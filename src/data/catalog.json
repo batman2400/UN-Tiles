@@ -1,0 +1,156 @@
+{
+  "categories": [
+    {
+      "slug": "floor-tiles",
+      "name": "Floor Tiles",
+      "image": "/images/landing_hero.png"
+    },
+    {
+      "slug": "wall-tiles",
+      "name": "Wall Tiles",
+      "image": "/images/contact_hero.png"
+    },
+    {
+      "slug": "bathroom",
+      "name": "Bathroom",
+      "image": "/images/monolith_about.png"
+    },
+    {
+      "slug": "outdoor",
+      "name": "Outdoor",
+      "image": "/images/landing_hero.png"
+    }
+  ],
+  "products": [
+    {
+      "id": "p1",
+      "sku": "FLT-CAL-6060",
+      "name": "Calacatta Prime",
+      "dimensions": "60x60cm",
+      "pricePerSqFt": 13.25,
+      "image": "/images/landing_hero.png",
+      "categorySlug": "floor-tiles",
+      "featured": true,
+      "finish": "Polished",
+      "application": "Interior",
+      "stockSqFt": 1840
+    },
+    {
+      "id": "p2",
+      "sku": "WLT-SLT-12060",
+      "name": "Slate Grey Textures",
+      "dimensions": "120x60cm",
+      "pricePerSqFt": 18,
+      "image": "/images/contact_hero.png",
+      "categorySlug": "wall-tiles",
+      "featured": true,
+      "finish": "Matt",
+      "application": "Interior",
+      "stockSqFt": 1230
+    },
+    {
+      "id": "p3",
+      "sku": "BTH-ONX-8080",
+      "name": "Onyx Black",
+      "dimensions": "80x80cm",
+      "pricePerSqFt": 22,
+      "image": "/images/monolith_about.png",
+      "categorySlug": "bathroom",
+      "featured": true,
+      "finish": "Gloss",
+      "application": "Interior",
+      "stockSqFt": 980
+    },
+    {
+      "id": "p4",
+      "sku": "OUT-TRV-6060",
+      "name": "Travertine Natural",
+      "dimensions": "60x60cm",
+      "pricePerSqFt": 15,
+      "image": "/images/landing_hero.png",
+      "categorySlug": "outdoor",
+      "featured": true,
+      "finish": "Anti-Slip",
+      "application": "Exterior",
+      "stockSqFt": 2010
+    },
+    {
+      "id": "p5",
+      "sku": "FLT-BCR-6060",
+      "name": "Bianco Carrara",
+      "dimensions": "60x60cm",
+      "pricePerSqFt": 14,
+      "image": "/images/contact_hero.png",
+      "categorySlug": "floor-tiles",
+      "featured": false,
+      "finish": "Polished",
+      "application": "Interior",
+      "stockSqFt": 1680
+    },
+    {
+      "id": "p6",
+      "sku": "WLT-NRM-12060",
+      "name": "Nero Marquina",
+      "dimensions": "120x60cm",
+      "pricePerSqFt": 24,
+      "image": "/images/monolith_about.png",
+      "categorySlug": "wall-tiles",
+      "featured": false,
+      "finish": "Gloss",
+      "application": "Interior",
+      "stockSqFt": 870
+    },
+    {
+      "id": "p7",
+      "sku": "BTH-CRD-6060",
+      "name": "Coral Dune",
+      "dimensions": "60x60cm",
+      "pricePerSqFt": 17.5,
+      "image": "/images/contact_hero.png",
+      "categorySlug": "bathroom",
+      "featured": false,
+      "finish": "Matt",
+      "application": "Interior",
+      "stockSqFt": 1120
+    },
+    {
+      "id": "p8",
+      "sku": "OUT-BSL-8080",
+      "name": "Basalt Ridge",
+      "dimensions": "80x80cm",
+      "pricePerSqFt": 19.75,
+      "image": "/images/landing_hero.png",
+      "categorySlug": "outdoor",
+      "featured": false,
+      "finish": "Textured",
+      "application": "Exterior",
+      "stockSqFt": 940
+    },
+    {
+      "id": "p9",
+      "sku": "FLT-WRM-12060",
+      "name": "Warm Limestone",
+      "dimensions": "120x60cm",
+      "pricePerSqFt": 16.25,
+      "image": "/images/monolith_about.png",
+      "categorySlug": "floor-tiles",
+      "featured": false,
+      "finish": "Honed",
+      "application": "Interior",
+      "stockSqFt": 1310
+    },
+    {
+      "id": "p10",
+      "sku": "WLT-ALB-6060",
+      "name": "Alabaster Vein",
+      "dimensions": "60x60cm",
+      "pricePerSqFt": 20.5,
+      "image": "/images/contact_hero.png",
+      "categorySlug": "wall-tiles",
+      "featured": false,
+      "finish": "Satin",
+      "application": "Interior",
+      "stockSqFt": 760
+    }
+  ]
+}
