@@ -1,73 +1,92 @@
 import Link from "next/link";
-import { ArrowRight, Mail, Phone, LayoutGrid } from "lucide-react";
+import { ArrowRight, Mail, Phone, LayoutGrid, Globe } from "lucide-react";
 import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="bg-surface-container-low border-t ghost-border py-16 mt-24">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12">
-        <div className="col-span-1 md:col-span-1 flex flex-col space-y-6 motion-fade-up">
+    <footer className="bg-surface-dark text-on-surface-dark">
+      {/* Main footer */}
+      <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-12">
+        
+        {/* Brand */}
+        <div className="col-span-1 md:col-span-1 flex flex-col space-y-6">
           <Link href="/" className="inline-flex">
             <Image 
               src="/images/un tiles logo.jpeg" 
               alt="UN Tiles" 
               width={100} 
               height={32} 
-              style={{ width: "auto", height: "auto" }}
-              className="logo-edge-blend mix-blend-multiply opacity-80 mix-blend-darken filter grayscale transition-transform duration-500 hover:scale-[1.03]"
+              style={{ width: "auto", height: "auto", maxHeight: "36px" }}
+              className="logo-edge-blend brightness-150 contrast-75 transition-transform duration-500 hover:scale-[1.03]"
             />
           </Link>
-          <p className="text-sm text-on-surface-variant max-w-xs leading-relaxed">
+          <p className="text-sm text-on-surface-dark-variant leading-relaxed">
             Architectural precision in high-end tiling. Materializing your vision with structural integrity and timeless design.
           </p>
+          <div className="flex space-x-4 pt-2">
+            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+              <Globe className="w-4 h-4" />
+            </a>
+            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+              <LayoutGrid className="w-4 h-4" />
+            </a>
+            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+              <Mail className="w-4 h-4" />
+            </a>
+            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+              <Phone className="w-4 h-4" />
+            </a>
+          </div>
         </div>
         
-        <div className="motion-fade-up motion-delay-1">
-          <h4 className="font-display font-semibold tracking-wide text-on-surface mb-6">Collections</h4>
-          <ul className="space-y-4 text-sm text-on-surface-variant">
-            <li><Link href="/collections" className="kinetic-link hover:text-primary transition-colors">Floor Tiles</Link></li>
-            <li><Link href="/collections" className="kinetic-link hover:text-primary transition-colors">Wall Elegance</Link></li>
-            <li><Link href="/collections" className="kinetic-link hover:text-primary transition-colors">Bathroom Monolith</Link></li>
-            <li><Link href="/collections" className="kinetic-link hover:text-primary transition-colors">Outdoor Slate</Link></li>
+        {/* Collections */}
+        <div>
+          <h4 className="font-display font-semibold tracking-wide text-on-surface-dark text-sm uppercase mb-6">Collections</h4>
+          <ul className="space-y-3 text-sm text-on-surface-dark-variant">
+            <li><Link href="/collections?category=floor-tiles" className="hover:text-accent transition-colors duration-300">Floor Tiles</Link></li>
+            <li><Link href="/collections?category=wall-tiles" className="hover:text-accent transition-colors duration-300">Wall Elegance</Link></li>
+            <li><Link href="/collections?category=bathroom" className="hover:text-accent transition-colors duration-300">Bathroom Monolith</Link></li>
+            <li><Link href="/collections?category=outdoor" className="hover:text-accent transition-colors duration-300">Outdoor Slate</Link></li>
           </ul>
         </div>
 
-        <div className="motion-fade-up motion-delay-2">
-          <h4 className="font-display font-semibold tracking-wide text-on-surface mb-6">Studio</h4>
-          <ul className="space-y-4 text-sm text-on-surface-variant">
-            <li><Link href="/about" className="kinetic-link hover:text-primary transition-colors">About Us</Link></li>
-            <li><Link href="/contact" className="kinetic-link hover:text-primary transition-colors">Contact</Link></li>
-            <li><Link href="#" className="kinetic-link hover:text-primary transition-colors">Shipping Policy</Link></li>
-            <li><Link href="#" className="kinetic-link hover:text-primary transition-colors">Terms of Service</Link></li>
+        {/* Studio */}
+        <div>
+          <h4 className="font-display font-semibold tracking-wide text-on-surface-dark text-sm uppercase mb-6">Studio</h4>
+          <ul className="space-y-3 text-sm text-on-surface-dark-variant">
+            <li><Link href="/about" className="hover:text-accent transition-colors duration-300">About Us</Link></li>
+            <li><Link href="/contact" className="hover:text-accent transition-colors duration-300">Contact</Link></li>
+            <li><Link href="#" className="hover:text-accent transition-colors duration-300">Shipping Policy</Link></li>
+            <li><Link href="#" className="hover:text-accent transition-colors duration-300">Terms of Service</Link></li>
           </ul>
         </div>
 
-        <div className="motion-fade-up motion-delay-3">
-          <h4 className="font-display font-semibold tracking-wide text-on-surface mb-6">Newsletter</h4>
-          <p className="text-sm text-on-surface-variant mb-4">Subscribe for exclusive designs.</p>
-          <div className="flex border-b border-outline focus-within:border-primary transition-colors pb-2">
+        {/* Newsletter */}
+        <div>
+          <h4 className="font-display font-semibold tracking-wide text-on-surface-dark text-sm uppercase mb-6">Newsletter</h4>
+          <p className="text-sm text-on-surface-dark-variant mb-5">Subscribe for exclusive designs and early access to new collections.</p>
+          <div className="flex">
             <input 
               type="email" 
               placeholder="Email address" 
-              className="bg-transparent border-none outline-none text-sm w-full text-on-surface placeholder:text-outline-variant"
+              className="bg-surface-dark-elevated border border-white/10 outline-none text-sm flex-1 px-4 py-3 text-on-surface-dark placeholder:text-on-surface-dark-variant/50 focus:border-accent transition-colors"
             />
-            <button className="icon-button-lift text-primary hover:text-primary-dim pl-2">
+            <button className="bg-accent text-on-accent px-4 py-3 hover:bg-accent/90 transition-colors flex-shrink-0">
               <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
-          <div className="flex space-x-4 mt-8">
-            <a href="#" className="icon-button-lift text-on-surface-variant hover:text-primary transition-colors"><Mail className="w-5 h-5" /></a>
-            <a href="#" className="icon-button-lift text-on-surface-variant hover:text-primary transition-colors"><Phone className="w-5 h-5" /></a>
-            <a href="#" className="icon-button-lift text-on-surface-variant hover:text-primary transition-colors"><LayoutGrid className="w-5 h-5" /></a>
           </div>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto px-6 mt-16 pt-8 border-t ghost-border text-xs text-on-surface-variant flex flex-col md:flex-row justify-between items-center">
-        <p>&copy; {new Date().getFullYear()} UN Tiles. All rights reserved.</p>
-        <div className="flex space-x-6 mt-4 md:mt-0">
-          <Link href="#" className="kinetic-link hover:text-primary transition-colors">Privacy</Link>
-          <Link href="#" className="kinetic-link hover:text-primary transition-colors">Cookies</Link>
+      {/* Bottom bar */}
+      <div className="border-t border-white/8">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-dark-variant">
+          <p>&copy; {new Date().getFullYear()} UN Tiles. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <Link href="#" className="hover:text-accent transition-colors">Privacy Policy</Link>
+            <Link href="#" className="hover:text-accent transition-colors">Cookie Policy</Link>
+            <Link href="#" className="hover:text-accent transition-colors">Sitemap</Link>
+          </div>
         </div>
       </div>
     </footer>
