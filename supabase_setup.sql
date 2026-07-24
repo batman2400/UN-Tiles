@@ -128,3 +128,23 @@ create policy "Users can view own orders." on public.orders
   for select using (auth.uid() = user_id);
 
 -- (Orders would typically be inserted by a secure backend process, so we don't allow public insert here)
+
+-- Create a table for contact form inquiries
+create table if not exists public.inquiries (
+  id         uuid default gen_random_uuid() primary key,
+  name       text not null,
+  email      text not null,
+  message    text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.inquiries enable row level security;
+
+create policy "Anyone can submit an inquiry." on public.inquiries
+  for insert with check (true);
+
+create policy "Only admins can view inquiries." on public.inquiries
+  for select using (
+    auth.role() = 'authenticated'
+    and auth.jwt() ->> 'email' in ('uvarammohan90@gmail.com')
+  );

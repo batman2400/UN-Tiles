@@ -1,9 +1,66 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { Mail, Phone, Clock, MapPin } from "lucide-react";
+import { Mail, Phone, Clock, MapPin, CheckCircle } from "lucide-react";
 
 export default function Contact() {
+  // ── Form state ───────────────────────────────────────
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [projectType, setProjectType] = useState("Residential");
+  const [message, setMessage] = useState("");
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // ── Submit handler ───────────────────────────────────
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Something went wrong. Please try again.");
+        return;
+      }
+
+      // Open the device's default mail app with the inquiry pre-filled
+      const subject = encodeURIComponent(`UN Tiles Inquiry from ${name}`);
+      const body = encodeURIComponent(
+        `Name: ${name}\nEmail: ${email}\nCompany: ${company || "N/A"}\nPhone: ${phone || "N/A"}\nProject Type: ${projectType}\n\nMessage:\n${message}`
+      );
+      window.open(`mailto:uvarammohan90@gmail.com?subject=${subject}&body=${body}`, "_self");
+
+      // Clear form & show success
+      setName("");
+      setCompany("");
+      setEmail("");
+      setPhone("");
+      setProjectType("Residential");
+      setMessage("");
+      setSuccess(true);
+    } catch {
+      setErrorMsg("Unable to reach our servers. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       
@@ -117,50 +174,127 @@ export default function Contact() {
         {/* Form */}
         <ScrollReveal delay={100}>
           <div className="bg-surface-container-lowest p-8 md:p-12 premium-shadow-lg sticky top-24">
-            <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-2">Send a Message</p>
-            <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-8">Inquire</h2>
-            <form className="space-y-7">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Name *</label>
-                  <input type="text" className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors" required />
+            {success ? (
+              /* ── Success State ─────────────────────────── */
+              <div className="flex flex-col items-center justify-center text-center py-12 space-y-6">
+                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-accent" />
                 </div>
-                <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Company Name</label>
-                  <input type="text" className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors" />
+                <div className="space-y-3">
+                  <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold">Inquiry Received</p>
+                  <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface">
+                    Thank You
+                  </h2>
+                  <p className="text-on-surface-variant leading-relaxed max-w-sm">
+                    An architectural consultant will be in touch shortly to discuss your project in detail.
+                  </p>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setSuccess(false)}
+                  className="mt-4 text-sm uppercase tracking-widest text-accent font-semibold hover:text-accent/80 transition-colors underline underline-offset-4"
+                >
+                  Send Another Message
+                </button>
               </div>
+            ) : (
+              /* ── Form State ────────────────────────────── */
+              <>
+                <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-2">Send a Message</p>
+                <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-8">Inquire</h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Email *</label>
-                  <input type="email" className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors" required />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Phone Number</label>
-                  <input type="tel" className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors" />
-                </div>
-              </div>
+                {errorMsg && (
+                  <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded">
+                    {errorMsg}
+                  </div>
+                )}
 
-              <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Project Type</label>
-                <select className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors appearance-none cursor-pointer rounded-none">
-                  <option>Residential</option>
-                  <option>Commercial</option>
-                  <option>Public Space</option>
-                  <option>Other</option>
-                </select>
-              </div>
+                <form onSubmit={handleSubmit} className="space-y-7">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="flex flex-col">
+                      <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Name *</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors"
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Company Name</label>
+                      <input
+                        type="text"
+                        value={company}
+                        onChange={(e) => setCompany(e.target.value)}
+                        className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
 
-              <div className="flex flex-col">
-                <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Message *</label>
-                <textarea rows={4} className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors resize-none" required></textarea>
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="flex flex-col">
+                      <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Email *</label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors"
+                        required
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                  </div>
 
-              <button type="submit" className="kinetic-button bg-accent text-on-accent px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-accent/90 transition-colors w-full">
-                <span>Submit Inquiry</span>
-              </button>
-            </form>
+                  <div className="flex flex-col">
+                    <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Project Type</label>
+                    <select
+                      value={projectType}
+                      onChange={(e) => setProjectType(e.target.value)}
+                      className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors appearance-none cursor-pointer rounded-none"
+                      disabled={isSubmitting}
+                    >
+                      <option>Residential</option>
+                      <option>Commercial</option>
+                      <option>Public Space</option>
+                      <option>Other</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col">
+                    <label className="text-xs uppercase tracking-widest text-on-surface-variant mb-2 font-semibold">Message *</label>
+                    <textarea
+                      rows={4}
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="form-field-animate bg-transparent border-b-2 border-outline-variant/40 focus:border-accent outline-none py-3 text-on-surface transition-colors resize-none"
+                      required
+                      disabled={isSubmitting}
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="kinetic-button bg-accent text-on-accent px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-accent/90 transition-colors w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <span>{isSubmitting ? "Sending..." : "Submit Inquiry"}</span>
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </ScrollReveal>
         
