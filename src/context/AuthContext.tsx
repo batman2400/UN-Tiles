@@ -98,8 +98,15 @@ function getStoredAuthState(): StoredAuthState {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // Check whether Supabase env vars are configured at all
+  const hasSupabaseEnv = !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
   const [user, setUser] = useState<UserData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // If no env vars, nothing to load — start as not-loading immediately.
+  const [isLoading, setIsLoading] = useState(hasSupabaseEnv);
 
   // Lazy-init: Supabase browser client is only created when env vars are present.
   // During Vercel build-time SSR, env vars may be missing, so we defer creation.
@@ -110,12 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return supabaseRef.current;
   }, []);
-
-  // Check whether Supabase env vars are configured at all
-  const hasSupabaseEnv = !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
 
   const loadProfile = useCallback(
     async (userId: string, email: string) => {
@@ -167,7 +168,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // During Vercel build-time prerendering, Supabase env vars may not exist.
     // Skip all auth initialization — the user will be null (logged out) in static HTML.
     if (!hasSupabaseEnv) {
-      setIsLoading(false);
       return;
     }
 

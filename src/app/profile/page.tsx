@@ -61,7 +61,16 @@ function parseAndFormatTotal(totalStr: string): string {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isLoading, logout, updateProfile } = useAuth();
-  const [activeSection, setActiveSection] = useState<SidebarSection>("account");
+  const [activeSection, setActiveSection] = useState<SidebarSection>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") as SidebarSection;
+      if (tab && (tab === "account" || tab === "orders" || tab === "addresses")) {
+        return tab;
+      }
+    }
+    return "account";
+  });
   const [profileEdits, setProfileEdits] = useState<Partial<ProfileFormState>>({});
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
@@ -76,16 +85,6 @@ export default function ProfilePage() {
     }
   }, [user, isLoading, router]);
 
-  // Read tab from URL query params
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab") as SidebarSection;
-      if (tab && (tab === "account" || tab === "orders" || tab === "addresses")) {
-        setActiveSection(tab);
-      }
-    }
-  }, []);
 
   // Fetch related data once a user is known.
   useEffect(() => {

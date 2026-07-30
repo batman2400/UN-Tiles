@@ -32,10 +32,12 @@ export function TopNavBar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  // Close mobile menu on route change (React pattern: adjusting state on prop change)
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (mobileOpen) setMobileOpen(false);
+  }
 
   const navbarClass = isHeroPage && !scrolled ? "navbar-transparent" : "navbar-solid";
 
