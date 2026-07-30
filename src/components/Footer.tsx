@@ -43,10 +43,10 @@ export function Footer() {
         <div>
           <h4 className="font-display font-semibold tracking-wide text-on-surface-dark text-sm uppercase mb-6">Collections</h4>
           <ul className="space-y-3 text-sm text-on-surface-dark-variant">
-            <li><Link href="/collections?category=floor-tiles" className="hover:text-accent transition-colors duration-300">Floor Tiles</Link></li>
-            <li><Link href="/collections?category=wall-tiles" className="hover:text-accent transition-colors duration-300">Wall Elegance</Link></li>
-            <li><Link href="/collections?category=bathroom" className="hover:text-accent transition-colors duration-300">Bathroom Monolith</Link></li>
-            <li><Link href="/collections?category=outdoor" className="hover:text-accent transition-colors duration-300">Outdoor Slate</Link></li>
+            <li><Link href="/collections?category=floor" className="hover:text-accent transition-colors duration-300">Floor Tiles</Link></li>
+            <li><Link href="/collections?category=wall" className="hover:text-accent transition-colors duration-300">Wall Tiles</Link></li>
+            <li><Link href="/collections?category=mosaics" className="hover:text-accent transition-colors duration-300">Mosaics</Link></li>
+            <li><Link href="/collections?category=pool-tiles" className="hover:text-accent transition-colors duration-300">Pool Tiles</Link></li>
           </ul>
         </div>
 
