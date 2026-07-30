@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -23,6 +23,7 @@ export default function CartPage() {
   const { user } = useAuth();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<"cod" | "pickup">("pickup");
 
   const handleCheckout = async () => {
     setCheckoutError(null);
@@ -41,6 +42,7 @@ export default function CartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          deliveryMethod: deliveryMethod === "cod" ? "Cash on Delivery" : "Pickup from Store",
           items: items.map((item) => ({
             product_id: item.id,
             quantity_sqft: item.cartQuantitySqft,
@@ -244,6 +246,77 @@ export default function CartPage() {
                 Order Summary
               </h2>
 
+              {/* ── Delivery Method ─────────────────── */}
+              <div className="mb-8">
+                <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant mb-4">
+                  Delivery Method
+                </p>
+                <div className="space-y-3">
+                  <label
+                    className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
+                      deliveryMethod === "pickup"
+                        ? "bg-primary/5 border-l-2 border-primary"
+                        : "bg-surface-container-low hover:bg-surface-container border-l-2 border-transparent"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryMethod"
+                      value="pickup"
+                      checked={deliveryMethod === "pickup"}
+                      onChange={() => setDeliveryMethod("pickup")}
+                      className="sr-only"
+                    />
+                    <Store className={`w-5 h-5 flex-shrink-0 ${
+                      deliveryMethod === "pickup" ? "text-primary" : "text-on-surface-variant"
+                    }`} />
+                    <div>
+                      <span className={`text-sm font-semibold block ${
+                        deliveryMethod === "pickup" ? "text-on-surface" : "text-on-surface-variant"
+                      }`}>
+                        Pickup from Store
+                      </span>
+                      <span className="text-xs text-on-surface-variant">
+                        Collect your order from our showroom
+                      </span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
+                      deliveryMethod === "cod"
+                        ? "bg-primary/5 border-l-2 border-primary"
+                        : "bg-surface-container-low hover:bg-surface-container border-l-2 border-transparent"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryMethod"
+                      value="cod"
+                      checked={deliveryMethod === "cod"}
+                      onChange={() => setDeliveryMethod("cod")}
+                      className="sr-only"
+                    />
+                    <Truck className={`w-5 h-5 flex-shrink-0 ${
+                      deliveryMethod === "cod" ? "text-primary" : "text-on-surface-variant"
+                    }`} />
+                    <div>
+                      <span className={`text-sm font-semibold block ${
+                        deliveryMethod === "cod" ? "text-on-surface" : "text-on-surface-variant"
+                      }`}>
+                        Cash on Delivery
+                      </span>
+                      <span className="text-xs text-on-surface-variant">
+                        Pay when your order arrives
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="section-divider mb-6" />
+
+              {/* ── Price Breakdown ─────────────────── */}
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-sm">
                   <span className="text-on-surface-variant">
@@ -253,7 +326,9 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-on-surface-variant">Shipping</span>
-                  <span className="text-on-surface font-medium">Calculated at checkout</span>
+                  <span className="text-on-surface font-medium">
+                    {deliveryMethod === "pickup" ? "Free (Store Pickup)" : "Calculated on delivery"}
+                  </span>
                 </div>
               </div>
 
@@ -278,11 +353,13 @@ export default function CartPage() {
                 className="kinetic-button w-full bg-primary hover:bg-primary-dim text-on-primary px-8 py-4 text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
                 <Lock className="w-4 h-4" />
-                <span>{isCheckingOut ? "Processing..." : "Secure Checkout"}</span>
+                <span>{isCheckingOut ? "Processing..." : "Place Order"}</span>
               </button>
 
               <p className="text-xs text-on-surface-variant text-center mt-4">
-                256-bit SSL Encrypted Transaction
+                {deliveryMethod === "cod"
+                  ? "Pay in cash when your order is delivered"
+                  : "Your order will be ready for pickup"}
               </p>
             </div>
           </div>

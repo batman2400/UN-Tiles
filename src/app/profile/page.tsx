@@ -21,6 +21,7 @@ interface OrderRecord {
   items: string;
   date: string;
   total: string;
+  delivery_method: string | null;
 }
 
 interface AddressRecord {
@@ -63,7 +64,7 @@ export default function ProfilePage() {
       const [ordersRes, addressesRes] = await Promise.all([
         supabase
           .from("orders")
-          .select("id, status, items, date, total")
+          .select("id, status, items, date, total, delivery_method")
           .eq("user_id", user.id)
           .order("date", { ascending: false }),
         supabase
@@ -265,9 +266,16 @@ export default function ProfilePage() {
                       <div key={order.id} className="bg-surface-container-low p-6 transition-colors hover:bg-surface-container">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                           <span className="font-display font-semibold text-on-surface">{order.id}</span>
-                          <span className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 ${
-                            order.status === "Delivered" ? "bg-primary/10 text-primary" : "bg-surface-container-highest text-on-surface-variant"
-                          }`}>{order.status}</span>
+                          <div className="flex items-center gap-2">
+                            {order.delivery_method && (
+                              <span className="text-xs font-semibold uppercase tracking-widest px-3 py-1.5 bg-accent-soft text-accent">
+                                {order.delivery_method}
+                              </span>
+                            )}
+                            <span className={`text-xs font-semibold uppercase tracking-widest px-3 py-1.5 ${
+                              order.status === "Delivered" ? "bg-primary/10 text-primary" : "bg-surface-container-highest text-on-surface-variant"
+                            }`}>{order.status}</span>
+                          </div>
                         </div>
                         <p className="text-sm text-on-surface-variant mb-1">{order.items}</p>
                         <div className="flex justify-between text-sm">

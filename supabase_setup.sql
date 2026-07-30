@@ -133,6 +133,7 @@ create table if not exists public.orders (
   status text,
   total text,
   items text,
+  delivery_method text default 'Pickup from Store',
   date timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

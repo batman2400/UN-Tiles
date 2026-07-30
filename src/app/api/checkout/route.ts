@@ -10,7 +10,12 @@ interface CheckoutItem {
 
 interface CheckoutRequestBody {
   items: CheckoutItem[];
+  deliveryMethod: string;
 }
+
+// ── Constants ──────────────────────────────────────────
+
+const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store"];
 
 // ── Validation ─────────────────────────────────────────
 
@@ -19,6 +24,13 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
   const candidate = body as Record<string, unknown>;
 
   if (!Array.isArray(candidate.items) || candidate.items.length === 0) return false;
+
+  if (
+    typeof candidate.deliveryMethod !== "string" ||
+    !VALID_DELIVERY_METHODS.includes(candidate.deliveryMethod)
+  ) {
+    return false;
+  }
 
   return candidate.items.every((item: unknown) => {
     if (typeof item !== "object" || item === null) return false;
@@ -66,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidCheckoutBody(body)) {
       return NextResponse.json(
-        { error: "Invalid cart data. Each item must have a product_id (string) and quantity_sqft (positive number)." },
+        { error: "Invalid cart data. Each item must have a product_id (string) and quantity_sqft (positive number). A valid delivery method is required." },
         { status: 400 }
       );
     }
@@ -110,12 +122,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Return success with order ID
+    // 6. Extract order ID from the RPC result
     const orderId =
       typeof data === "object" && data !== null && "order_id" in data
         ? (data as { order_id: string }).order_id
         : data;
 
+    // 7. Set the delivery method on the newly created order
+    //    Done as a separate UPDATE to avoid modifying the existing process_checkout RPC.
+    if (orderId) {
+      const { error: updateError } = await supabase
+        .from("orders")
+        .update({ delivery_method: body.deliveryMethod })
+        .eq("id", orderId);
+
+      if (updateError) {
+        // Non-critical: order was already placed, just log the failure
+        console.error("Failed to set delivery method on order:", updateError);
+      }
+    }
+
+    // 8. Return success with order ID
     return NextResponse.json({
       success: true,
       order_id: orderId,
@@ -128,3 +155,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
