@@ -38,6 +38,26 @@ const sidebarLinks: { key: SidebarSection; label: string; icon: typeof User }[] 
   { key: "addresses", label: "Saved Addresses", icon: MapPin },
 ];
 
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-LK", {
+    style: "currency",
+    currency: "LKR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function parseAndFormatTotal(totalStr: string): string {
+  // Extract only numbers and decimals from the string
+  const numMatches = totalStr.match(/[\d.]+/g);
+  if (!numMatches) return totalStr;
+  
+  const parsed = parseFloat(numMatches.join(''));
+  if (isNaN(parsed)) return totalStr;
+  
+  return formatCurrency(parsed);
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isLoading, logout, updateProfile } = useAuth();
@@ -55,6 +75,17 @@ export default function ProfilePage() {
       router.replace("/login");
     }
   }, [user, isLoading, router]);
+
+  // Read tab from URL query params
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") as SidebarSection;
+      if (tab && (tab === "account" || tab === "orders" || tab === "addresses")) {
+        setActiveSection(tab);
+      }
+    }
+  }, []);
 
   // Fetch related data once a user is known.
   useEffect(() => {
@@ -280,7 +311,7 @@ export default function ProfilePage() {
                         <p className="text-sm text-on-surface-variant mb-1">{order.items}</p>
                         <div className="flex justify-between text-sm">
                           <span className="text-outline">{new Date(order.date).toLocaleDateString()}</span>
-                          <span className="font-semibold text-on-surface">{order.total}</span>
+                          <span className="font-semibold text-on-surface">{parseAndFormatTotal(order.total)}</span>
                         </div>
                       </div>
                     ))

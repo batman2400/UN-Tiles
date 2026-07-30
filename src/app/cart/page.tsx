@@ -66,7 +66,7 @@ export default function CartPage() {
 
       // Success — clear cart and redirect to profile orders
       clearCart();
-      router.push("/profile");
+      router.push("/profile?tab=orders");
     } catch {
       setCheckoutError("Network error. Please check your connection and try again.");
     } finally {
