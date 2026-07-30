@@ -5,8 +5,8 @@ import {
   useContext,
   useState,
   useEffect,
-  useMemo,
   useCallback,
+  useRef,
   ReactNode,
 } from "react";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
@@ -100,12 +100,27 @@ function getStoredAuthState(): StoredAuthState {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = useMemo(() => createClient(), []);
+
+  // Lazy-init: Supabase browser client is only created when env vars are present.
+  // During Vercel build-time SSR, env vars may be missing, so we defer creation.
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null);
+  const getSupabase = useCallback(() => {
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient();
+    }
+    return supabaseRef.current;
+  }, []);
+
+  // Check whether Supabase env vars are configured at all
+  const hasSupabaseEnv = !!(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
 
   const loadProfile = useCallback(
     async (userId: string, email: string) => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
           .from("profiles")
           .select("*")
           .eq("id", userId)
@@ -145,10 +160,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     },
-    [supabase]
+    [getSupabase]
   );
 
   useEffect(() => {
+    // During Vercel build-time prerendering, Supabase env vars may not exist.
+    // Skip all auth initialization — the user will be null (logged out) in static HTML.
+    if (!hasSupabaseEnv) {
+      setIsLoading(false);
+      return;
+    }
+
     let isMounted = true;
 
     const applySession = (session: Session | null) => {
@@ -196,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(
+    } = getSupabase().auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
       // Ignore transient null-session events while a token still exists.
       if (!session && event !== "SIGNED_OUT") {
@@ -214,11 +236,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [loadProfile, supabase]);
+  }, [loadProfile, getSupabase, hasSupabaseEnv]);
 
   const login = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await getSupabase().auth.signInWithPassword({ email, password });
       if (error) {
         return { success: false, error: error.message };
       }
@@ -235,7 +257,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (data: UserData & { password: string }) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await getSupabase().auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -253,14 +275,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
     setUser(null);
   };
 
   const updateProfile = async (data: UserData) => {
     if (!user?.id) return { success: false, error: "Not logged in" };
     try {
-      const { error } = await supabase
+      const { error } = await getSupabase()
         .from('profiles')
         .upsert({
           id: user.id,

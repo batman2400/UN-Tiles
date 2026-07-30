@@ -9,11 +9,11 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
 function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-LK", {
     style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency: "LKR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 }
 
@@ -120,8 +120,8 @@ export default function CartPage() {
             {/* Column Headers (desktop) */}
             <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-6 pb-4 border-b border-outline-variant/20 mb-6">
               <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Product</span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Price / sq ft</span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Sq Ft</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Price / tile</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Qty</span>
               <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-right">Subtotal</span>
               <span className="w-10" />
             </div>
@@ -152,7 +152,7 @@ export default function CartPage() {
                       </div>
                     </div>
 
-                    {/* Price per sq ft */}
+                    {/* Price per tile */}
                     <div className="flex justify-between md:justify-center mb-3 md:mb-0">
                       <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Price:</span>
                       <span className="text-sm text-on-surface font-medium">
@@ -162,7 +162,7 @@ export default function CartPage() {
 
                     {/* Quantity Control */}
                     <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
-                      <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Sq Ft:</span>
+                      <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Qty:</span>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() =>

@@ -106,7 +106,7 @@ export function ProductCard({ product }: { product: Product }) {
         {/* Price + Quick Add row */}
         <div className="flex items-center justify-between pt-1">
           <span className="font-bold text-sm text-on-surface">
-            {product.price} / sq ft
+            {product.price} / tile
           </span>
           <button
             onClick={handleQuickAdd}

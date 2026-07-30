@@ -112,11 +112,11 @@ function isRawCatalogPayload(value: unknown): value is RawCatalogPayload {
 }
 
 function formatPrice(pricePerSqFt: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-LK", {
     style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    currency: "LKR",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(pricePerSqFt);
 }
 
@@ -137,6 +137,12 @@ function humanizeSlug(slug: string): string {
  */
 async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
   try {
+    // During Vercel build-time prerendering, env vars may not be available.
+    // Gracefully return null so getCatalogData falls back to the static seed.
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return null;
+    }
+
     const supabase = await createClient();
 
     // Use a 5-second timeout so the page falls back quickly if Supabase is unreachable.

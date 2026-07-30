@@ -157,9 +157,9 @@ export default async function Home() {
         <ScrollReveal>
           <div className="mb-16">
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Best Sellers</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-4">The Monolith Series</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-4">Featured Collection</h2>
             <p className="text-on-surface-variant max-w-2xl">
-              Our most sought-after slabs, defined by extreme formats and mathematical alignment.
+              Our most popular tiles — handpicked for quality, style, and value across every space.
             </p>
           </div>
         </ScrollReveal>
@@ -186,7 +186,7 @@ export default async function Home() {
                   <h3 className="text-lg font-display font-semibold text-on-surface mb-2">{product.name}</h3>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-on-surface-variant">{product.dimensions}</span>
-                    <span className="font-bold text-on-surface">{product.price} / sq ft</span>
+                    <span className="font-bold text-on-surface">{product.price} / tile</span>
                   </div>
                 </div>
               </div>
