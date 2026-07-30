@@ -45,6 +45,7 @@ export default async function Collections({
           src="/images/contact_hero.png"
           alt="Tile showroom"
           fill
+          sizes="100vw"
           className="object-cover opacity-40"
           priority
         />

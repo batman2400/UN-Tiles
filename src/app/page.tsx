@@ -23,6 +23,7 @@ export default async function Home() {
             src="/images/landing_hero.png" 
             alt="Luxury modern interior with slate tiles" 
             fill 
+            sizes="100vw"
             className="object-cover object-center opacity-90"
             priority
           />
@@ -106,6 +107,7 @@ export default async function Home() {
                   src={cat.image} 
                   alt={cat.name} 
                   fill 
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                   className="object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
