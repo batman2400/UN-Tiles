@@ -211,3 +211,25 @@ insert into public.products (id, sku, name, dimensions, price_per_sqft, image, c
   ('mos-003', 'MOS-PNY-25-MT', 'Penny - Round White', '2.5 cm round sheet', 3800, '/images/tiles/mosaic_pattern.png', 'mosaics', false, 'Matt', 'Interior', 72),
   ('mos-004', 'MOS-HEX-5050-ST', 'Hexara - Blend', '5x5 cm sheet', 4800, '/images/tiles/mosaic_pattern.png', 'mosaics', false, 'Satin', 'Interior', 55)
 on conflict (id) do nothing;
+- -   A d d   R L S   p o l i c y   s o   a d m i n s   c a n   S E L E C T   a l l   o r d e r s   ( c u r r e n t l y   o n l y   u s e r s   c a n   s e e   t h e i r   o w n ) 
+ d r o p   p o l i c y   i f   e x i s t s   " A d m i n s   c a n   v i e w   a l l   o r d e r s . "   o n   p u b l i c . o r d e r s ; 
+ c r e a t e   p o l i c y   " A d m i n s   c a n   v i e w   a l l   o r d e r s . "   o n   p u b l i c . o r d e r s 
+     f o r   s e l e c t   u s i n g   ( 
+         e x i s t s   ( 
+             s e l e c t   1   f r o m   p u b l i c . p r o f i l e s 
+             w h e r e   p r o f i l e s . i d   =   a u t h . u i d ( ) 
+             a n d   p r o f i l e s . r o l e   =   ' a d m i n ' 
+         ) 
+     ) ; 
+ 
+ - -   A d d   R L S   p o l i c y   s o   a d m i n s   c a n   U P D A T E   o r d e r s   ( t o   u p d a t e   s t a t u s ) 
+ d r o p   p o l i c y   i f   e x i s t s   " A d m i n s   c a n   u p d a t e   o r d e r s . "   o n   p u b l i c . o r d e r s ; 
+ c r e a t e   p o l i c y   " A d m i n s   c a n   u p d a t e   o r d e r s . "   o n   p u b l i c . o r d e r s 
+     f o r   u p d a t e   u s i n g   ( 
+         e x i s t s   ( 
+             s e l e c t   1   f r o m   p u b l i c . p r o f i l e s 
+             w h e r e   p r o f i l e s . i d   =   a u t h . u i d ( ) 
+             a n d   p r o f i l e s . r o l e   =   ' a d m i n ' 
+         ) 
+     ) ;  
+ 

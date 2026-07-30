@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, FormEvent, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { User, Package, MapPin, LogOut, CheckCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -58,19 +58,25 @@ function parseAndFormatTotal(totalStr: string): string {
   return formatCurrency(parsed);
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading, logout, updateProfile } = useAuth();
-  const [activeSection, setActiveSection] = useState<SidebarSection>(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab") as SidebarSection;
-      if (tab && (tab === "account" || tab === "orders" || tab === "addresses")) {
-        return tab;
-      }
-    }
-    return "account";
-  });
+  
+  // Parse tab from search params or default to "account"
+  const tabParam = searchParams.get("tab") as SidebarSection | null;
+  const initialTab = tabParam && ["account", "orders", "addresses"].includes(tabParam) 
+    ? tabParam 
+    : "account";
+    
+  const [activeSection, setActiveSection] = useState<SidebarSection>(initialTab);
+  
+  // If the URL changes (e.g. user goes back/forward), sync the state
+  const [prevTab, setPrevTab] = useState(initialTab);
+  if (initialTab !== prevTab) {
+    setPrevTab(initialTab);
+    setActiveSection(initialTab);
+  }
   const [profileEdits, setProfileEdits] = useState<Partial<ProfileFormState>>({});
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
@@ -351,5 +357,13 @@ export default function ProfilePage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<div className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center">Loading...</div>}>
+      <ProfileContent />
+    </Suspense>
   );
 }

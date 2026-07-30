@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { AdminStockEditor } from "./AdminStockEditor";
+import { AdminOrdersPanel } from "./AdminOrdersPanel";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -11,6 +12,21 @@ export interface AdminProduct {
   stock_sqft: number;
   price_per_sqft: number;
   category_slug: string;
+}
+
+export interface AdminOrder {
+  id: string;
+  status: string;
+  items: string;
+  total: string;
+  delivery_method: string;
+  date: string;
+  profiles: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  } | null;
 }
 
 // ── Server Component ───────────────────────────────────
@@ -39,17 +55,31 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  // 3. Fetch all products for inventory management
-  const { data: products, error: productsError } = await supabase
-    .from("products")
-    .select("id, sku, name, stock_sqft, price_per_sqft, category_slug")
-    .order("sku", { ascending: true });
+  // 3. Fetch data in parallel
+  const [productsRes, ordersRes] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id, sku, name, stock_sqft, price_per_sqft, category_slug")
+      .order("sku", { ascending: true }),
+    supabase
+      .from("orders")
+      .select(`
+        id, status, items, total, delivery_method, date,
+        profiles (
+          first_name, last_name, email, phone
+        )
+      `)
+      .order("date", { ascending: false })
+  ]);
 
-  if (productsError) {
-    console.error("Failed to load products for admin:", productsError);
+  if (productsRes.error) {
+    console.error("Failed to load products for admin:", productsRes.error);
+  }
+  if (ordersRes.error) {
+    console.error("Failed to load orders for admin:", ordersRes.error);
   }
 
-  const adminProducts: AdminProduct[] = (products ?? []).map((row) => ({
+  const adminProducts: AdminProduct[] = (productsRes.data ?? []).map((row) => ({
     id: row.id as string,
     sku: row.sku as string,
     name: row.name as string,
@@ -57,6 +87,20 @@ export default async function AdminPage() {
     price_per_sqft: Number(row.price_per_sqft),
     category_slug: row.category_slug as string,
   }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adminOrders: AdminOrder[] = (ordersRes.data ?? []).map((row: any) => ({
+    id: row.id,
+    status: row.status,
+    items: row.items,
+    total: row.total,
+    delivery_method: row.delivery_method,
+    date: row.date,
+    profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+  }));
+
+  const pendingOrders = adminOrders.filter(o => o.status === 'Pending').length;
+  const completedOrders = adminOrders.filter(o => o.status === 'Delivered').length;
 
   return (
     <section className="min-h-[calc(100vh-6rem)] bg-surface py-12 md:py-16 px-6">
@@ -67,43 +111,21 @@ export default async function AdminPage() {
             Administration
           </p>
           <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">
-            Inventory Management
+            Control Panel
           </h1>
           <p className="text-on-surface-variant mt-3 max-w-2xl">
-            Monitor stock levels and restock products. Changes are saved directly
-            to the live database.
+            Monitor stock levels, restock products, and manage customer orders.
           </p>
         </div>
 
-        {/* Stats Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 motion-fade-up motion-delay-1">
-          <div className="bg-surface-container-lowest premium-shadow p-5">
-            <p className="text-xs uppercase tracking-widest text-on-surface-variant mb-1">Total SKUs</p>
-            <p className="text-2xl font-display font-bold text-on-surface">{adminProducts.length}</p>
-          </div>
-          <div className="bg-surface-container-lowest premium-shadow p-5">
-            <p className="text-xs uppercase tracking-widest text-on-surface-variant mb-1">Total Stock</p>
-            <p className="text-2xl font-display font-bold text-on-surface">
-              {adminProducts.reduce((sum, p) => sum + p.stock_sqft, 0).toLocaleString()} sq ft
-            </p>
-          </div>
-          <div className="bg-surface-container-lowest premium-shadow p-5">
-            <p className="text-xs uppercase tracking-widest text-on-surface-variant mb-1">Low Stock</p>
-            <p className="text-2xl font-display font-bold text-[#9f403d]">
-              {adminProducts.filter((p) => p.stock_sqft < 100).length}
-            </p>
-          </div>
-          <div className="bg-surface-container-lowest premium-shadow p-5">
-            <p className="text-xs uppercase tracking-widest text-on-surface-variant mb-1">Categories</p>
-            <p className="text-2xl font-display font-bold text-on-surface">
-              {new Set(adminProducts.map((p) => p.category_slug)).size}
-            </p>
-          </div>
-        </div>
-
         {/* Inventory Table (client component for editing) */}
-        <div className="motion-fade-up motion-delay-2">
+        <div className="motion-fade-up motion-delay-2 space-y-12">
           <AdminStockEditor initialProducts={adminProducts} />
+          
+          <AdminOrdersPanel 
+            initialOrders={adminOrders} 
+            lowStockCount={adminProducts.filter((p) => p.stock_sqft < 100).length} 
+          />
         </div>
       </div>
     </section>
