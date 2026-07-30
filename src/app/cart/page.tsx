@@ -327,7 +327,7 @@ export default function CartPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-on-surface-variant">Shipping</span>
                   <span className="text-on-surface font-medium">
-                    {deliveryMethod === "pickup" ? "Free (Store Pickup)" : "Calculated on delivery"}
+                    {deliveryMethod === "pickup" ? "Free (Store Pickup)" : "Free (Island-wide)"}
                   </span>
                 </div>
               </div>
@@ -358,7 +358,7 @@ export default function CartPage() {
 
               <p className="text-xs text-on-surface-variant text-center mt-4">
                 {deliveryMethod === "cod"
-                  ? "Pay in cash when your order is delivered"
+                  ? "Pay in cash when your order arrives (Free Delivery)"
                   : "Your order will be ready for pickup"}
               </p>
             </div>
