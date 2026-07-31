@@ -33,16 +33,16 @@ interface CartContextType {
 
 // ── Constants ──────────────────────────────────────────
 
-const STORAGE_KEY = "un-tiles-cart";
+const BASE_STORAGE_KEY = "un-tiles-cart";
 
 const CartContext = createContext<CartContextType | null>(null);
 
 // ── Helpers ────────────────────────────────────────────
 
-function readStorage(): CartItem[] {
+function readStorage(key: string): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -59,10 +59,10 @@ function readStorage(): CartItem[] {
   }
 }
 
-function writeStorage(items: CartItem[]): void {
+function writeStorage(key: string, items: CartItem[]): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    window.localStorage.setItem(key, JSON.stringify(items));
   } catch {
     // Storage full or unavailable — silently degrade.
   }
@@ -70,14 +70,27 @@ function writeStorage(items: CartItem[]): void {
 
 // ── Provider ───────────────────────────────────────────
 
+import { useAuth } from "@/context/AuthContext";
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  // Lazy init from localStorage
-  const [items, setItems] = useState<CartItem[]>(() => readStorage());
+  const { user } = useAuth();
+  const storageKey = `${BASE_STORAGE_KEY}-${user?.id || 'guest'}`;
+
+  // Initialize with empty, then load on mount/key change to avoid hydration mismatch
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setItems(readStorage(storageKey));
+    setIsLoaded(true);
+  }, [storageKey]);
 
   // Sync to localStorage on every change
   useEffect(() => {
-    writeStorage(items);
-  }, [items]);
+    if (isLoaded) {
+      writeStorage(storageKey, items);
+    }
+  }, [items, storageKey, isLoaded]);
 
   const addToCart = useCallback(
     (product: Omit<CartItem, "cartQuantitySqft">, sqft: number) => {

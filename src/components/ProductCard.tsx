@@ -11,6 +11,7 @@ import type { Product } from "@/data/products";
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const [justAdded, setJustAdded] = useState(false);
+  const [qty, setQty] = useState(10);
 
   const isOutOfStock = product.stockSqft === 0;
   const isLowStock = product.stockSqft > 0 && product.stockSqft <= 100;
@@ -26,12 +27,12 @@ export function ProductCard({ product }: { product: Product }) {
         category: product.category,
         price_per_sqft: product.pricePerSqft,
       },
-      10
+      qty
     );
 
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1800);
-  }, [addToCart, product, isOutOfStock, justAdded]);
+  }, [addToCart, product, isOutOfStock, justAdded, qty]);
 
   return (
     <div className="group bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500">
@@ -105,35 +106,50 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
 
         {/* Price + Quick Add row */}
-        <div className="flex items-center justify-between pt-1">
-          <span className="font-bold text-sm text-on-surface">
-            {product.price} / tile
-          </span>
-          <button
-            onClick={handleQuickAdd}
-            disabled={isOutOfStock || justAdded}
-            className={`flex items-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 ${
-              isOutOfStock
-                ? "bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed"
-                : justAdded
-                ? "bg-primary/10 text-primary"
-                : "bg-surface-container-high text-on-surface-variant hover:bg-accent hover:text-on-accent"
-            }`}
-          >
-            {isOutOfStock ? (
-              "Sold Out"
-            ) : justAdded ? (
-              <>
-                <Check className="w-3 h-3" />
-                Added ✓
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-3 h-3" />
-                + Add
-              </>
+        <div className="flex items-center justify-between pt-1 gap-2">
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-on-surface">
+              {product.price} / tile
+            </span>
+          </div>
+          <div className="flex flex-1 justify-end items-center gap-2">
+            {!isOutOfStock && (
+              <input
+                type="number"
+                min={1}
+                max={product.stockSqft}
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-14 px-2 py-1.5 text-xs border border-outline bg-transparent rounded outline-none focus:border-primary text-center"
+                disabled={justAdded}
+              />
             )}
-          </button>
+            <button
+              onClick={handleQuickAdd}
+              disabled={isOutOfStock || justAdded}
+              className={`flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${
+                isOutOfStock
+                  ? "bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed w-full"
+                  : justAdded
+                  ? "bg-primary/10 text-primary"
+                  : "bg-surface-container-high text-on-surface-variant hover:bg-accent hover:text-on-accent"
+              }`}
+            >
+              {isOutOfStock ? (
+                "Sold Out"
+              ) : justAdded ? (
+                <>
+                  <Check className="w-3 h-3" />
+                  Added
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-3 h-3" />
+                  Add
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
