@@ -167,7 +167,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                   </td>
                   <td className="px-6 py-4 text-right">
                     <span className="text-sm font-medium text-gray-900">
-                      ${product.price_per_sqft.toFixed(2)}
+                      Rs {product.price_per_sqft.toLocaleString()}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">

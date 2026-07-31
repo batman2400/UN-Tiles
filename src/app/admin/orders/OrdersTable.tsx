@@ -95,10 +95,11 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
     const num = parseFloat(amountStr.replace(/[^\d.-]/g, ""));
     if (isNaN(num)) return amountStr;
     
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-LK", {
       style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
+      currency: "LKR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(num);
   };
 
