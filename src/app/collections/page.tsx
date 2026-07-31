@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 type CollectionsPageProps = {
   searchParams: Promise<{
     category?: string | string[];
+    dim?: string | string[];
   }>;
 };
 
@@ -22,15 +23,21 @@ export default async function Collections({
     ? resolvedSearchParams.category[0]
     : resolvedSearchParams.category;
 
+  const dimParams = resolvedSearchParams.dim 
+    ? (Array.isArray(resolvedSearchParams.dim) ? resolvedSearchParams.dim : [resolvedSearchParams.dim]) 
+    : [];
+
   const activeCategory = categories.find(
     (category) => category.slug === categoryParam
   );
 
-  const visibleProducts = activeCategory
-    ? allProducts.filter(
-        (product) => product.categorySlug === activeCategory.slug
-      )
+  let visibleProducts = activeCategory
+    ? allProducts.filter((product) => product.categorySlug === activeCategory.slug)
     : allProducts;
+    
+  if (dimParams.length > 0) {
+    visibleProducts = visibleProducts.filter(p => dimParams.includes(p.dimensions));
+  }
 
   const dimensions = Array.from(
     new Set(allProducts.map((product) => product.dimensions))
@@ -140,14 +147,27 @@ export default async function Collections({
               <div>
                 <h3 className="text-sm font-semibold tracking-widest uppercase text-on-surface mb-5">Dimensions</h3>
                 <ul className="space-y-3">
-                  {dimensions.map((dim) => (
-                    <li key={dim}>
-                      <label className="flex items-center space-x-3 cursor-pointer group">
-                        <div className="w-4 h-4 border border-outline group-hover:border-accent transition-colors flex items-center justify-center"></div>
-                        <span className="text-sm text-on-surface-variant group-hover:text-on-surface">{dim}</span>
-                      </label>
-                    </li>
-                  ))}
+                  {dimensions.map((dim) => {
+                    const isActive = dimParams.includes(dim);
+                    const newDimParams = isActive 
+                      ? dimParams.filter(d => d !== dim) 
+                      : [...dimParams, dim];
+                    
+                    const query = new URLSearchParams();
+                    if (categoryParam) query.set("category", categoryParam);
+                    newDimParams.forEach(d => query.append("dim", d));
+                    
+                    return (
+                      <li key={dim}>
+                        <Link href={`/collections?${query.toString()}`} className="flex items-center space-x-3 cursor-pointer group">
+                          <div className={`w-4 h-4 border flex items-center justify-center transition-colors ${isActive ? 'bg-accent border-accent' : 'border-outline group-hover:border-accent'}`}>
+                            {isActive && <span className="w-2 h-2 bg-white rounded-sm" />}
+                          </div>
+                          <span className={`text-sm ${isActive ? 'text-on-surface font-semibold' : 'text-on-surface-variant group-hover:text-on-surface'}`}>{dim}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 
