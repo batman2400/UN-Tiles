@@ -69,7 +69,7 @@ export function TopNavBar() {
                   width={320}
                   height={110}
                   style={{ width: "auto", height: "72px" }}
-                  className={`object-contain transition-all duration-500 brightness-0 invert drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]`}
+                  className={`object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]`}
                   priority
                 />
               </Link>
