@@ -16,7 +16,7 @@ const NAV_LINKS = [
 ];
 
 // Pages where navbar starts transparent over a hero image
-const HERO_PAGES = ["/", "/about", "/contact"];
+const HERO_PAGES = ["/", "/about", "/contact", "/collections"];
 
 export function TopNavBar() {
   const pathname = usePathname();
@@ -39,93 +39,94 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
-  const isTransparent = isHeroPage && !scrolled;
-
   return (
     <>
-      <nav
-        className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isTransparent
-            ? "bg-transparent border-b border-transparent"
-            : "bg-[#FAFAFA] shadow-sm border-b border-outline-variant/15"
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-
-            {/* Left: Mobile menu + Logo */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setMobileOpen(true)}
-                className={`md:hidden icon-button-lift transition-colors duration-300 ${
-                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
+      {/* ── Floating Pill Navbar ── */}
+      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 transition-all duration-500">
+        <nav
+          className={`w-full max-w-6xl rounded-full px-8 py-3 flex items-center justify-between transition-all duration-500 ${
+            scrolled
+              ? "bg-white/85 backdrop-blur-xl shadow-lg border border-white/20"
+              : "bg-black/40 backdrop-blur-xl border border-white/10"
+          }`}
+        >
+          {/* Left: Mobile menu + Logo */}
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden text-white/90 hover:text-accent transition-colors duration-300"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <Link href="/" className="flex-shrink-0 flex items-center">
+              <Image
+                src="/images/final Logo without background.png"
+                alt="UN Tiles Logo"
+                width={200}
+                height={60}
+                style={{ width: "auto", height: "44px" }}
+                className={`object-contain transition-all duration-500 hover:scale-[1.03] ${
+                  scrolled ? "" : "brightness-0 invert"
                 }`}
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-              <Link href="/" className="flex-shrink-0 flex items-center">
-                <Image
-                  src="/images/final Logo without background.png"
-                  alt="UN Tiles Logo"
-                  width={300}
-                  height={100}
-                  style={{ width: "auto", height: "56px" }}
-                  className="object-contain transition-transform duration-500 hover:scale-[1.03]"
-                />
-              </Link>
-            </div>
-
-            {/* Center: Navigation Links */}
-            <div className="hidden md:flex space-x-8">
-              {NAV_LINKS.map(({ href, label }) => {
-                const isActive =
-                  href === "/" ? pathname === "/" : pathname.startsWith(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`px-3 py-2 text-sm font-bold tracking-wider transition-colors border-b-2 ${
-                      isActive
-                        ? "text-accent border-accent"
-                        : isTransparent
-                        ? "text-white/90 hover:text-white border-transparent hover:border-white/50"
-                        : "text-gray-900 hover:text-accent border-transparent hover:border-accent"
-                    }`}
-                  >
-                    {label.toUpperCase()}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Right: Search, Profile, Cart */}
-            <div className="flex items-center space-x-6">
-              <button
-                className={`icon-button-lift transition-colors duration-300 ${
-                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <Search className="w-5 h-5" />
-              </button>
-              <AuthNavIcon />
-              <Link
-                href="/cart"
-                className={`relative icon-button-lift transition-colors duration-300 ${
-                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-            </div>
-
+              />
+            </Link>
           </div>
-        </div>
-      </nav>
+
+          {/* Center: Navigation Links */}
+          <div className="hidden md:flex items-center space-x-8">
+            {NAV_LINKS.map(({ href, label }) => {
+              const isActive =
+                href === "/" ? pathname === "/" : pathname.startsWith(href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`px-2 py-1 text-xs font-bold tracking-[0.15em] uppercase transition-colors duration-300 border-b-2 ${
+                    isActive
+                      ? scrolled
+                        ? "text-accent border-accent"
+                        : "text-accent border-accent"
+                      : scrolled
+                      ? "text-gray-700 hover:text-accent border-transparent hover:border-accent/50"
+                      : "text-white/90 hover:text-accent border-transparent hover:border-accent/50"
+                  }`}
+                >
+                  {label.toUpperCase()}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Right: Search, Profile, Cart */}
+          <div className="flex items-center space-x-5">
+            <button
+              className={`transition-colors duration-300 ${
+                scrolled
+                  ? "text-gray-600 hover:text-accent"
+                  : "text-white/85 hover:text-accent"
+              }`}
+            >
+              <Search className="w-[18px] h-[18px]" />
+            </button>
+            <AuthNavIcon />
+            <Link
+              href="/cart"
+              className={`relative transition-colors duration-300 ${
+                scrolled
+                  ? "text-gray-600 hover:text-accent"
+                  : "text-white/85 hover:text-accent"
+              }`}
+            >
+              <ShoppingCart className="w-[18px] h-[18px]" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </nav>
+      </div>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
