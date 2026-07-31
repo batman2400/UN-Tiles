@@ -58,7 +58,7 @@ export function TopNavBar() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center motion-fade-up">
             <Image
-              src="/images/un tiles logo.jpeg"
+              src="/images/Logo.png"
               alt="UN Tiles"
               width={120}
               height={40}
@@ -116,7 +116,7 @@ export function TopNavBar() {
           <div className="absolute top-0 left-0 h-full w-80 max-w-[85vw] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out]">
             <div className="flex items-center justify-between p-6 border-b ghost-border">
               <Image
-                src="/images/un tiles logo.jpeg"
+                src="/images/Logo.png"
                 alt="UN Tiles"
                 width={100}
                 height={32}
