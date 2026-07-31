@@ -5,7 +5,7 @@ import { Search, ShoppingCart, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
 import { useCart } from "@/context/CartContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-// Pages where nav bar starts transparent over a hero image
+// Pages where navbar starts transparent over a hero image
 const HERO_PAGES = ["/", "/about", "/contact"];
 
 export function TopNavBar() {
@@ -23,28 +23,13 @@ export function TopNavBar() {
   const { cartCount } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [logoBarHeight, setLogoBarHeight] = useState(0);
-  const logoBarRef = useRef<HTMLDivElement>(null);
   const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    const onScroll = () => setScrolled(window.scrollY > 60);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Measure logo bar height for positioning the nav bar below it
-  useEffect(() => {
-    if (logoBarRef.current) {
-      const ro = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setLogoBarHeight(entry.contentRect.height + 1); // +1 for border
-        }
-      });
-      ro.observe(logoBarRef.current);
-      return () => ro.disconnect();
-    }
   }, []);
 
   // Close mobile menu on route change
@@ -54,86 +39,91 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
-  const navTransparent = isHeroPage && !scrolled;
+  const isTransparent = isHeroPage && !scrolled;
 
   return (
     <>
-      {/* ── Top Logo Bar (always solid) ── */}
-      <div
-        ref={logoBarRef}
-        className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-outline-variant/15 transition-all duration-500"
-      >
-        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
-          {/* Mobile menu icon */}
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="md:hidden text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center motion-fade-up">
-            <Image
-              src="/images/final Logo without background.png"
-              alt="UN Tiles"
-              width={300}
-              height={100}
-              style={{ width: "auto", height: "90px" }}
-              className="object-contain transition-transform duration-500 hover:scale-[1.03]"
-            />
-          </Link>
-
-          {/* Actions */}
-          <div className="flex items-center space-x-6">
-            <button className="text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300">
-              <Search className="w-5 h-5" />
-            </button>
-            <AuthNavIcon />
-            <Link href="/cart" className="relative text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300">
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Navigation Bar (separate row, transparent on hero pages) ── */}
       <nav
-        className={`fixed left-0 right-0 z-40 transition-all duration-500 ${
-          navTransparent
+        className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isTransparent
             ? "bg-transparent border-b border-transparent"
-            : "bg-surface/95 backdrop-blur-md border-b border-outline-variant/15 shadow-sm"
+            : "bg-[#FAFAFA] shadow-sm border-b border-outline-variant/15"
         }`}
-        style={{ top: logoBarHeight > 0 ? `${logoBarHeight}px` : "96px" }}
       >
-        <div className="max-w-7xl mx-auto px-6 hidden md:flex justify-center gap-10 py-3">
-          {NAV_LINKS.map(({ href, label }) => {
-            const isActive =
-              href === "/" ? pathname === "/" : pathname.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={`relative kinetic-link text-sm tracking-widest uppercase font-semibold transition-colors duration-300 ${
-                  isActive
-                    ? "text-accent"
-                    : navTransparent
-                    ? "text-white/90 hover:text-white"
-                    : "text-on-surface-variant hover:text-on-surface"
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+
+            {/* Left: Mobile menu + Logo */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setMobileOpen(true)}
+                className={`md:hidden icon-button-lift transition-colors duration-300 ${
+                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                {label}
-                {isActive && (
-                  <span className="absolute -bottom-[2px] left-0 w-full h-[2px] bg-accent" />
+                <Menu className="w-6 h-6" />
+              </button>
+              <Link href="/" className="flex-shrink-0 flex items-center">
+                <Image
+                  src="/images/final Logo without background.png"
+                  alt="UN Tiles Logo"
+                  width={300}
+                  height={100}
+                  style={{ width: "auto", height: "56px" }}
+                  className="object-contain transition-transform duration-500 hover:scale-[1.03]"
+                />
+              </Link>
+            </div>
+
+            {/* Center: Navigation Links */}
+            <div className="hidden md:flex space-x-8">
+              {NAV_LINKS.map(({ href, label }) => {
+                const isActive =
+                  href === "/" ? pathname === "/" : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`px-3 py-2 text-sm font-bold tracking-wider transition-colors border-b-2 ${
+                      isActive
+                        ? "text-accent border-accent"
+                        : isTransparent
+                        ? "text-white/90 hover:text-white border-transparent hover:border-white/50"
+                        : "text-gray-900 hover:text-accent border-transparent hover:border-accent"
+                    }`}
+                  >
+                    {label.toUpperCase()}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Right: Search, Profile, Cart */}
+            <div className="flex items-center space-x-6">
+              <button
+                className={`icon-button-lift transition-colors duration-300 ${
+                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <Search className="w-5 h-5" />
+              </button>
+              <AuthNavIcon />
+              <Link
+                href="/cart"
+                className={`relative icon-button-lift transition-colors duration-300 ${
+                  isTransparent ? "text-white/85 hover:text-white" : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
                 )}
               </Link>
-            );
-          })}
+            </div>
+
+          </div>
         </div>
       </nav>
 
@@ -153,7 +143,7 @@ export function TopNavBar() {
                 alt="UN Tiles"
                 width={200}
                 height={70}
-                style={{ width: "auto", height: "60px" }}
+                style={{ width: "auto", height: "50px" }}
                 className="object-contain"
               />
               <button
