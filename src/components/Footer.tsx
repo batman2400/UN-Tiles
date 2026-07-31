@@ -12,7 +12,7 @@ export function Footer() {
         <div className="col-span-1 md:col-span-1 flex flex-col space-y-6">
           <Link href="/" className="inline-flex">
             <Image 
-              src="/images/Logo.png" 
+              src="/images/final Logo without background.png" 
               alt="UN Tiles" 
               width={100} 
               height={32} 
