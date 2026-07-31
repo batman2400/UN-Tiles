@@ -24,7 +24,7 @@ export default async function Collections({
     : resolvedSearchParams.category;
 
   const dimParams = resolvedSearchParams.dim 
-    ? (Array.isArray(resolvedSearchParams.dim) ? resolvedSearchParams.dim : [resolvedSearchParams.dim]) 
+    ? (Array.isArray(resolvedSearchParams.dim) ? resolvedSearchParams.dim : [resolvedSearchParams.dim]).map(d => d.replace(/\+/g, ' '))
     : [];
 
   const activeCategory = categories.find(
