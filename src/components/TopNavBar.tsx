@@ -23,7 +23,6 @@ export function TopNavBar() {
   const { cartCount } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -39,7 +38,7 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
-  const navbarClass = isHeroPage && !scrolled ? "navbar-transparent" : "navbar-solid";
+  const navbarClass = "navbar-solid"; // Always use solid to separate the navbar from content
 
   return (
     <>
@@ -60,10 +59,10 @@ export function TopNavBar() {
             <Image
               src="/images/final Logo without background.png"
               alt="UN Tiles"
-              width={120}
-              height={40}
-              style={{ width: "auto", height: "auto", maxHeight: "44px" }}
-              className="object-contain logo-edge-blend transition-transform duration-500 hover:scale-[1.03]"
+              width={300}
+              height={100}
+              style={{ width: "auto", height: "100px" }}
+              className="object-contain transition-transform duration-500 hover:scale-[1.03]"
             />
           </Link>
 
@@ -118,10 +117,10 @@ export function TopNavBar() {
               <Image
                 src="/images/final Logo without background.png"
                 alt="UN Tiles"
-                width={100}
-                height={32}
-                style={{ width: "auto", height: "auto", maxHeight: "36px" }}
-                className="object-contain logo-edge-blend"
+                width={200}
+                height={70}
+                style={{ width: "auto", height: "70px" }}
+                className="object-contain"
               />
               <button
                 onClick={() => setMobileOpen(false)}

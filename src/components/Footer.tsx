@@ -14,9 +14,9 @@ export function Footer() {
             <Image 
               src="/images/final Logo without background.png" 
               alt="UN Tiles" 
-              width={100} 
-              height={32} 
-              style={{ width: "auto", height: "auto", maxHeight: "36px" }}
+              width={200} 
+              height={64} 
+              style={{ width: "auto", height: "auto", maxHeight: "64px" }}
               className="logo-edge-blend brightness-150 contrast-75 transition-transform duration-500 hover:scale-[1.03]"
             />
           </Link>
