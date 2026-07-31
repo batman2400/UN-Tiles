@@ -157,7 +157,7 @@ function ProfileContent() {
 
   if (isLoading) {
     return (
-      <section className="min-h-[calc(100vh-6rem)] bg-surface py-12 md:py-16 px-6">
+      <section className="min-h-[calc(100vh-6rem)] bg-surface pt-32 pb-16 md:pt-40 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-surface-container-lowest p-10 md:p-14 ambient-glow text-center">
             <p className="text-sm uppercase tracking-widest text-on-surface-variant">Loading profile...</p>
@@ -177,7 +177,7 @@ function ProfileContent() {
   const displayName = user.firstName ? `${user.firstName} ${user.lastName}` : "My Profile";
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] bg-surface py-12 md:py-16 px-6">
+    <section className="min-h-[calc(100vh-6rem)] bg-surface pt-32 pb-16 md:pt-40 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Mobile Header */}
         <div className="md:hidden mb-6 motion-fade-up">
@@ -362,7 +362,7 @@ function ProfileContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<div className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center pt-32 pb-16 px-6">Loading...</div>}>
       <ProfileContent />
     </Suspense>
   );

@@ -78,7 +78,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center px-6">
+      <section className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center pt-32 pb-16 px-6">
         <div className="text-center motion-fade-up max-w-md">
           <div className="w-20 h-20 mx-auto mb-8 bg-surface-container-high flex items-center justify-center">
             <ShoppingBag className="w-9 h-9 text-on-surface-variant opacity-50" />
@@ -104,7 +104,7 @@ export default function CartPage() {
   // ── Cart with Items ─────────────────────────────────
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] bg-surface py-12 md:py-16 px-6">
+    <section className="min-h-[calc(100vh-6rem)] bg-surface pt-32 pb-16 md:pt-40 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-10 motion-fade-up">

@@ -40,7 +40,7 @@ export default function LoginPage() {
   if (isLoading) return null;
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] flex items-center justify-center bg-surface px-6 py-16">
+    <section className="min-h-[calc(100vh-6rem)] flex items-center justify-center bg-surface px-6 pt-32 pb-16">
       <div className="w-full max-w-md motion-fade-up">
         <div className="bg-surface-container-lowest p-10 md:p-14 ambient-glow">
           {/* Header */}
