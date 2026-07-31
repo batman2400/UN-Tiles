@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-// Pages where navbar starts transparent over a hero image
+// All pages with hero images where islands float transparently
 const HERO_PAGES = ["/", "/about", "/contact", "/collections"];
 
 export function TopNavBar() {
@@ -26,7 +26,7 @@ export function TopNavBar() {
   const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => setScrolled(window.scrollY > 80);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -39,96 +39,101 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
+  // Glassmorphism style for center & right pills
+  const pillClass = scrolled
+    ? "bg-white/80 backdrop-blur-2xl shadow-lg shadow-black/5 border border-white/30"
+    : "bg-black/35 backdrop-blur-2xl border border-white/10";
+
+  // Text colors
+  const linkColor = scrolled
+    ? "text-gray-700 hover:text-accent"
+    : "text-white/90 hover:text-accent";
+
+  const iconColor = scrolled
+    ? "text-gray-600 hover:text-accent"
+    : "text-white/85 hover:text-accent";
+
   return (
     <>
-      {/* ── Floating Pill Navbar ── */}
-      <div className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 transition-all duration-500">
-        <nav
-          className={`w-full max-w-6xl rounded-full px-8 py-3 flex items-center justify-between transition-all duration-500 ${
-            scrolled
-              ? "bg-white/85 backdrop-blur-xl shadow-lg border border-white/20"
-              : "bg-black/40 backdrop-blur-xl border border-white/10"
-          }`}
-        >
-          {/* Left: Mobile menu + Logo */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="md:hidden text-white/90 hover:text-accent transition-colors duration-300"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <Image
-                src="/images/final Logo without background.png"
-                alt="UN Tiles Logo"
-                width={200}
-                height={60}
-                style={{ width: "auto", height: "44px" }}
-                className={`object-contain transition-all duration-500 hover:scale-[1.03] ${
-                  scrolled ? "" : "brightness-0 invert"
-                }`}
-              />
-            </Link>
-          </div>
+      {/* ── Split Island Navbar ── */}
+      <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+        <div className="max-w-[90rem] mx-auto px-6 lg:px-10 pt-5">
+          <div className="flex items-center justify-between">
 
-          {/* Center: Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
-            {NAV_LINKS.map(({ href, label }) => {
-              const isActive =
-                href === "/" ? pathname === "/" : pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`px-2 py-1 text-xs font-bold tracking-[0.15em] uppercase transition-colors duration-300 border-b-2 ${
-                    isActive
-                      ? scrolled
-                        ? "text-accent border-accent"
-                        : "text-accent border-accent"
-                      : scrolled
-                      ? "text-gray-700 hover:text-accent border-transparent hover:border-accent/50"
-                      : "text-white/90 hover:text-accent border-transparent hover:border-accent/50"
+            {/* ═══ LEFT ISLAND — Brand Anchor (no container) ═══ */}
+            <div className="pointer-events-auto flex-shrink-0">
+              <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
+                <Image
+                  src="/images/final Logo without background.png"
+                  alt="UN Tiles"
+                  width={320}
+                  height={110}
+                  style={{ width: "auto", height: "72px" }}
+                  className={`object-contain drop-shadow-lg transition-all duration-500 ${
+                    scrolled ? "" : "brightness-0 invert drop-shadow-[0_2px_8px_rgba(0,0,0,0.3)]"
                   }`}
-                >
-                  {label.toUpperCase()}
-                </Link>
-              );
-            })}
-          </div>
+                  priority
+                />
+              </Link>
+            </div>
 
-          {/* Right: Search, Profile, Cart */}
-          <div className="flex items-center space-x-5">
-            <button
-              className={`transition-colors duration-300 ${
-                scrolled
-                  ? "text-gray-600 hover:text-accent"
-                  : "text-white/85 hover:text-accent"
-              }`}
+            {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
+            <nav
+              className={`pointer-events-auto hidden md:flex items-center gap-8 rounded-full px-8 py-3 transition-all duration-500 ${pillClass}`}
             >
-              <Search className="w-[18px] h-[18px]" />
-            </button>
-            <AuthNavIcon />
-            <Link
-              href="/cart"
-              className={`relative transition-colors duration-300 ${
-                scrolled
-                  ? "text-gray-600 hover:text-accent"
-                  : "text-white/85 hover:text-accent"
-              }`}
+              {NAV_LINKS.map(({ href, label }) => {
+                const isActive =
+                  href === "/" ? pathname === "/" : pathname.startsWith(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors duration-300 ${
+                      isActive ? "text-accent" : linkColor
+                    }`}
+                  >
+                    {label.toUpperCase()}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
+            <div
+              className={`pointer-events-auto flex items-center gap-5 rounded-full px-6 py-3 transition-all duration-500 ${pillClass}`}
             >
-              <ShoppingCart className="w-[18px] h-[18px]" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+              {/* Mobile menu trigger (replaces center nav on small screens) */}
+              <button
+                onClick={() => setMobileOpen(true)}
+                className={`md:hidden transition-colors duration-300 ${iconColor}`}
+              >
+                <Menu className="w-[18px] h-[18px]" />
+              </button>
+
+              <button className={`hidden md:block transition-colors duration-300 ${iconColor}`}>
+                <Search className="w-[18px] h-[18px]" />
+              </button>
+
+              <AuthNavIcon />
+
+              <Link
+                href="/cart"
+                className={`relative transition-colors duration-300 ${iconColor}`}
+              >
+                <ShoppingCart className="w-[18px] h-[18px]" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+
           </div>
-        </nav>
+        </div>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* ── Mobile Drawer ── */}
       {mobileOpen && (
         <div className="fixed inset-0 z-[60] md:hidden">
           {/* Backdrop */}
