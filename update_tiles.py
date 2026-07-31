@@ -31,7 +31,13 @@ for cat in categories:
     folder_name = list(folder_map.keys())[list(folder_map.values()).index(cat["slug"])]
     cat_path = os.path.join(old_data_dir, folder_name)
     if os.path.exists(cat_path):
-        files = [f for f in os.listdir(cat_path) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+        all_files = os.listdir(cat_path)
+            
+        # Filter out Autumn.jpg explicitly
+        if cat["slug"] == "wall":
+            all_files = [f for f in all_files if f != "Autumn.jpg"]
+            
+        files = [f for f in all_files if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
         files.sort()
         selected_files = files[:10]
         
