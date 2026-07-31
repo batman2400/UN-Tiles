@@ -18,6 +18,7 @@ export interface UserData {
   lastName: string;
   email: string;
   phone: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -138,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             lastName: data.last_name || "",
             email: data.email || email,
             phone: data.phone || "",
+            role: data.role || "user",
           });
           return;
         }

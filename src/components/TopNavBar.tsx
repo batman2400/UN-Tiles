@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, Shield } from "lucide-react";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
@@ -21,6 +22,7 @@ const HERO_PAGES = ["/", "/about", "/contact", "/collections"];
 export function TopNavBar() {
   const pathname = usePathname();
   const { cartCount } = useCart();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isHeroPage = HERO_PAGES.includes(pathname);
@@ -111,6 +113,16 @@ export function TopNavBar() {
               <button className={`hidden md:block transition-colors duration-300 ${iconColor}`}>
                 <Search className="w-[18px] h-[18px]" />
               </button>
+
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${iconColor}`}
+                >
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden lg:inline">Admin</span>
+                </Link>
+              )}
 
               <AuthNavIcon />
 
