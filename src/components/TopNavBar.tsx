@@ -5,7 +5,7 @@ import { Search, ShoppingCart, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
 import { useCart } from "@/context/CartContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const NAV_LINKS = [
@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-// Pages where navbar starts transparent over a hero image
+// Pages where nav bar starts transparent over a hero image
 const HERO_PAGES = ["/", "/about", "/contact"];
 
 export function TopNavBar() {
@@ -23,33 +23,51 @@ export function TopNavBar() {
   const { cartCount } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [logoBarHeight, setLogoBarHeight] = useState(0);
+  const logoBarRef = useRef<HTMLDivElement>(null);
+  const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    onScroll(); // initialize
+    const onScroll = () => setScrolled(window.scrollY > 80);
+    onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change (React pattern: adjusting state on prop change)
+  // Measure logo bar height for positioning the nav bar below it
+  useEffect(() => {
+    if (logoBarRef.current) {
+      const ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setLogoBarHeight(entry.contentRect.height + 1); // +1 for border
+        }
+      });
+      ro.observe(logoBarRef.current);
+      return () => ro.disconnect();
+    }
+  }, []);
+
+  // Close mobile menu on route change
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     if (mobileOpen) setMobileOpen(false);
   }
 
-  const navbarClass = "navbar-solid"; // Always use solid to separate the navbar from content
+  const navTransparent = isHeroPage && !scrolled;
 
   return (
     <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 border-b transition-all duration-500 ${navbarClass}`}
+      {/* ── Top Logo Bar (always solid) ── */}
+      <div
+        ref={logoBarRef}
+        className="fixed top-0 left-0 right-0 z-50 bg-surface border-b border-outline-variant/15 transition-all duration-500"
       >
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
           {/* Mobile menu icon */}
           <button
             onClick={() => setMobileOpen(true)}
-            className="md:hidden nav-icon icon-button-lift transition-colors duration-300"
+            className="md:hidden text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -61,37 +79,18 @@ export function TopNavBar() {
               alt="UN Tiles"
               width={300}
               height={100}
-              style={{ width: "auto", height: "100px" }}
+              style={{ width: "auto", height: "90px" }}
               className="object-contain transition-transform duration-500 hover:scale-[1.03]"
             />
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex flex-1 justify-center gap-10">
-            {NAV_LINKS.map(({ href, label }) => {
-              const isActive =
-                href === "/" ? pathname === "/" : pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`relative kinetic-link nav-link text-sm tracking-widest uppercase font-semibold transition-colors duration-300 ${
-                    isActive ? "nav-link-active" : ""
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-
           {/* Actions */}
           <div className="flex items-center space-x-6">
-            <button className="nav-icon icon-button-lift transition-colors duration-300">
+            <button className="text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300">
               <Search className="w-5 h-5" />
             </button>
             <AuthNavIcon />
-            <Link href="/cart" className="relative nav-icon icon-button-lift transition-colors duration-300">
+            <Link href="/cart" className="relative text-on-surface-variant hover:text-on-surface icon-button-lift transition-colors duration-300">
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-accent text-on-accent text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
@@ -101,7 +100,42 @@ export function TopNavBar() {
             </Link>
           </div>
         </div>
-      </header>
+      </div>
+
+      {/* ── Navigation Bar (separate row, transparent on hero pages) ── */}
+      <nav
+        className={`fixed left-0 right-0 z-40 transition-all duration-500 ${
+          navTransparent
+            ? "bg-transparent border-b border-transparent"
+            : "bg-surface/95 backdrop-blur-md border-b border-outline-variant/15 shadow-sm"
+        }`}
+        style={{ top: logoBarHeight > 0 ? `${logoBarHeight}px` : "96px" }}
+      >
+        <div className="max-w-7xl mx-auto px-6 hidden md:flex justify-center gap-10 py-3">
+          {NAV_LINKS.map(({ href, label }) => {
+            const isActive =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`relative kinetic-link text-sm tracking-widest uppercase font-semibold transition-colors duration-300 ${
+                  isActive
+                    ? "text-accent"
+                    : navTransparent
+                    ? "text-white/90 hover:text-white"
+                    : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
+                {label}
+                {isActive && (
+                  <span className="absolute -bottom-[2px] left-0 w-full h-[2px] bg-accent" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
 
       {/* Mobile Drawer */}
       {mobileOpen && (
@@ -119,7 +153,7 @@ export function TopNavBar() {
                 alt="UN Tiles"
                 width={200}
                 height={70}
-                style={{ width: "auto", height: "70px" }}
+                style={{ width: "auto", height: "60px" }}
                 className="object-contain"
               />
               <button
