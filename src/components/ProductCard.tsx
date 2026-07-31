@@ -109,7 +109,12 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="flex items-center justify-between pt-1 gap-2">
           <div className="flex flex-col">
             <span className="font-bold text-sm text-on-surface">
-              {product.price} / tile
+              {new Intl.NumberFormat("en-LK", {
+                style: "currency",
+                currency: "LKR",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(product.pricePerSqft * qty)}
             </span>
           </div>
           <div className="flex flex-1 justify-end items-center gap-2">
