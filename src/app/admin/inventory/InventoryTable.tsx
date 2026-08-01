@@ -239,11 +239,11 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                           onChange={(e) => updateRowState(product.id, { editValue: e.target.value })}
                           className="w-16 text-center px-1 py-1.5 text-sm font-mono bg-transparent outline-none text-gray-900 placeholder:text-gray-300"
                         />
-                        <div className="overflow-hidden">
+                        <div className="overflow-hidden w-0 opacity-0 translate-x-2 group-hover:w-[48px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
                           <button
                             onClick={() => handleUpdate(product)}
                             disabled={row.isUpdating || !row.editValue.trim()}
-                            className="px-3 py-1.5 flex justify-center items-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0"
+                            className="w-12 py-1.5 flex justify-center items-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95"
                           >
                             {row.isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Set"}
                           </button>
