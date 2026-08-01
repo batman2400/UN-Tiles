@@ -105,17 +105,17 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
 
   const getStatusBadgeColor = (status: string) => {
     switch(status) {
-      case 'Pending': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'Processing': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'Shipped': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'Delivered': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Cancelled': return 'bg-red-100 text-red-700 border-red-200';
-      default: return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200/60';
+      case 'Processing': return 'bg-blue-50 text-blue-700 border-blue-200/60';
+      case 'Shipped': return 'bg-purple-50 text-purple-700 border-purple-200/60';
+      case 'Delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
+      case 'Cancelled': return 'bg-red-50 text-red-700 border-red-200/60';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200/60';
     }
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-[page-enter_300ms_ease-out]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden animate-[page-enter_300ms_ease-out]">
       <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Order Fulfillment</h2>

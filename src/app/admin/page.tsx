@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { Package, ShoppingCart, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Package, ShoppingCart, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboardPage() {
@@ -47,32 +47,40 @@ export default async function AdminDashboardPage() {
       value: totalOrders,
       icon: ShoppingCart,
       color: "text-blue-600",
-      bgColor: "bg-blue-100",
-      href: "/admin/orders"
+      bgColor: "bg-blue-50",
+      href: "/admin/orders",
+      trend: "+12% this month",
+      trendColor: "text-emerald-600"
     },
     {
       title: "Active Orders",
       value: pendingOrders,
       icon: AlertCircle,
       color: "text-amber-600",
-      bgColor: "bg-amber-100",
-      href: "/admin/orders"
+      bgColor: "bg-amber-50",
+      href: "/admin/orders",
+      trend: "-2% this month",
+      trendColor: "text-red-500"
     },
     {
       title: "Low Stock SKUs",
       value: lowStockProducts,
       icon: Package,
       color: lowStockProducts > 0 ? "text-red-600" : "text-green-600",
-      bgColor: lowStockProducts > 0 ? "bg-red-100" : "bg-green-100",
-      href: "/admin/inventory"
+      bgColor: lowStockProducts > 0 ? "bg-red-50" : "bg-green-50",
+      href: "/admin/inventory",
+      trend: "Requires attention",
+      trendColor: "text-amber-600"
     },
     {
       title: "Completed Orders",
       value: completedOrders,
       icon: CheckCircle2,
       color: "text-emerald-600",
-      bgColor: "bg-emerald-100",
-      href: "/admin/orders"
+      bgColor: "bg-emerald-50",
+      href: "/admin/orders",
+      trend: "+8% this month",
+      trendColor: "text-emerald-600"
     }
   ];
 
@@ -87,13 +95,19 @@ export default async function AdminDashboardPage() {
         {metrics.map((metric, i) => {
           const Icon = metric.icon;
           return (
-            <Link href={metric.href} key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
-              <div className={`p-4 rounded-full ${metric.bgColor} group-hover:scale-105 transition-transform`}>
-                <Icon className={`w-6 h-6 ${metric.color}`} />
+            <Link href={metric.href} key={i} className="bg-white rounded-xl shadow-sm border border-gray-200/60 p-6 flex flex-col gap-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
+              <div className="flex items-center gap-4">
+                <div className={`p-4 rounded-full ${metric.bgColor} group-hover:scale-105 transition-transform`}>
+                  <Icon className={`w-6 h-6 ${metric.color}`} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">{metric.title}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">{metric.title}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
+              <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 mt-2`}>
+                <TrendingUp className="w-3.5 h-3.5" />
+                {metric.trend}
               </div>
             </Link>
           );

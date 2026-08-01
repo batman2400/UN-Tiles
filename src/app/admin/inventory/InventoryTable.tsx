@@ -123,7 +123,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden animate-[page-enter_300ms_ease-out]">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden animate-[page-enter_300ms_ease-out]">
       <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
@@ -178,27 +178,27 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               const row = getRowState(product.id);
               
               let stockColor = "text-green-600";
-              let badgeBg = "bg-green-100 border-green-200";
-              let badgeText = "text-green-700";
+              let badgeBg = "bg-emerald-50 border-emerald-200/60";
+              let badgeText = "text-emerald-700";
               let statusText = "Healthy Stock";
               
               if (product.stock_sqft === 0) {
                 stockColor = "text-red-600";
-                badgeBg = "bg-red-100 border-red-200";
+                badgeBg = "bg-red-50 border-red-200/60";
                 badgeText = "text-red-700";
                 statusText = "Out of Stock";
               } else if (product.stock_sqft <= 50) {
                 stockColor = "text-amber-600";
-                badgeBg = "bg-amber-100 border-amber-200";
+                badgeBg = "bg-amber-50 border-amber-200/60";
                 badgeText = "text-amber-700";
                 statusText = "Low Stock";
               }
 
               return (
-                <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
+                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-12 h-12 rounded bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="relative w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {product.image ? (
                           <Image src={product.image} alt={product.name} fill className="object-cover" />
                         ) : (
@@ -247,7 +247,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                         <button
                           onClick={() => handleUpdate(product)}
                           disabled={row.isUpdating || !row.editValue.trim()}
-                          className="px-4 py-1.5 min-w-[60px] flex justify-center bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-4 py-1.5 min-w-[60px] flex justify-center bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           {row.isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Set"}
                         </button>
