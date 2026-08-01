@@ -22,8 +22,11 @@ export function AdminSidebar() {
   };
 
   return (
-    <div className="w-64 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl flex flex-col shadow-sm sticky top-4 h-[calc(100vh-2rem)] flex-shrink-0">
-      <div className="h-20 flex items-center px-6 border-b border-gray-100">
+    <div className="w-64 bg-white/60 backdrop-blur-2xl border border-white/50 rounded-2xl flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.03)] sticky top-4 h-[calc(100vh-2rem)] flex-shrink-0 overflow-hidden relative">
+      {/* Subtle shine/reflection effect for the glass panel */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+      
+      <div className="h-20 flex items-center px-6 border-b border-gray-200/40 relative z-10">
         <Link href="/">
           <Image
             src="/images/final Logo without background.png"
@@ -36,8 +39,8 @@ export function AdminSidebar() {
         </Link>
       </div>
 
-      <nav className="flex-1 py-8 px-4 space-y-2">
-        <p className="px-3 text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
+      <nav className="flex-1 py-8 px-4 space-y-2 relative z-10">
+        <p className="px-3 text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">
           Admin Panel
         </p>
         
@@ -49,14 +52,19 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 relative overflow-hidden ${
                 isActive
-                  ? "bg-accent/10 text-accent"
-                  : "text-gray-600 hover:bg-accent/5 hover:text-accent"
+                  ? "text-accent shadow-sm"
+                  : "text-gray-600 hover:text-accent hover:translate-x-1"
               }`}
             >
-              <Icon className="w-5 h-5" />
-              {item.label}
+              {/* Fluid hover/active background */}
+              <div className={`absolute inset-0 transition-opacity duration-300 ${
+                isActive ? "opacity-100 bg-gradient-to-r from-accent/15 to-transparent" : "opacity-0 bg-gradient-to-r from-accent/5 to-transparent group-hover:opacity-100"
+              }`} />
+              
+              <Icon className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">{item.label}</span>
             </Link>
           );
         })}

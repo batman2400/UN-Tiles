@@ -101,7 +101,7 @@ export default async function AdminDashboardPage() {
             <Link 
               href={metric.href} 
               key={i} 
-              className={`relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all cursor-pointer group min-h-[220px] ${spanClass}`}
+              className={`relative overflow-hidden bg-white/60 backdrop-blur-3xl rounded-3xl border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_16px_48px_rgba(0,0,0,0.08)] hover:bg-white/80 transition-all duration-500 cursor-pointer group min-h-[220px] ${spanClass}`}
             >
               {/* Background Glow */}
               <div className={`absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors group-hover:opacity-30 ${metric.bgColor.replace('bg-', 'bg-').replace('-50', '-500')}`} />
