@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store, Check, Loader2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 
@@ -78,20 +78,20 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="min-h-[calc(100vh-6rem)] bg-surface flex items-center justify-center pt-32 pb-16 px-6">
-        <div className="text-center motion-fade-up max-w-md">
-          <div className="w-20 h-20 mx-auto mb-8 bg-surface-container-high flex items-center justify-center">
-            <ShoppingBag className="w-9 h-9 text-on-surface-variant opacity-50" />
+      <section className="min-h-[calc(100vh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-32 pb-16 px-6 flex items-center justify-center">
+        <div className="text-center motion-fade-up max-w-md bg-white/90 backdrop-blur-md p-10 rounded-2xl shadow-xl border border-gray-100">
+          <div className="w-20 h-20 mx-auto mb-6 bg-yellow-500/10 text-yellow-600 rounded-full flex items-center justify-center border border-yellow-500/20 shadow-sm">
+            <ShoppingBag className="w-9 h-9" />
           </div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-on-surface mb-4">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-zinc-900 mb-3">
             Your Cart is Empty
           </h1>
-          <p className="text-on-surface-variant mb-10">
-            Browse our curated collections and find the perfect tiles for your next project.
+          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+            Browse our curated luxury tile collections and select the ideal materials for your architectural project.
           </p>
           <Link
             href="/collections"
-            className="kinetic-button inline-flex items-center gap-3 bg-primary hover:bg-primary-dim text-on-primary px-10 py-4 text-sm font-semibold uppercase tracking-widest transition-colors"
+            className="inline-flex items-center justify-center gap-3 bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-4 px-8 text-xs uppercase tracking-widest transition-all duration-300 shadow-md hover:shadow-xl w-full sm:w-auto"
           >
             <span>Explore Collections</span>
             <ArrowRight className="w-4 h-4" />
@@ -104,77 +104,86 @@ export default function CartPage() {
   // ── Cart with Items ─────────────────────────────────
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] bg-surface pt-32 pb-16 md:pt-40 px-6">
+    <section className="min-h-[calc(100vh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        
         {/* Header */}
-        <div className="mb-10 motion-fade-up">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-3">
+        <div className="mb-8 motion-fade-up">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-600 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
             Shopping Cart
-          </p>
-          <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">
-            Your Selection
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-zinc-900 mt-2">
+            Your Selection ({items.length} {items.length === 1 ? "Item" : "Items"})
           </h1>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-10">
-          {/* ── Cart Items ───────────────────────────── */}
+          
+          {/* ── Cart Items List ───────────────────────────── */}
           <div className="flex-1 motion-fade-up motion-delay-1">
-            {/* Column Headers (desktop) */}
-            <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_auto] gap-6 pb-4 border-b border-outline-variant/20 mb-6">
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Product</span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Price / tile</span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-center">Qty</span>
-              <span className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant text-right">Subtotal</span>
+            
+            {/* Desktop Column Headers */}
+            <div className="hidden md:grid grid-cols-[2.5fr_1fr_1fr_1fr_auto] gap-6 pb-4 px-4 border-b border-gray-200/80 mb-4">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Product Specification</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center">Unit Price</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center">Quantity (sq ft)</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-right">Subtotal</span>
               <span className="w-10" />
             </div>
 
-            {/* Items */}
-            <div className="space-y-6">
+            {/* Product Item Cards */}
+            <div className="space-y-4">
               {items.map((item) => {
                 const lineTotal = item.price_per_sqft * item.cartQuantitySqft;
 
                 return (
                   <div
                     key={item.id}
-                    className="bg-surface-container-lowest premium-shadow p-5 md:p-6 md:grid md:grid-cols-[2fr_1fr_1fr_1fr_auto] md:gap-6 md:items-center"
+                    className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:bg-gray-50/50 transition-all md:grid md:grid-cols-[2.5fr_1fr_1fr_1fr_auto] md:gap-6 md:items-center group"
                   >
                     {/* Product Info */}
                     <div className="flex items-center gap-5 mb-4 md:mb-0">
-                      <div className="relative w-20 h-20 flex-shrink-0 bg-surface-container overflow-hidden">
+                      <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner">
                         <Image
                           src={item.image}
                           alt={item.name}
                           fill
-                          className="object-cover"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-widest text-accent mb-1">{item.category}</p>
-                        <h3 className="font-display font-semibold text-on-surface">{item.name}</h3>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 mb-1 inline-block">
+                          {item.category}
+                        </span>
+                        <h3 className="font-display font-bold text-zinc-900 text-base">{item.name}</h3>
+                        <p className="text-xs text-gray-400 mt-0.5">Architectural Tile Specification</p>
                       </div>
                     </div>
 
-                    {/* Price per tile */}
-                    <div className="flex justify-between md:justify-center mb-3 md:mb-0">
-                      <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Price:</span>
-                      <span className="text-sm text-on-surface font-medium">
+                    {/* Price per sq ft */}
+                    <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Unit Price:</span>
+                      <span className="font-mono text-sm font-semibold text-zinc-900">
                         {formatCurrency(item.price_per_sqft)}
                       </span>
                     </div>
 
-                    {/* Quantity Control */}
+                    {/* Quantity Control Pill */}
                     <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
-                      <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Qty:</span>
-                      <div className="flex items-center gap-1">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Qty (sq ft):</span>
+                      
+                      {/* Sleek Rounded Pill Quantity Selector */}
+                      <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
                         <button
                           onClick={() =>
                             updateQuantity(item.id, Math.max(1, item.cartQuantitySqft - 1))
                           }
-                          className="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+                          className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
                           aria-label="Decrease quantity"
                         >
                           <Minus className="w-3.5 h-3.5" />
                         </button>
+                        
                         <input
                           type="number"
                           min={1}
@@ -185,13 +194,14 @@ export default function CartPage() {
                               updateQuantity(item.id, val);
                             }
                           }}
-                          className="w-16 text-center bg-transparent border-b border-outline py-1.5 text-sm text-on-surface outline-none form-field-animate focus:border-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
+                        
                         <button
                           onClick={() =>
                             updateQuantity(item.id, item.cartQuantitySqft + 1)
                           }
-                          className="w-8 h-8 flex items-center justify-center bg-surface-container-high hover:bg-surface-container-highest text-on-surface-variant hover:text-on-surface transition-colors"
+                          className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
                           aria-label="Increase quantity"
                         >
                           <Plus className="w-3.5 h-3.5" />
@@ -200,19 +210,20 @@ export default function CartPage() {
                     </div>
 
                     {/* Line Subtotal */}
-                    <div className="flex justify-between md:justify-end mb-3 md:mb-0">
-                      <span className="text-xs uppercase tracking-widest text-on-surface-variant md:hidden">Subtotal:</span>
-                      <span className="text-sm font-bold text-on-surface">
+                    <div className="flex justify-between md:justify-end items-center mb-3 md:mb-0">
+                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Subtotal:</span>
+                      <span className="font-mono text-base font-bold text-zinc-900">
                         {formatCurrency(lineTotal)}
                       </span>
                     </div>
 
-                    {/* Remove */}
-                    <div className="flex justify-end">
+                    {/* Delete Icon with Red Hover Effect */}
+                    <div className="flex justify-end items-center">
                       <button
                         onClick={() => removeFromCart(item.id)}
-                        className="w-10 h-10 flex items-center justify-center text-on-surface-variant hover:text-[#9f403d] transition-colors"
+                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all"
                         aria-label={`Remove ${item.name}`}
+                        title="Remove item"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -222,41 +233,47 @@ export default function CartPage() {
               })}
             </div>
 
-            {/* Continue Shopping */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            {/* Cart Footer Actions */}
+            <div className="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 p-4 rounded-xl border border-gray-100">
               <Link
                 href="/collections"
-                className="kinetic-link text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors"
+                className="text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-zinc-900 transition-colors flex items-center gap-2"
               >
-                ← Continue Shopping
+                <span>← Continue Shopping</span>
               </Link>
               <button
                 onClick={clearCart}
-                className="text-sm font-semibold uppercase tracking-widest text-on-surface-variant hover:text-[#9f403d] transition-colors"
+                className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors"
               >
                 Clear Cart
               </button>
             </div>
           </div>
 
-          {/* ── Order Summary Sidebar ────────────────── */}
+          {/* ── Order Summary Glassmorphism Sidebar ────────────────── */}
           <div className="lg:w-96 motion-fade-up motion-delay-2">
-            <div className="bg-surface-container-lowest premium-shadow p-8 sticky top-28">
-              <h2 className="text-lg font-display font-semibold text-on-surface mb-8">
-                Order Summary
-              </h2>
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/40 sticky top-28">
+              
+              <div className="pb-6 mb-6 border-b border-gray-100">
+                <h2 className="text-xl font-display font-bold text-zinc-900 tracking-tight">
+                  Order Summary
+                </h2>
+                <p className="text-xs text-gray-500 mt-0.5">Calculated total and delivery preferences.</p>
+              </div>
 
-              {/* ── Delivery Method ─────────────────── */}
-              <div className="mb-8">
-                <p className="text-xs font-semibold uppercase tracking-widest text-on-surface-variant mb-4">
+              {/* ── Delivery Method Selectors ─────────────────── */}
+              <div className="mb-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
                   Delivery Method
                 </p>
                 <div className="space-y-3">
+                  
+                  {/* Pickup Option */}
                   <label
                     className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
                       deliveryMethod === "pickup"
-                        ? "bg-primary/5 border-l-2 border-primary"
-                        : "bg-surface-container-low hover:bg-surface-container border-l-2 border-transparent"
+                        ? "border-2 border-yellow-500 bg-yellow-50/30 shadow-sm rounded-xl"
+                        : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100 rounded-xl"
                     }`}
                   >
                     <input
@@ -267,26 +284,34 @@ export default function CartPage() {
                       onChange={() => setDeliveryMethod("pickup")}
                       className="sr-only"
                     />
-                    <Store className={`w-5 h-5 flex-shrink-0 ${
-                      deliveryMethod === "pickup" ? "text-primary" : "text-on-surface-variant"
-                    }`} />
-                    <div>
-                      <span className={`text-sm font-semibold block ${
-                        deliveryMethod === "pickup" ? "text-on-surface" : "text-on-surface-variant"
-                      }`}>
-                        Pickup from Store
-                      </span>
-                      <span className="text-xs text-on-surface-variant">
-                        Collect your order from our showroom
+                    <div className={`p-2 rounded-lg ${deliveryMethod === "pickup" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200/60 text-gray-500"}`}>
+                      <Store className="w-5 h-5 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm font-bold block ${
+                          deliveryMethod === "pickup" ? "text-zinc-900" : "text-gray-700"
+                        }`}>
+                          Pickup from Store
+                        </span>
+                        {deliveryMethod === "pickup" && (
+                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500 block mt-0.5">
+                        Collect from showroom
                       </span>
                     </div>
                   </label>
 
+                  {/* Cash on Delivery Option */}
                   <label
                     className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
                       deliveryMethod === "cod"
-                        ? "bg-primary/5 border-l-2 border-primary"
-                        : "bg-surface-container-low hover:bg-surface-container border-l-2 border-transparent"
+                        ? "border-2 border-yellow-500 bg-yellow-50/30 shadow-sm rounded-xl"
+                        : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100 rounded-xl"
                     }`}
                   >
                     <input
@@ -297,69 +322,87 @@ export default function CartPage() {
                       onChange={() => setDeliveryMethod("cod")}
                       className="sr-only"
                     />
-                    <Truck className={`w-5 h-5 flex-shrink-0 ${
-                      deliveryMethod === "cod" ? "text-primary" : "text-on-surface-variant"
-                    }`} />
-                    <div>
-                      <span className={`text-sm font-semibold block ${
-                        deliveryMethod === "cod" ? "text-on-surface" : "text-on-surface-variant"
-                      }`}>
-                        Cash on Delivery
-                      </span>
-                      <span className="text-xs text-on-surface-variant">
-                        Pay when your order arrives
+                    <div className={`p-2 rounded-lg ${deliveryMethod === "cod" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200/60 text-gray-500"}`}>
+                      <Truck className="w-5 h-5 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm font-bold block ${
+                          deliveryMethod === "cod" ? "text-zinc-900" : "text-gray-700"
+                        }`}>
+                          Cash on Delivery
+                        </span>
+                        {deliveryMethod === "cod" && (
+                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500 block mt-0.5">
+                        Pay upon tile delivery
                       </span>
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="section-divider mb-6" />
-
-              {/* ── Price Breakdown ─────────────────── */}
-              <div className="space-y-4 mb-8">
+              {/* Price Breakdown */}
+              <div className="space-y-3 py-4 border-t border-b border-gray-100 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">
+                  <span className="text-gray-500 font-medium">
                     Subtotal ({items.length} {items.length === 1 ? "item" : "items"})
                   </span>
-                  <span className="text-on-surface font-medium">{formatCurrency(cartTotal)}</span>
+                  <span className="font-mono text-zinc-900 font-bold">{formatCurrency(cartTotal)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-on-surface-variant">Shipping</span>
-                  <span className="text-on-surface font-medium">
+                  <span className="text-gray-500 font-medium">Shipping</span>
+                  <span className="font-mono text-emerald-600 font-bold text-xs uppercase">
                     {deliveryMethod === "pickup" ? "Free (Store Pickup)" : "Free (Island-wide)"}
                   </span>
                 </div>
               </div>
 
-              <div className="section-divider mb-6" />
-
-              <div className="flex justify-between mb-8">
-                <span className="font-display font-semibold text-on-surface">Total</span>
-                <span className="font-display font-bold text-xl text-on-surface">
+              {/* Total Calculation Row */}
+              <div className="flex justify-between items-baseline mb-6">
+                <div>
+                  <span className="font-display font-bold text-zinc-900 text-lg block">Total Amount</span>
+                  <span className="text-[10px] text-gray-400 font-medium">Taxes included where applicable</span>
+                </div>
+                <span className="font-mono font-bold text-2xl text-zinc-900">
                   {formatCurrency(cartTotal)}
                 </span>
               </div>
 
+              {/* Error Notification */}
               {checkoutError && (
-                <div className="mb-6 bg-[#9f403d]/8 border-l-2 border-[#9f403d] px-5 py-4 motion-fade-up">
-                  <p className="text-sm text-[#9f403d]">{checkoutError}</p>
+                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 motion-fade-up">
+                  <p className="text-xs font-semibold text-red-700">{checkoutError}</p>
                 </div>
               )}
 
+              {/* Massive Primary PROCEED TO CHECKOUT Button */}
               <button
                 onClick={handleCheckout}
                 disabled={isCheckingOut}
-                className="kinetic-button w-full bg-primary hover:bg-primary-dim text-on-primary px-8 py-4 text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-4 w-full shadow-lg transition-all duration-300 text-center uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
-                <Lock className="w-4 h-4" />
-                <span>{isCheckingOut ? "Processing..." : "Place Order"}</span>
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Processing Order...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
+                    <span>Proceed to Checkout</span>
+                  </>
+                )}
               </button>
 
-              <p className="text-xs text-on-surface-variant text-center mt-4">
+              <p className="text-[11px] text-gray-400 text-center mt-4">
                 {deliveryMethod === "cod"
                   ? "Pay in cash when your order arrives (Free Delivery)"
-                  : "Your order will be ready for pickup"}
+                  : "Your order will be ready for store pickup"}
               </p>
             </div>
           </div>
