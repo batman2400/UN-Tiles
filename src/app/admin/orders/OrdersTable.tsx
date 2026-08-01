@@ -115,15 +115,15 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden animate-[page-enter_300ms_ease-out]">
-      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="animate-[page-enter_300ms_ease-out]">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Order Fulfillment</h2>
           <p className="text-sm text-gray-500 mt-1">Manage and track customer orders.</p>
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <select 
-            className="bg-gray-50 text-sm text-gray-900 rounded-lg outline-none border border-gray-200 focus:border-gray-400 py-2.5 px-3"
+            className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
@@ -137,28 +137,28 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               placeholder="Search ID, name, email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 text-sm text-gray-900 rounded-lg outline-none border border-gray-200 focus:border-gray-400 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
             />
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+      <div className="overflow-x-auto pb-8">
+        <table className="w-full text-left border-separate border-spacing-y-3 min-w-[900px]">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID & Date</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Delivery Method</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Items</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Price</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status Action</th>
+            <tr>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Order ID & Date</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Customer</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Delivery Method</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Items</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Total Price</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Status Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {filteredOrders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm">
                   <Package className="w-8 h-8 mx-auto mb-3 opacity-20" />
                   No orders found.
                 </td>
@@ -169,20 +169,20 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               const row = getRowState(order.id);
               
               return (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-sm font-semibold text-gray-900">
+                <tr key={order.id} className="group shadow-sm hover:shadow-md transition-all">
+                  <td className="bg-white px-6 py-4 rounded-l-xl border-y border-l border-gray-100">
+                    <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
                       {order.id.startsWith("UN-") 
                         ? `#${order.id.substring(0, 18).toUpperCase()}` 
                         : `#UN-2026-${order.id.substring(0, 8).toUpperCase()}`}
                     </span>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-[11px] font-medium text-gray-400 mt-1 uppercase tracking-wider">
                       {new Date(order.date).toLocaleDateString("en-US", {
                         month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
                       })}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">
                         {order.profiles?.first_name} {order.profiles?.last_name}
@@ -193,39 +193,39 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium border border-gray-200">
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                    <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 text-xs font-semibold uppercase tracking-wider border border-gray-100">
                       {order.delivery_method || "Pickup"}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-600 max-w-[200px] truncate" title={order.items}>
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                    <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>
                       {order.items}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
                     <span className="text-sm font-bold text-gray-900">
                       {formatCurrency(order.total)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 relative">
-                    <div className="relative inline-block w-36">
+                  <td className="bg-white px-6 py-4 relative rounded-r-xl border-y border-r border-gray-100">
+                    <div className="relative inline-block w-40 group/select">
                       <select
                         value={order.status}
                         disabled={row.isUpdating}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        className={`w-full appearance-none px-3 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md border outline-none cursor-pointer disabled:opacity-50 transition-colors ${getStatusBadgeColor(order.status)}`}
+                        className={`w-full appearance-none px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md border outline-none cursor-pointer disabled:opacity-50 transition-all ${getStatusBadgeColor(order.status)}`}
                       >
                         {ORDER_STATUSES.map((s) => (
                           <option key={s} value={s} className="bg-white text-gray-900">{s}</option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none opacity-60" />
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60 group-hover/select:opacity-100 transition-opacity" />
                     </div>
                     
                     {row.feedback && (
-                      <div className={`absolute left-6 -bottom-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider motion-fade-up ${
-                        row.feedback.type === "success" ? "text-green-600" : "text-red-600"
+                      <div className={`absolute left-6 -bottom-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider motion-fade-up z-10 ${
+                        row.feedback.type === "success" ? "text-emerald-600" : "text-red-600"
                       }`}>
                         {row.feedback.type === "success" ? (
                           <CheckCircle className="w-3 h-3" />

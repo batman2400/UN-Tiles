@@ -95,17 +95,18 @@ export default async function AdminDashboardPage() {
         {metrics.map((metric, i) => {
           const Icon = metric.icon;
           return (
-            <Link href={metric.href} key={i} className="bg-white rounded-xl shadow-sm border border-gray-200/60 p-6 flex flex-col gap-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
-              <div className="flex items-center gap-4">
-                <div className={`p-4 rounded-full ${metric.bgColor} group-hover:scale-105 transition-transform`}>
+            <Link href={metric.href} key={i} className="relative overflow-hidden bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group">
+              <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/10 rounded-full blur-2xl group-hover:bg-accent/20 transition-colors pointer-events-none" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className={`p-4 rounded-2xl ${metric.bgColor} group-hover:scale-105 transition-transform`}>
                   <Icon className={`w-6 h-6 ${metric.color}`} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">{metric.title}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
+                  <p className="text-3xl font-display font-bold text-gray-900 mt-1 tracking-tight">{metric.value}</p>
                 </div>
               </div>
-              <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 mt-2`}>
+              <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 mt-1 relative z-10`}>
                 <TrendingUp className="w-3.5 h-3.5" />
                 {metric.trend}
               </div>

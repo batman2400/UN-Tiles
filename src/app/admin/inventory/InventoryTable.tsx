@@ -123,8 +123,8 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 overflow-hidden animate-[page-enter_300ms_ease-out]">
-      <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="animate-[page-enter_300ms_ease-out]">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
           <p className="text-sm text-gray-500 mt-1">Manage stock levels for all products.</p>
@@ -136,21 +136,21 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
             placeholder="Search SKU, name, or category..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 text-sm text-gray-900 rounded-lg outline-none border border-gray-200 focus:border-gray-400 transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px]">
+      <div className="overflow-x-auto pb-8">
+        <table className="w-full text-left border-separate border-spacing-y-3 min-w-[800px]">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Product</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Price</th>
+            <tr>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Product</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">SKU</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Category</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none text-right">Price</th>
               <th 
-                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right cursor-pointer hover:bg-gray-100 transition-colors group"
+                className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none text-right cursor-pointer hover:text-gray-600 transition-colors group"
                 onClick={() => handleSort('stock_sqft')}
               >
                 <div className="flex items-center justify-end gap-1">
@@ -162,13 +162,13 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                   )}
                 </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Restock</th>
+              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none text-center">Restock</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {filteredProducts.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm">
                   <Package className="w-8 h-8 mx-auto mb-3 opacity-20" />
                   No products found.
                 </td>
@@ -195,68 +195,68 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               }
 
               return (
-                <tr key={product.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4">
+                <tr key={product.id} className="group shadow-sm hover:shadow-md transition-all">
+                  <td className="bg-white px-6 py-4 rounded-l-xl border-y border-l border-gray-100">
                     <div className="flex items-center gap-4">
-                      <div className="relative w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="relative w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200/50">
                         {product.image ? (
                           <Image src={product.image} alt={product.name} fill className="object-cover" />
                         ) : (
                           <ImageIcon className="w-5 h-5 text-gray-400" />
                         )}
                       </div>
-                      <span className="font-semibold text-sm text-gray-900">{product.name}</span>
+                      <span className="font-semibold text-sm text-gray-900 group-hover:text-accent transition-colors">{product.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                    <span className="font-mono text-[11px] font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
                       {product.sku}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
                       {product.category_slug.replace(/-/g, " ")}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className="text-sm font-medium text-gray-900">
+                  <td className="bg-white px-6 py-4 text-right border-y border-gray-100">
+                    <span className="text-sm font-bold text-gray-900">
                       Rs {product.price_per_sqft.toLocaleString()}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="bg-white px-6 py-4 text-right border-y border-gray-100">
                     <div className="flex flex-col items-end gap-1.5">
-                      <span className={`text-sm font-bold ${stockColor}`}>
+                      <span className={`text-base font-display font-bold ${stockColor}`}>
                         {product.stock_sqft.toLocaleString()}
                       </span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeBg} ${badgeText}`}>
+                      <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${badgeBg} ${badgeText}`}>
                         {statusText}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="bg-white px-6 py-4 rounded-r-xl border-y border-r border-gray-100">
                     <div className="flex flex-col items-center">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 p-1 bg-gray-50 rounded-lg border border-transparent focus-within:border-accent focus-within:bg-white focus-within:ring-1 focus-within:ring-accent/20 transition-all">
                         <input
                           type="number"
                           min={0}
                           placeholder="Qty"
                           value={row.editValue}
                           onChange={(e) => updateRowState(product.id, { editValue: e.target.value })}
-                          className="w-20 text-center px-2 py-1.5 text-sm bg-white border border-gray-300 rounded-md outline-none focus:border-gray-500 focus:ring-1 focus:ring-gray-500 transition-all"
+                          className="w-16 text-center px-1 py-1.5 text-sm bg-transparent outline-none font-medium text-gray-900 placeholder:text-gray-400"
                         />
                         <button
                           onClick={() => handleUpdate(product)}
                           disabled={row.isUpdating || !row.editValue.trim()}
-                          className="px-4 py-1.5 min-w-[60px] flex justify-center bg-accent text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-3 py-1.5 min-w-[50px] flex justify-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95"
                         >
-                          {row.isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Set"}
+                          {row.isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Set"}
                         </button>
                       </div>
                       {row.feedback && (
                         <div className={`mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider motion-fade-up ${
                           row.feedback.type === 'success' 
-                            ? 'bg-green-50 border-green-200 text-green-700' 
-                            : 'bg-red-50 border-red-200 text-red-700'
+                            ? 'bg-emerald-50 border-emerald-200/50 text-emerald-700' 
+                            : 'bg-red-50 border-red-200/50 text-red-700'
                         }`}>
                           {row.feedback.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
                           {row.feedback.message}
