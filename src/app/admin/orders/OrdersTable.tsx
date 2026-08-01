@@ -105,7 +105,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
 
   const getStatusBadgeColor = (status: string) => {
     switch(status) {
-      case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200/60 pulse-glow';
+      case 'Pending': return 'bg-amber-50 text-amber-700 border-amber-200/60';
       case 'Processing': return 'bg-blue-50 text-blue-700 border-blue-200/60';
       case 'Shipped': return 'bg-purple-50 text-purple-700 border-purple-200/60';
       case 'Delivered': return 'bg-emerald-50 text-emerald-700 border-emerald-200/60';
@@ -169,9 +169,9 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               const row = getRowState(order.id);
               
               return (
-                <tr key={order.id} className="group relative bg-white/40 backdrop-blur-md border-b border-white/40 hover:bg-white/60 transition-colors duration-300">
+                <tr key={order.id} className="group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
                   {/* Left Border Glow on Hover */}
-                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 group-hover:shadow-[0_0_12px_var(--color-accent)] transition-all duration-300" />
+                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <td className="px-6 py-3">
                     <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">

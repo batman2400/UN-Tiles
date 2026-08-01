@@ -189,9 +189,9 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               }
 
               return (
-                <tr key={product.id} className="group relative bg-white/40 backdrop-blur-md border-b border-white/40 hover:bg-white/60 transition-colors duration-300">
+                <tr key={product.id} className="group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
                   {/* Left Border Glow on Hover */}
-                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 group-hover:shadow-[0_0_12px_var(--color-accent)] transition-all duration-300" />
+                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-4">
@@ -222,7 +222,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                   </td>
                   <td className="px-6 py-3 text-right">
                     <div className="flex items-center justify-end gap-2.5">
-                      <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${dotColor} ${statusText !== "Healthy Stock" ? "pulse-glow" : ""}`} title={statusText} />
+                      <span className={`w-2 h-2 rounded-full shadow-[0_0_8px_currentColor] ${dotColor}`} title={statusText} />
                       <span className="text-lg font-mono font-bold text-gray-900 tracking-tight">
                         {product.stock_sqft.toLocaleString()}
                       </span>
@@ -230,20 +230,20 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex flex-col items-center justify-center">
-                      <div className="flex items-center gap-1.5 p-1 bg-white/60 backdrop-blur-sm rounded-lg border border-white/60 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/50 transition-all shadow-sm">
+                      <div className="flex items-center gap-1.5 p-1 bg-white rounded-lg border border-gray-200 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/50 transition-all shadow-sm">
                         <input
                           type="number"
                           min={0}
                           placeholder="Qty"
                           value={row.editValue}
                           onChange={(e) => updateRowState(product.id, { editValue: e.target.value })}
-                          className="w-16 text-center px-1 py-1.5 text-sm font-mono bg-transparent outline-none text-gray-900 placeholder:text-gray-400"
+                          className="w-16 text-center px-1 py-1.5 text-sm font-mono bg-transparent outline-none text-gray-900 placeholder:text-gray-300"
                         />
-                        <div className="overflow-hidden w-0 opacity-0 translate-x-2 group-hover:w-[48px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+                        <div className="overflow-hidden">
                           <button
                             onClick={() => handleUpdate(product)}
                             disabled={row.isUpdating || !row.editValue.trim()}
-                            className="w-12 py-1.5 flex justify-center items-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95"
+                            className="px-3 py-1.5 flex justify-center items-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95 opacity-0 translate-x-4 group-hover:opacity-100 group-hover:translate-x-0"
                           >
                             {row.isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Set"}
                           </button>

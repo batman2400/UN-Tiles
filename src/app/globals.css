@@ -220,34 +220,6 @@ html {
    ANIMATION CLASSES
    ═══════════════════════════════════════════ */
 
-@keyframes blob {
-  0% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -50px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 12px currentColor; }
-  50% { opacity: 0.5; box-shadow: 0 0 4px currentColor; }
-}
-
-.animate-blob {
-  animation: blob 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
-
-.pulse-glow {
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
 .motion-fade-up {
   animation: fade-up-soft 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
