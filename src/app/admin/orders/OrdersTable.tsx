@@ -172,7 +172,9 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                 <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <span className="font-mono text-sm font-semibold text-gray-900">
-                      #{order.id.substring(0, 8).toUpperCase()}
+                      {order.id.startsWith("UN-") 
+                        ? `#${order.id.substring(0, 18).toUpperCase()}` 
+                        : `#UN-2026-${order.id.substring(0, 8).toUpperCase()}`}
                     </span>
                     <div className="text-xs text-gray-500 mt-1">
                       {new Date(order.date).toLocaleDateString("en-US", {

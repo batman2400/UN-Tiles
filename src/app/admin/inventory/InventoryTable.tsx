@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 
@@ -27,17 +27,42 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
   const [products, setProducts] = useState<AdminProduct[]>(initialProducts);
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return products;
-    const q = searchQuery.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
-        p.category_slug.toLowerCase().includes(q)
-    );
-  }, [products, searchQuery]);
+    let result = products;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.category_slug.toLowerCase().includes(q)
+      );
+    }
+
+    if (sortConfig !== null) {
+      result.sort((a, b) => {
+        if (sortConfig.key === 'stock_sqft') {
+          return sortConfig.direction === 'asc' 
+            ? a.stock_sqft - b.stock_sqft 
+            : b.stock_sqft - a.stock_sqft;
+        }
+        return 0;
+      });
+    }
+    
+    // We return a new array to trigger re-renders properly after sort
+    return [...result];
+  }, [products, searchQuery, sortConfig]);
+
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const getRowState = (id: string): RowState => {
     return (
@@ -124,7 +149,19 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Price</th>
-              <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Stock (sq ft)</th>
+              <th 
+                className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right cursor-pointer hover:bg-gray-100 transition-colors group"
+                onClick={() => handleSort('stock_sqft')}
+              >
+                <div className="flex items-center justify-end gap-1">
+                  Stock (sq ft)
+                  {sortConfig?.key === 'stock_sqft' ? (
+                    sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 text-gray-900" /> : <ArrowDown className="w-3 h-3 text-gray-900" />
+                  ) : (
+                    <ArrowUpDown className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </div>
+              </th>
               <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Restock</th>
             </tr>
           </thead>
@@ -139,7 +176,23 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
             )}
             {filteredProducts.map((product) => {
               const row = getRowState(product.id);
-              const isLowStock = product.stock_sqft < 100;
+              
+              let stockColor = "text-green-600";
+              let badgeBg = "bg-green-100 border-green-200";
+              let badgeText = "text-green-700";
+              let statusText = "Healthy Stock";
+              
+              if (product.stock_sqft === 0) {
+                stockColor = "text-red-600";
+                badgeBg = "bg-red-100 border-red-200";
+                badgeText = "text-red-700";
+                statusText = "Out of Stock";
+              } else if (product.stock_sqft <= 50) {
+                stockColor = "text-amber-600";
+                badgeBg = "bg-amber-100 border-amber-200";
+                badgeText = "text-amber-700";
+                statusText = "Low Stock";
+              }
 
               return (
                 <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
@@ -171,15 +224,13 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex flex-col items-end">
-                      <span className={`text-sm font-bold ${isLowStock ? "text-red-600" : "text-gray-900"}`}>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <span className={`text-sm font-bold ${stockColor}`}>
                         {product.stock_sqft.toLocaleString()}
                       </span>
-                      {isLowStock && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-red-600 mt-1 flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3" /> Low Stock
-                        </span>
-                      )}
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeBg} ${badgeText}`}>
+                        {statusText}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -196,15 +247,20 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                         <button
                           onClick={() => handleUpdate(product)}
                           disabled={row.isUpdating || !row.editValue.trim()}
-                          className="px-4 py-1.5 bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          className="px-4 py-1.5 min-w-[60px] flex justify-center bg-gray-900 text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          {row.isUpdating ? "..." : "Set"}
+                          {row.isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Set"}
                         </button>
                       </div>
                       {row.feedback && (
-                        <span className={`text-[10px] font-bold uppercase tracking-wider mt-2 ${row.feedback.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className={`mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider motion-fade-up ${
+                          row.feedback.type === 'success' 
+                            ? 'bg-green-50 border-green-200 text-green-700' 
+                            : 'bg-red-50 border-red-200 text-red-700'
+                        }`}>
+                          {row.feedback.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />}
                           {row.feedback.message}
-                        </span>
+                        </div>
                       )}
                     </div>
                   </td>

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { Package, ShoppingCart, AlertCircle, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -36,9 +37,9 @@ export default async function AdminDashboardPage() {
   const orders = ordersRes.data ?? [];
 
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status === 'Pending').length;
+  const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
   const completedOrders = orders.filter(o => o.status === 'Delivered').length;
-  const lowStockProducts = products.filter(p => Number(p.stock_sqft) < 100).length;
+  const lowStockProducts = products.filter(p => Number(p.stock_sqft) <= 50).length;
 
   const metrics = [
     {
@@ -46,28 +47,32 @@ export default async function AdminDashboardPage() {
       value: totalOrders,
       icon: ShoppingCart,
       color: "text-blue-600",
-      bgColor: "bg-blue-100"
+      bgColor: "bg-blue-100",
+      href: "/admin/orders"
     },
     {
-      title: "Pending Orders",
+      title: "Active Orders",
       value: pendingOrders,
       icon: AlertCircle,
       color: "text-amber-600",
-      bgColor: "bg-amber-100"
+      bgColor: "bg-amber-100",
+      href: "/admin/orders"
     },
     {
       title: "Low Stock SKUs",
       value: lowStockProducts,
       icon: Package,
       color: lowStockProducts > 0 ? "text-red-600" : "text-green-600",
-      bgColor: lowStockProducts > 0 ? "bg-red-100" : "bg-green-100"
+      bgColor: lowStockProducts > 0 ? "bg-red-100" : "bg-green-100",
+      href: "/admin/inventory"
     },
     {
       title: "Completed Orders",
       value: completedOrders,
       icon: CheckCircle2,
       color: "text-emerald-600",
-      bgColor: "bg-emerald-100"
+      bgColor: "bg-emerald-100",
+      href: "/admin/orders"
     }
   ];
 
@@ -82,15 +87,15 @@ export default async function AdminDashboardPage() {
         {metrics.map((metric, i) => {
           const Icon = metric.icon;
           return (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4">
-              <div className={`p-4 rounded-full ${metric.bgColor}`}>
+            <Link href={metric.href} key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center gap-4 hover:shadow-md hover:border-gray-300 transition-all cursor-pointer group">
+              <div className={`p-4 rounded-full ${metric.bgColor} group-hover:scale-105 transition-transform`}>
                 <Icon className={`w-6 h-6 ${metric.color}`} />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-500">{metric.title}</p>
+                <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-700 transition-colors">{metric.title}</p>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
