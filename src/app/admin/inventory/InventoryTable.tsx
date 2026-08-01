@@ -145,12 +145,12 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">SKU</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Category</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right">Price</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[25%] text-left">Product</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-left">SKU</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-left">Category</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-right">Price</th>
               <th 
-                className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right cursor-pointer hover:text-gray-900 transition-colors group"
+                className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-right cursor-pointer hover:text-gray-900 transition-colors group"
                 onClick={() => handleSort('stock_sqft')}
               >
                 <div className="flex items-center justify-end gap-1">
@@ -162,7 +162,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                   )}
                 </div>
               </th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">Restock</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-center">Restock</th>
             </tr>
           </thead>
           <tbody>
@@ -174,8 +174,9 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                 </td>
               </tr>
             )}
-            {filteredProducts.map((product) => {
+            {filteredProducts.map((product, index) => {
               const row = getRowState(product.id);
+              const delayClass = `motion-delay-${(index % 4) + 1}`;
               
               let dotColor = "bg-emerald-500 text-emerald-500";
               let statusText = "Healthy Stock";
@@ -189,11 +190,11 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               }
 
               return (
-                <tr key={product.id} className="group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                <tr key={product.id} className={`group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors motion-fade-up ${delayClass}`}>
                   {/* Left Border Glow on Hover */}
                   <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <div className="flex items-center gap-4">
                       <div className="relative w-9 h-9 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200/50">
                         {product.image ? (
@@ -205,12 +206,12 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                       <span className="font-semibold text-sm text-gray-900 group-hover:text-accent transition-colors">{product.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <span className="font-mono text-xs text-gray-900">
                       {product.sku}
                     </span>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
                       {product.category_slug.replace(/-/g, " ")}
                     </span>

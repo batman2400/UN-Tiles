@@ -147,12 +147,12 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
         <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID & Date</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Delivery Method</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Items</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Price</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Action</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Order ID & Date</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[25%] text-left">Customer</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-left">Delivery Method</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Items</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[10%] text-right">Total Price</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[10%] text-right">Status Action</th>
             </tr>
           </thead>
           <tbody>
@@ -165,15 +165,16 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               </tr>
             )}
             
-            {filteredOrders.map((order) => {
+            {filteredOrders.map((order, index) => {
               const row = getRowState(order.id);
+              const delayClass = `motion-delay-${(index % 4) + 1}`;
               
               return (
-                <tr key={order.id} className="group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                <tr key={order.id} className={`group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors motion-fade-up ${delayClass}`}>
                   {/* Left Border Glow on Hover */}
                   <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
                       {order.id.startsWith("UN-") 
                         ? `#${order.id.substring(0, 18).toUpperCase()}` 
@@ -185,7 +186,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       })}
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">
                         {order.profiles?.first_name} {order.profiles?.last_name}
@@ -196,22 +197,22 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 text-xs font-semibold uppercase tracking-wider border border-gray-100">
                       {order.delivery_method || "Pickup"}
                     </span>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-left">
                     <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>
                       {order.items}
                     </div>
                   </td>
-                  <td className="px-6 py-3">
+                  <td className="px-6 py-3 text-right">
                     <span className="font-mono text-sm font-bold text-gray-900">
                       {formatCurrency(order.total)}
                     </span>
                   </td>
-                  <td className="px-6 py-3 relative">
+                  <td className="px-6 py-3 text-right relative">
                     <div className="relative inline-block w-40 group/select">
                       <select
                         value={order.status}
