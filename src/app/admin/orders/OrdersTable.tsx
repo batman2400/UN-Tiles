@@ -144,15 +144,15 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
       </div>
 
       <div className="overflow-x-auto pb-8">
-        <table className="w-full text-left border-separate border-spacing-y-3 min-w-[900px]">
+        <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
-            <tr>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Order ID & Date</th>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Customer</th>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Delivery Method</th>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Items</th>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Total Price</th>
-              <th className="px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-widest border-none">Status Action</th>
+            <tr className="border-b border-gray-100">
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order ID & Date</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Customer</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Delivery Method</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Items</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Price</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status Action</th>
             </tr>
           </thead>
           <tbody>
@@ -169,8 +169,11 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               const row = getRowState(order.id);
               
               return (
-                <tr key={order.id} className="group shadow-sm hover:shadow-md transition-all">
-                  <td className="bg-white px-6 py-4 rounded-l-xl border-y border-l border-gray-100">
+                <tr key={order.id} className="group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors">
+                  {/* Left Border Glow on Hover */}
+                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <td className="px-6 py-3">
                     <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
                       {order.id.startsWith("UN-") 
                         ? `#${order.id.substring(0, 18).toUpperCase()}` 
@@ -182,7 +185,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       })}
                     </div>
                   </td>
-                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                  <td className="px-6 py-3">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-gray-900">
                         {order.profiles?.first_name} {order.profiles?.last_name}
@@ -193,22 +196,22 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       )}
                     </div>
                   </td>
-                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                  <td className="px-6 py-3">
                     <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 text-xs font-semibold uppercase tracking-wider border border-gray-100">
                       {order.delivery_method || "Pickup"}
                     </span>
                   </td>
-                  <td className="bg-white px-6 py-4 border-y border-gray-100">
+                  <td className="px-6 py-3">
                     <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>
                       {order.items}
                     </div>
                   </td>
-                  <td className="bg-white px-6 py-4 border-y border-gray-100">
-                    <span className="text-sm font-bold text-gray-900">
+                  <td className="px-6 py-3">
+                    <span className="font-mono text-sm font-bold text-gray-900">
                       {formatCurrency(order.total)}
                     </span>
                   </td>
-                  <td className="bg-white px-6 py-4 relative rounded-r-xl border-y border-r border-gray-100">
+                  <td className="px-6 py-3 relative">
                     <div className="relative inline-block w-40 group/select">
                       <select
                         value={order.status}

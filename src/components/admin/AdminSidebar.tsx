@@ -22,7 +22,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-screen fixed top-0 left-0 flex flex-col shadow-sm">
+    <div className="w-64 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl flex flex-col shadow-sm sticky top-4 h-[calc(100vh-2rem)] flex-shrink-0">
       <div className="h-20 flex items-center px-6 border-b border-gray-100">
         <Link href="/">
           <Image
