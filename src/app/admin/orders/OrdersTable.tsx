@@ -147,12 +147,12 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
         <table className="w-full text-left border-collapse min-w-[900px]">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Order ID & Date</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[25%] text-left">Customer</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[18%] text-left">Order ID & Date</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[22%] text-left">Customer</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-left">Delivery Method</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Items</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[10%] text-right">Total Price</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[10%] text-right">Status Action</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[12%] text-right">Total Price</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[13%] text-right">Status Action</th>
             </tr>
           </thead>
           <tbody>
@@ -170,10 +170,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               const delayClass = `motion-delay-${(index % 4) + 1}`;
               
               return (
-                <tr key={order.id} className={`group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors motion-fade-up ${delayClass}`}>
-                  {/* Left Border Glow on Hover */}
-                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
+                <tr key={order.id} className={`group bg-white border-b border-gray-100 border-l-2 border-l-transparent hover:border-l-accent hover:bg-gray-50/80 transition-all motion-fade-up ${delayClass}`}>
                   <td className="px-6 py-3 text-left">
                     <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
                       {order.id.startsWith("UN-") 

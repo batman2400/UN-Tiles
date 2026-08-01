@@ -190,10 +190,7 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
               }
 
               return (
-                <tr key={product.id} className={`group relative bg-white border-b border-gray-100 hover:bg-gray-50/80 transition-colors motion-fade-up ${delayClass}`}>
-                  {/* Left Border Glow on Hover */}
-                  <div className="absolute left-0 top-0 w-[2px] h-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
+                <tr key={product.id} className={`group bg-white border-b border-gray-100 border-l-2 border-l-transparent hover:border-l-accent hover:bg-gray-50/80 transition-all motion-fade-up ${delayClass}`}>
                   <td className="px-6 py-3 text-left">
                     <div className="flex items-center gap-4">
                       <div className="relative w-9 h-9 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0 border border-gray-200/50">
