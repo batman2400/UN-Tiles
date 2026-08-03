@@ -92,10 +92,10 @@ export default function Contact() {
       <section className="bg-surface-dark border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[
-            { icon: Phone, label: "Call Us", value: "+1 (555) 123-4567" },
+            { icon: Phone, label: "Call Us", value: "+94 773508325" },
             { icon: Mail, label: "Email", value: "studio@untiles.com" },
-            { icon: MapPin, label: "Location", value: "Design District, NY" },
-            { icon: Clock, label: "Hours", value: "Mon-Sat: 9am-6pm" },
+            { icon: MapPin, label: "Location", value: "Kirulapona,Colombo 05." },
+            { icon: Clock, label: "Hours", value: "Mon-Sat: 9.00am-6.30pm " },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-3 text-on-surface-dark-variant">
               <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
@@ -116,11 +116,11 @@ export default function Contact() {
           <ScrollReveal>
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Visit Us</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">HQ / Flagship Studio</h2>
+              <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Colombo Showroom (Head Office)</h2>
               <div className="space-y-2 text-on-surface-variant leading-relaxed">
-                <p>100 Architectural Way</p>
-                <p>Design District, NY 10001</p>
-                <p className="pt-4 font-semibold text-on-surface">P: +1 (555) 123-4567</p>
+                <p>No. 161/A, Polhengoda Road,</p>
+                <p>Kirulapona, Colombo 05.</p>
+                <p className="pt-4 font-semibold text-on-surface">P: +94 773508325 / +94 772303950</p>
                 <p className="font-semibold text-on-surface">E: studio@untiles.com</p>
               </div>
             </div>
@@ -132,16 +132,12 @@ export default function Contact() {
 
           <ScrollReveal delay={150}>
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Worldwide</p>
-              <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Global Showrooms</h2>
+              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Islandwide</p>
+              <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Other Showrooms</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="bg-surface-container-low p-6 premium-shadow">
-                  <p className="font-display font-semibold text-on-surface mb-1">London</p>
-                  <p className="text-sm text-on-surface-variant">45 Monolith Building, Clerkenwell EC1M</p>
-                </div>
-                <div className="bg-surface-container-low p-6 premium-shadow">
-                  <p className="font-display font-semibold text-on-surface mb-1">Milan</p>
-                  <p className="text-sm text-on-surface-variant">Via Brera 22, 20121 Milano MI</p>
+                  <p className="font-display font-semibold text-on-surface mb-1">Benthota</p>
+                  <p className="text-sm text-on-surface-variant">No 105, Gasdeka watta, Dope , Benthota</p>
                 </div>
               </div>
             </div>
@@ -157,9 +153,9 @@ export default function Contact() {
               <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Business Hours</h2>
               <div className="space-y-3 text-sm">
                 {[
-                  { day: "Monday – Friday", time: "9:00 AM – 6:00 PM" },
-                  { day: "Saturday", time: "10:00 AM – 4:00 PM" },
+                  { day: "Monday – Saturday", time: "9:00 AM – 6:30 PM" },
                   { day: "Sunday", time: "Closed" },
+                  { day: "Public Holidays", time: "Closed" },
                 ].map((item) => (
                   <div key={item.day} className="flex justify-between py-2 border-b ghost-border">
                     <span className="text-on-surface font-medium">{item.day}</span>
