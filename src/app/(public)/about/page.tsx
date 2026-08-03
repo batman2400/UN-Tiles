@@ -48,7 +48,7 @@ export default function About() {
             <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-8">Our Heritage</h2>
             <div className="space-y-6 text-on-surface-variant leading-relaxed">
               <p>
-                Established in 2004, UN Tiles was founded with a simple vision—to provide Sri Lankan customers with high-quality ceramic tiles and sanitary products at competitive prices. Over the years, we have built a strong reputation as a trusted importer and distributor by offering reliable products, exceptional customer service, and a wide selection suitable for both residential and commercial projects.
+                Established in 2004, UN Tiles (Unicorn Enterprises) was founded with a simple vision—to provide Sri Lankan customers with high-quality ceramic tiles and sanitary products at competitive prices. Over the years, we have built a strong reputation as a trusted importer and distributor by offering reliable products, exceptional customer service, and a wide selection suitable for both residential and commercial projects.
               </p>
               <p>
                 With more than two decades of industry experience, we continue to help homeowners, architects, contractors, and developers find the perfect ceramic solutions for every space.
@@ -78,7 +78,7 @@ export default function About() {
       <section className="bg-surface-dark py-20">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark">
           <StatsCounter end={20} suffix="+" label="Years of Experience" />
-          <StatsCounter end={1000} suffix="+" label="Customers Served" />
+          <StatsCounter end={1000} suffix="+" label="Satisfied Customers" />
           <StatsCounter end={4} label="Sourcing Locations" />
           <StatsCounter end={500} suffix="+" label="Projects Supplied" />
         </div>

@@ -81,7 +81,7 @@ export function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-white/8">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-dark-variant">
-          <p>&copy; {new Date().getFullYear()} UN Tiles. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} UN Tiles (Unicorn Enterprises). All rights reserved.</p>
           <div className="flex space-x-6">
             <Link href="#" className="hover:text-accent transition-colors">Privacy Policy</Link>
             <Link href="#" className="hover:text-accent transition-colors">Cookie Policy</Link>

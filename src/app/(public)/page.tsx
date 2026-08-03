@@ -82,6 +82,19 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* ══════ ABOUT US (SHORT) ══════ */}
+      <section className="bg-surface-container-low py-20 px-6 border-b ghost-border">
+        <div className="max-w-4xl mx-auto text-center">
+          <ScrollReveal>
+            <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Our Heritage</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-8">UN Tiles (Unicorn Enterprises)</h2>
+            <p className="text-lg leading-relaxed text-on-surface-variant max-w-3xl mx-auto">
+              Since 2004, UN Tiles (Unicorn Enterprises) has been a trusted importer and distributor of premium ceramic tiles and related products in Sri Lanka. Sourcing from leading manufacturers in China, Vietnam, India, and Lanka Tiles, we offer high-quality products, competitive pricing, and a wide range of designs for homes, businesses, and large-scale construction projects. With over two decades of experience and thousands of satisfied customers, we remain committed to delivering quality, reliability, and exceptional customer service.
+            </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* ══════ CATEGORY GRID ══════ */}
       <section className="max-w-7xl mx-auto px-6 py-24 w-full">
         <ScrollReveal>
@@ -201,9 +214,9 @@ export default async function Home() {
       <section className="bg-surface-dark py-20">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark">
           <StatsCounter end={500} suffix="+" label="Projects Completed" />
-          <StatsCounter end={15} suffix="+" label="Years Experience" />
-          <StatsCounter end={12} label="Countries Served" />
-          <StatsCounter end={98} suffix="%" label="Client Satisfaction" />
+          <StatsCounter end={20} suffix="+" label="Years Experience" />
+          <StatsCounter end={4} label="Sourcing Locations" />
+          <StatsCounter end={1000} suffix="+" label="Satisfied Customers" />
         </div>
       </section>
 
