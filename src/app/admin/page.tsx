@@ -1,133 +1,106 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { Package, ShoppingCart, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
-import Link from "next/link";
+'use client';
 
-export default async function AdminDashboardPage() {
-  const supabase = await createClient();
+import { useEffect, useState } from 'react';
+import { Package, Grid3x3, BarChart3, TrendingUp } from 'lucide-react';
 
-  // 1. Verify authentication
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+interface Stats {
+  totalProducts: number;
+  totalCategories: number;
+  totalStock: number;
+  totalValue: number;
+}
 
-  if (authError || !user) {
-    redirect("/login");
-  }
+export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats>({
+    totalProducts: 0,
+    totalCategories: 0,
+    totalStock: 0,
+    totalValue: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-  // 2. Verify admin role
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/admin/stats');
+        const data = await response.json();
+        setStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (profileError || !profile || profile.role !== "admin") {
-    redirect("/login");
-  }
+    fetchStats();
+  }, []);
 
-  // 3. Fetch data for metrics
-  const [productsRes, ordersRes] = await Promise.all([
-    supabase.from("products").select("stock_sqft"),
-    supabase.from("orders").select("status")
-  ]);
-
-  const products = productsRes.data ?? [];
-  const orders = ordersRes.data ?? [];
-
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
-  const completedOrders = orders.filter(o => o.status === 'Delivered').length;
-  const lowStockProducts = products.filter(p => Number(p.stock_sqft) <= 50).length;
-
-  const metrics = [
-    {
-      title: "Total Orders",
-      value: totalOrders,
-      icon: ShoppingCart,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50",
-      href: "/admin/orders",
-      trend: "+12% this month",
-      trendColor: "text-emerald-600"
-    },
-    {
-      title: "Active Orders",
-      value: pendingOrders,
-      icon: AlertCircle,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      href: "/admin/orders",
-      trend: "-2% this month",
-      trendColor: "text-red-500"
-    },
-    {
-      title: "Low Stock SKUs",
-      value: lowStockProducts,
-      icon: Package,
-      color: lowStockProducts > 0 ? "text-red-600" : "text-green-600",
-      bgColor: lowStockProducts > 0 ? "bg-red-50" : "bg-green-50",
-      href: "/admin/inventory",
-      trend: "Requires attention",
-      trendColor: "text-amber-600"
-    },
-    {
-      title: "Completed Orders",
-      value: completedOrders,
-      icon: CheckCircle2,
-      color: "text-emerald-600",
-      bgColor: "bg-emerald-50",
-      href: "/admin/orders",
-      trend: "+8% this month",
-      trendColor: "text-emerald-600"
-    }
-  ];
+  const StatCard = ({ icon: Icon, label, value }: any) => (
+    <div className="bg-white rounded-lg shadow p-6 flex items-start gap-4">
+      <div className="bg-blue-100 p-3 rounded-lg">
+        <Icon className="text-blue-600" size={24} />
+      </div>
+      <div>
+        <p className="text-gray-600 text-sm">{label}</p>
+        <p className="text-3xl font-bold text-gray-900 mt-1">
+          {loading ? '—' : value}
+        </p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto animate-[page-enter_300ms_ease-out]">
-      <div className="mb-8 pl-2">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-500 mt-2">Welcome back, monitor your store's performance.</p>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-display font-medium tracking-tight text-gray-900">Dashboard</h1>
+        <p className="text-gray-500 mt-2">Welcome to UN Tiles Admin Panel</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((metric, i) => {
-          const Icon = metric.icon;
-          const delayClass = `motion-delay-${(i % 4) + 1}`;
-          
-          return (
-            <Link 
-              href={metric.href} 
-              key={i} 
-              className={`relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all cursor-pointer group min-h-[220px] motion-fade-up ${delayClass}`}
-            >
-              {/* Background Glow */}
-              <div className={`absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors group-hover:opacity-30 ${metric.bgColor.replace('bg-', 'bg-').replace('-50', '-500')}`} />
-              
-              {/* Background Abstract Line Art */}
-              <div className="absolute -bottom-8 -right-8 opacity-[0.03] pointer-events-none transform group-hover:scale-110 transition-transform duration-700">
-                <Icon className="w-48 h-48" />
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          icon={Package}
+          label="Total Products"
+          value={stats.totalProducts}
+        />
+        <StatCard
+          icon={Grid3x3}
+          label="Categories"
+          value={stats.totalCategories}
+        />
+        <StatCard
+          icon={BarChart3}
+          label="Stock (sq ft)"
+          value={stats.totalStock.toLocaleString()}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Inventory Value"
+          value={`$${stats.totalValue.toLocaleString()}`}
+        />
+      </div>
 
-              <div className="relative z-10 flex justify-between items-start">
-                <div className={`p-3 rounded-2xl ${metric.bgColor} group-hover:scale-110 transition-transform`}>
-                  <Icon className={`w-6 h-6 ${metric.color}`} />
-                </div>
-                
-                <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full shadow-sm border border-gray-100`}>
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  {metric.trend}
-                </div>
-              </div>
-
-              <div className="relative z-10 mt-8">
-                <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">{metric.title}</p>
-                <p className="text-5xl font-mono font-light text-gray-900 mt-2 tracking-tight">{metric.value}</p>
-              </div>
-            </Link>
-          );
-        })}
+      <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-display font-medium text-gray-900 mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a
+            href="/admin/products/new"
+            className="px-4 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-semibold tracking-wide uppercase text-xs text-center"
+          >
+            + Add New Product
+          </a>
+          <a
+            href="/admin/categories"
+            className="px-4 py-3 bg-blue-50 text-blue-900 border border-blue-100 rounded hover:bg-blue-100 transition-colors font-semibold tracking-wide uppercase text-xs text-center"
+          >
+            Manage Categories
+          </a>
+          <a
+            href="/admin/products"
+            className="px-4 py-3 bg-blue-50 text-blue-900 border border-blue-100 rounded hover:bg-blue-100 transition-colors font-semibold tracking-wide uppercase text-xs text-center"
+          >
+            View All Products
+          </a>
+        </div>
       </div>
     </div>
   );
