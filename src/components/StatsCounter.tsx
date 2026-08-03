@@ -63,7 +63,7 @@ export function StatsCounter({
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-2">
+      <div className="text-4xl md:text-5xl font-mono font-bold tracking-tight mb-2 text-accent drop-shadow-[0_0_12px_rgba(184,134,11,0.4)] animate-[pulse_3s_cubic-bezier(0.4,0,0.6,1)_infinite]">
         {prefix}{count}{suffix}
       </div>
       <div className="text-sm uppercase tracking-widest opacity-70">

@@ -9,7 +9,7 @@ export default function About() {
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[85vh] flex items-center justify-center bg-surface-dark overflow-hidden">
+      <section className="relative h-[85vh] flex items-center justify-center bg-surface-dark overflow-hidden pt-32">
         <ParallaxLayer
           speed={0.2}
           maxOffset={64}
@@ -42,20 +42,24 @@ export default function About() {
 
       {/* ══════ HERITAGE ══════ */}
       <section className="max-w-7xl mx-auto px-6 py-32 w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <ScrollReveal>
-          <div>
+        <div className="flex flex-col justify-center">
+          <ScrollReveal>
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Since 2004</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-8">Our Heritage</h2>
-            <div className="space-y-6 text-on-surface-variant leading-relaxed">
+          </ScrollReveal>
+          <div className="space-y-6 text-on-surface-variant leading-relaxed">
+            <ScrollReveal delay={100}>
               <p>
                 Established in 2004, UN Tiles (Unicorn Enterprises) was founded with a simple vision—to provide Sri Lankan customers with high-quality ceramic tiles and sanitary products at competitive prices. Over the years, we have built a strong reputation as a trusted importer and distributor by offering reliable products, exceptional customer service, and a wide selection suitable for both residential and commercial projects.
               </p>
+            </ScrollReveal>
+            <ScrollReveal delay={200}>
               <p>
                 With more than two decades of industry experience, we continue to help homeowners, architects, contractors, and developers find the perfect ceramic solutions for every space.
               </p>
-            </div>
+            </ScrollReveal>
           </div>
-        </ScrollReveal>
+        </div>
         <ScrollReveal delay={150}>
           <div className="relative aspect-[4/5] bg-surface-container overflow-hidden premium-shadow-lg">
             <ParallaxLayer
@@ -75,8 +79,8 @@ export default function About() {
       </section>
 
       {/* ══════ STATS ══════ */}
-      <section className="bg-surface-dark py-20">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark">
+      <section className="bg-surface-dark py-20 relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/40 before:to-transparent after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-accent/40 after:to-transparent">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark relative z-10">
           <StatsCounter end={20} suffix="+" label="Years of Experience" />
           <StatsCounter end={1000} suffix="+" label="Satisfied Customers" />
           <StatsCounter end={4} label="Sourcing Locations" />
@@ -90,9 +94,13 @@ export default function About() {
           <ScrollReveal>
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Product Sourcing</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-8">Global Sourcing, Local Trust</h2>
+          </ScrollReveal>
+          <ScrollReveal delay={100}>
             <p className="text-lg leading-relaxed text-on-surface-variant max-w-2xl mx-auto">
               Our products are carefully sourced from leading manufacturers across China, Vietnam, India, and Lanka Tiles (Sri Lanka).
             </p>
+          </ScrollReveal>
+          <ScrollReveal delay={200}>
             <p className="mt-6 text-lg leading-relaxed text-on-surface-variant max-w-2xl mx-auto">
               This allows us to offer customers a diverse range of designs, finishes, sizes, and price points to suit every project.
             </p>

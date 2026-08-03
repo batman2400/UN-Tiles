@@ -58,7 +58,7 @@ export function TopNavBar() {
   return (
     <>
       {/* ── Split Island Navbar ── */}
-      <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+      <div className="fixed top-0 w-full z-[100] pointer-events-none">
         <div className="max-w-[90rem] mx-auto px-6 lg:px-10 pt-5">
           <div className="flex items-center justify-between">
 
