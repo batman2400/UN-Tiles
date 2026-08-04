@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
 export interface AdminOrder {
@@ -33,10 +33,12 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<string>("All");
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       if (statusFilter !== "All" && o.status !== statusFilter) return false;
+      if (deliveryMethodFilter !== "All" && o.delivery_method !== deliveryMethodFilter) return false;
 
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
@@ -47,7 +49,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
         (o.profiles?.email || "").toLowerCase().includes(q)
       );
     });
-  }, [orders, searchQuery, statusFilter]);
+  }, [orders, searchQuery, statusFilter, deliveryMethodFilter]);
 
   const getRowState = (id: string): RowState => {
     return rowStates[id] ?? { isUpdating: false, feedback: null };
@@ -121,16 +123,25 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
           <h2 className="text-xl font-bold text-gray-900">Order Fulfillment</h2>
           <p className="text-sm text-gray-500 mt-1">Manage and track customer orders.</p>
         </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <select 
-            className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer"
+            className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer w-full md:w-auto"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="All">All Statuses</option>
             {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <div className="relative flex-1 md:w-64">
+          <select 
+            className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer w-full md:w-auto"
+            value={deliveryMethodFilter}
+            onChange={(e) => setDeliveryMethodFilter(e.target.value)}
+          >
+            <option value="All">All Delivery Methods</option>
+            <option value="Cash on Delivery">Cash on Delivery</option>
+            <option value="Pickup from Store">Pickup from Store</option>
+          </select>
+          <div className="relative flex-1 md:w-64 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
@@ -195,9 +206,16 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                     </div>
                   </td>
                   <td className="px-6 py-3 text-left">
-                    <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 text-xs font-semibold uppercase tracking-wider border border-gray-100">
-                      {order.delivery_method || "Pickup"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {order.delivery_method === "Cash on Delivery" ? (
+                        <Truck className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <Store className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      )}
+                      <span className="inline-flex px-2.5 py-1 rounded-md bg-gray-50 text-gray-600 text-[10px] font-bold uppercase tracking-wider border border-gray-100">
+                        {order.delivery_method || "Pickup"}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-6 py-3 text-left">
                     <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>

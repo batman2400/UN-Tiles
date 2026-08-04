@@ -18,7 +18,11 @@ import {
   ShoppingBag,
   Calendar,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  Truck,
+  Store,
+  Clock,
+  XCircle
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
@@ -148,6 +152,28 @@ function ProfileContent() {
     };
 
     void fetchUserData();
+
+    // Subscribe to real-time order updates
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          setOrders((current) =>
+            current.map((o) =>
+              o.id === payload.new.id
+                ? { ...o, status: payload.new.status, delivery_method: payload.new.delivery_method }
+                : o
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [supabase, user?.id]);
 
   const formValues: ProfileFormState = {
@@ -458,7 +484,13 @@ function ProfileContent() {
                   ) : (
                     orders.map((order) => {
                       const badgeStyle = getStatusBadgeStyle(order.status);
+                      const isCancelled = order.status.toLowerCase() === "cancelled";
+                      const isCOD = order.delivery_method === "Cash on Delivery";
+                      const isPickup = order.delivery_method === "Pickup from Store";
                       
+                      const steps = ["Pending", "Processing", "Shipped", "Delivered"];
+                      const currentStepIndex = isCancelled ? -1 : steps.findIndex(s => s.toLowerCase() === order.status.toLowerCase());
+
                       return (
                         <div 
                           key={order.id} 
@@ -478,12 +510,6 @@ function ProfileContent() {
                               <div className="flex items-center gap-2 text-xs text-gray-400 mt-1 font-mono">
                                 <Calendar className="w-3.5 h-3.5" />
                                 <span>{new Date(order.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
-                                {order.delivery_method && (
-                                  <>
-                                    <span>•</span>
-                                    <span className="uppercase">{order.delivery_method}</span>
-                                  </>
-                                )}
                               </div>
                             </div>
                             
@@ -493,17 +519,80 @@ function ProfileContent() {
                             </div>
                           </div>
 
+                          {/* Order Tracking Visual Stepper */}
+                          <div className="py-6 border-b border-gray-100">
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Fulfillment Status</h4>
+                            {isCancelled ? (
+                              <div className="flex items-center gap-3 text-red-600 bg-red-50 p-4 rounded-xl border border-red-100">
+                                <XCircle className="w-5 h-5" />
+                                <span className="text-sm font-semibold">Order Cancelled</span>
+                                <p className="text-xs text-red-500/80 ml-auto hidden sm:block">Please contact support for more details.</p>
+                              </div>
+                            ) : (
+                              <div className="relative flex items-center justify-between w-full max-w-2xl">
+                                {/* Connecting Background Line */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full"></div>
+                                {/* Active Connecting Line */}
+                                <div 
+                                  className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-yellow-500 rounded-full transition-all duration-700 ease-out" 
+                                  style={{ width: `${Math.max(0, (currentStepIndex / (steps.length - 1)) * 100)}%` }}
+                                ></div>
+
+                                {steps.map((step, idx) => {
+                                  const isCompleted = idx <= currentStepIndex;
+                                  const isCurrent = idx === currentStepIndex;
+                                  
+                                  return (
+                                    <div key={step} className="relative flex flex-col items-center gap-2 z-10">
+                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${
+                                        isCompleted ? "bg-yellow-500 text-zinc-950 shadow-md ring-4 ring-yellow-500/20" : "bg-gray-200 text-gray-400"
+                                      }`}>
+                                        {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+                                      </div>
+                                      <span className={`text-[10px] font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap transition-colors ${
+                                        isCurrent ? "text-zinc-900" : isCompleted ? "text-yellow-700" : "text-gray-400"
+                                      }`}>
+                                        {step}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+
                           {/* Items Preview Row */}
-                          <div className="py-4 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-yellow-500/20 text-yellow-600">
-                              <Package className="w-6 h-6" />
+                          <div className="py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4 max-w-md">
+                              <div className="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center flex-shrink-0 border border-yellow-500/20 text-yellow-600">
+                                <Package className="w-6 h-6" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-zinc-900 truncate" title={order.items}>
+                                  {order.items}
+                                </p>
+                                <p className="text-xs text-gray-400">Architectural Tile Specification</p>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-zinc-900 truncate" title={order.items}>
-                                {order.items}
-                              </p>
-                              <p className="text-xs text-gray-400">Architectural Tile Item Specification</p>
-                            </div>
+                            
+                            {/* Delivery Context Block */}
+                            {order.delivery_method && !isCancelled && (
+                              <div className={`p-4 rounded-xl flex items-start gap-3 w-full md:w-auto border ${
+                                isCOD ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-blue-50 border-blue-100 text-blue-800"
+                              }`}>
+                                {isCOD ? <Truck className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <Store className="w-5 h-5 flex-shrink-0 mt-0.5" />}
+                                <div>
+                                  <span className="text-xs font-bold uppercase tracking-widest block mb-1">
+                                    {order.delivery_method}
+                                  </span>
+                                  <p className="text-xs font-medium opacity-80 max-w-[200px]">
+                                    {isCOD 
+                                      ? "Please prepare exact change for collection upon delivery." 
+                                      : "Please visit our flagship showroom with your Order ID for collection."}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Action Items Footer */}

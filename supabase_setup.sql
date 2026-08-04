@@ -143,6 +143,10 @@ drop policy if exists "Users can view own orders." on public.orders;
 create policy "Users can view own orders." on public.orders
   for select using (auth.uid() = user_id);
 
+drop policy if exists "Users can update own pending orders." on public.orders;
+create policy "Users can update own pending orders." on public.orders
+  for update using (auth.uid() = user_id and status = 'Pending');
+
 -- (Orders would typically be inserted by a secure backend process, so we don't allow public insert here)
 
 -- Create a table for contact form inquiries
