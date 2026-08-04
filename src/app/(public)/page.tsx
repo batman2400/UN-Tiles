@@ -72,7 +72,7 @@ export default async function Home() {
           <div className="hidden md:block w-[1px] h-4 bg-on-surface-dark-variant/20" />
           <div className="flex items-center gap-3">
             <Award className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">15+ Years Experience</span>
+            <span className="text-sm font-medium tracking-wide">20+ Years Experience</span>
           </div>
           <div className="hidden md:block w-[1px] h-4 bg-on-surface-dark-variant/20" />
           <div className="flex items-center gap-3">
