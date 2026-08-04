@@ -2,8 +2,6 @@ import Image from "next/image";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
-import { Layers, Target, Heart, Globe } from "lucide-react";
-
 export default function About() {
   return (
     <div className="flex flex-col min-h-screen">

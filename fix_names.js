@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 
 const catalogStr = fs.readFileSync('./src/data/catalog.json', 'utf8');

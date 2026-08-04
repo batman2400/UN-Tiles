@@ -42,6 +42,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
           if (payload.eventType === "INSERT") {
             setOrders((prev) => [payload.new as AdminOrder, ...prev]);

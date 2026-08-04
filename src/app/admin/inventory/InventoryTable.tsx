@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { AddCategoryModal } from "@/components/admin/AddCategoryModal";
@@ -38,6 +38,7 @@ export function InventoryTable({ initialProducts, categories }: { initialProduct
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "products" },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
           setProducts((prev) =>
             prev.map((p) =>

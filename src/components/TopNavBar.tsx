@@ -16,8 +16,6 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-// All pages with hero images where islands float transparently
-const HERO_PAGES = ["/", "/about", "/contact", "/collections"];
 
 export function TopNavBar() {
   const pathname = usePathname();
@@ -29,7 +27,6 @@ export function TopNavBar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);

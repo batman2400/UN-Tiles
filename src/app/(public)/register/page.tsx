@@ -82,7 +82,7 @@ export default function RegisterPage() {
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-on-surface">Account created successfully!</p>
-                  <p className="text-sm text-on-surface-variant">We've sent a verification link to your email. Please verify your email before signing in.</p>
+                  <p className="text-sm text-on-surface-variant">We&apos;ve sent a verification link to your email. Please verify your email before signing in.</p>
                   <p className="text-xs text-on-surface-variant/70 italic pt-2">Redirecting to login...</p>
                 </div>
               </div>

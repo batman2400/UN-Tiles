@@ -87,7 +87,7 @@ export default async function AdminDashboardPage() {
     <div className="max-w-6xl mx-auto animate-[page-enter_300ms_ease-out]">
       <div className="mb-8 pl-2">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-500 mt-2">Welcome back, monitor your store's performance.</p>
+        <p className="text-gray-500 mt-2">Welcome back, monitor your store&apos;s performance.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

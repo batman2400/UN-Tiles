@@ -159,6 +159,7 @@ function ProfileContent() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
           setOrders((current) =>
             current.map((o) =>
@@ -486,7 +487,6 @@ function ProfileContent() {
                       const badgeStyle = getStatusBadgeStyle(order.status);
                       const isCancelled = order.status.toLowerCase() === "cancelled";
                       const isCOD = order.delivery_method === "Cash on Delivery";
-                      const isPickup = order.delivery_method === "Pickup from Store";
                       
                       const steps = ["Pending", "Processing", "Shipped", "Delivered"];
                       const currentStepIndex = isCancelled ? -1 : steps.findIndex(s => s.toLowerCase() === order.status.toLowerCase());

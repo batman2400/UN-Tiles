@@ -1,12 +1,13 @@
 "use server";
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 /**
  * Ensures the currently authenticated user is an admin.
  */
-async function requireAdmin(supabase: any) {
+async function requireAdmin(supabase: SupabaseClient) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     throw new Error("Unauthorized");

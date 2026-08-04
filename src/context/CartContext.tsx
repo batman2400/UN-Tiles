@@ -81,6 +81,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(readStorage(storageKey));
     setIsLoaded(true);
   }, [storageKey]);

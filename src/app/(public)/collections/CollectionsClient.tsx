@@ -36,6 +36,7 @@ export function CollectionsClient({
     const q = searchParams.get("q") || "";
     const dims = searchParams.getAll("dim").map((d) => d.replace(/\+/g, " "));
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedCategory(cat);
     setSearchQuery(q);
     setSelectedDims(dims);
@@ -299,7 +300,7 @@ export function CollectionsClient({
                 <span className="text-xs text-gray-400 font-medium">Sort By:</span>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
+                  onChange={(e) => setSortBy(e.target.value as "featured" | "price-asc" | "price-desc")}
                   className="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-zinc-900 px-3 py-2 outline-none cursor-pointer focus:border-yellow-500 transition-all"
                 >
                   <option value="featured">Featured First</option>

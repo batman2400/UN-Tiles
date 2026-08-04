@@ -1,5 +1,5 @@
 import catalogSeed from "./catalog.json";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export type ProductCard = {
   id: string;
@@ -64,7 +64,6 @@ type CatalogLoadOptions = {
   remote?: boolean;
 };
 
-const CACHE_SECONDS = 300;
 const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.png";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
 
@@ -98,6 +97,7 @@ function isRawCatalogProduct(value: unknown): value is RawCatalogProduct {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isRawCatalogPayload(value: unknown): value is RawCatalogPayload {
   if (!isRecord(value)) {
     return false;
@@ -143,7 +143,10 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
       return null;
     }
 
-    const supabase = await createClient();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
 
     // Use a 5-second timeout so the page falls back quickly if Supabase is unreachable.
     const timeout = AbortSignal.timeout(5000);
