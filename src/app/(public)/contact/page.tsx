@@ -44,7 +44,7 @@ export default function Contact() {
       const body = encodeURIComponent(
         `Name: ${name}\nEmail: ${email}\nCompany: ${company || "N/A"}\nPhone: ${phone || "N/A"}\nProject Type: ${projectType}\n\nMessage:\n${message}`
       );
-      window.open(`mailto:uvarammohan90@gmail.com?subject=${subject}&body=${body}`, "_self");
+      window.open(`mailto:studio@untiles.com?subject=${subject}&body=${body}`, "_self");
 
       // Clear form & show success
       setName("");
@@ -340,7 +340,7 @@ export default function Contact() {
             {/* Accent top border */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent z-10" />
             {/* Dark overlay label */}
-            <div className="absolute top-6 left-6 z-10 bg-surface-dark/90 backdrop-blur-sm px-5 py-3 premium-shadow flex items-center gap-3">
+            <div className="absolute top-6 right-6 z-10 bg-surface-dark/90 backdrop-blur-sm px-5 py-3 premium-shadow flex items-center gap-3">
               <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-dark-variant">Head Office</p>
