@@ -24,16 +24,10 @@ export function Footer() {
             Architectural precision in high-end tiling. Materializing your vision with structural integrity and timeless design.
           </p>
           <div className="flex space-x-4 pt-2">
-            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
-              <Globe className="w-4 h-4" />
-            </a>
-            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
-              <LayoutGrid className="w-4 h-4" />
-            </a>
-            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+            <a href="mailto:studio@untiles.com" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
               <Mail className="w-4 h-4" />
             </a>
-            <a href="#" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+            <a href="tel:+94773508325" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
               <Phone className="w-4 h-4" />
             </a>
           </div>
@@ -56,8 +50,6 @@ export function Footer() {
           <ul className="space-y-3 text-sm text-on-surface-dark-variant">
             <li><Link href="/about" className="hover:text-accent transition-colors duration-300">About Us</Link></li>
             <li><Link href="/contact" className="hover:text-accent transition-colors duration-300">Contact</Link></li>
-            <li><Link href="#" className="hover:text-accent transition-colors duration-300">Shipping Policy</Link></li>
-            <li><Link href="#" className="hover:text-accent transition-colors duration-300">Terms of Service</Link></li>
           </ul>
         </div>
 
@@ -65,13 +57,8 @@ export function Footer() {
       
       {/* Bottom bar */}
       <div className="border-t border-white/8">
-        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-on-surface-dark-variant">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-center items-center gap-4 text-xs text-on-surface-dark-variant">
           <p>&copy; {new Date().getFullYear()} UN Tiles (Unicorn Enterprises). All rights reserved.</p>
-          <div className="flex space-x-6">
-            <Link href="#" className="hover:text-accent transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-accent transition-colors">Cookie Policy</Link>
-            <Link href="#" className="hover:text-accent transition-colors">Sitemap</Link>
-          </div>
         </div>
       </div>
     </footer>
