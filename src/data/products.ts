@@ -163,6 +163,8 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
       return null;
     }
 
+    const fallbackNameMap = new Map(FALLBACK_CATALOG.products.map((p) => [p.id, p.name]));
+
     // Map the relational rows (snake_case) to our TypeScript payload interface (camelCase)
     const payload: RawCatalogPayload = {
       categories: categoriesRes.data.map((row) => ({
@@ -173,7 +175,7 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
       products: productsRes.data.map((row) => ({
         id: row.id,
         sku: row.sku,
-        name: row.name,
+        name: fallbackNameMap.get(row.id) || row.name,
         dimensions: row.dimensions,
         pricePerSqFt: row.price_per_sqft,
         image: row.image,
