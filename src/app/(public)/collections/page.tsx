@@ -8,6 +8,7 @@ type CollectionsPageProps = {
   searchParams: Promise<{
     category?: string | string[];
     dim?: string | string[];
+    q?: string | string[];
   }>;
 };
 
@@ -27,6 +28,10 @@ export default async function Collections({
     ? (Array.isArray(resolvedSearchParams.dim) ? resolvedSearchParams.dim : [resolvedSearchParams.dim]).map(d => d.replace(/\+/g, ' '))
     : [];
 
+  const qParam = resolvedSearchParams.q 
+    ? (Array.isArray(resolvedSearchParams.q) ? resolvedSearchParams.q[0] : resolvedSearchParams.q).toLowerCase()
+    : "";
+
   const activeCategory = categories.find(
     (category) => category.slug === categoryParam
   );
@@ -37,6 +42,13 @@ export default async function Collections({
     
   if (dimParams.length > 0) {
     visibleProducts = visibleProducts.filter(p => dimParams.includes(p.dimensions));
+  }
+
+  if (qParam) {
+    visibleProducts = visibleProducts.filter(p => 
+      p.name.toLowerCase().includes(qParam) || 
+      p.category.toLowerCase().includes(qParam)
+    );
   }
 
   const dimensions = Array.from(
@@ -59,15 +71,17 @@ export default async function Collections({
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 pb-12 w-full motion-fade-up">
           <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">
-            {activeCategory ? activeCategory.name : "All Collections"}
+            {qParam ? `Search Results for "${qParam}"` : (activeCategory ? activeCategory.name : "All Collections")}
           </p>
           <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white mb-4">
-            The Collections
+            {qParam ? "Search Results" : "The Collections"}
           </h1>
           <p className="text-white/70 max-w-2xl">
-            {activeCategory
-              ? `Showing ${activeCategory.name}. Browse the latest in this segment and refine by dimensions.`
-              : "Browse our full archive of architectural slabs. Use the structural filters to refine by scale, application, and finish."}
+            {qParam 
+              ? `Found ${visibleProducts.length} results matching your search.`
+              : (activeCategory
+                ? `Showing ${activeCategory.name}. Browse the latest in this segment and refine by dimensions.`
+                : "Browse our full archive of architectural slabs. Use the structural filters to refine by scale, application, and finish.")}
           </p>
         </div>
       </section>

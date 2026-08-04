@@ -6,8 +6,8 @@ import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -21,10 +21,14 @@ const HERO_PAGES = ["/", "/about", "/contact", "/collections"];
 
 export function TopNavBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { cartCount } = useCart();
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const isHeroPage = HERO_PAGES.includes(pathname);
 
   useEffect(() => {
@@ -33,6 +37,21 @@ export function TopNavBar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/collections?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
 
   // Close mobile menu on route change
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -110,7 +129,27 @@ export function TopNavBar() {
                 <Menu className="w-[18px] h-[18px]" />
               </button>
 
-              <button className={`hidden md:block transition-colors duration-300 ${iconColor}`}>
+              <form 
+                onSubmit={handleSearchSubmit}
+                className={`hidden md:flex items-center transition-all duration-500 overflow-hidden ${searchOpen ? 'w-40 border-b border-white/20' : 'w-0'}`}
+              >
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
+                  onBlur={() => {
+                    if (!searchQuery) setSearchOpen(false);
+                  }}
+                />
+              </form>
+              <button 
+                type="button"
+                onClick={() => setSearchOpen(!searchOpen)}
+                className={`hidden md:block transition-colors duration-300 ${iconColor}`}
+              >
                 <Search className="w-[18px] h-[18px]" />
               </button>
 
