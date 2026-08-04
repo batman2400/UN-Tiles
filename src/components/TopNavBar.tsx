@@ -208,6 +208,20 @@ export function TopNavBar() {
                 <X className="w-6 h-6" />
               </button>
             </div>
+            
+            {/* Mobile Search Input */}
+            <form onSubmit={handleSearchSubmit} className="p-4 border-b ghost-border">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant opacity-60" />
+                <input
+                  type="text"
+                  placeholder="Search collections..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2.5 bg-surface-container-low text-xs text-on-surface rounded-xl border ghost-border outline-none focus:border-accent"
+                />
+              </div>
+            </form>
             <nav className="flex-1 p-6 space-y-2">
               {NAV_LINKS.map(({ href, label }) => {
                 const isActive =
