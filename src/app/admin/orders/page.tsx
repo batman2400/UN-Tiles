@@ -11,32 +11,36 @@ export default async function AdminOrdersPage() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const [profileRes, ordersRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("orders")
+      .select(`
+        id, status, items, total, delivery_method, date,
+        profiles (
+          first_name, last_name, email, phone
+        )
+      `)
+      .order("date", { ascending: false }),
+  ]);
+
+  const profile = profileRes.data;
+  const error = ordersRes.error;
 
   if (!profile || profile.role !== "admin") {
     redirect("/login");
   }
-
-  const { data: ordersRes, error } = await supabase
-    .from("orders")
-    .select(`
-      id, status, items, total, delivery_method, date,
-      profiles (
-        first_name, last_name, email, phone
-      )
-    `)
-    .order("date", { ascending: false });
 
   if (error) {
     console.error("Failed to load orders for admin:", error);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adminOrders: AdminOrder[] = (ordersRes ?? []).map((row: any) => ({
+  const adminOrders: AdminOrder[] = (ordersRes.data ?? []).map((row: any) => ({
     id: row.id,
     status: row.status,
     items: row.items,

@@ -17,21 +17,20 @@ export default async function AdminDashboardPage() {
   }
 
   // 2. Verify admin role
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const [profileRes, productsRes, ordersRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single(),
+    supabase.from("products").select("stock_sqft"),
+    supabase.from("orders").select("status"),
+  ]);
 
-  if (profileError || !profile || profile.role !== "admin") {
+  const profile = profileRes.data;
+  if (!profile || profile.role !== "admin") {
     redirect("/login");
   }
-
-  // 3. Fetch data for metrics
-  const [productsRes, ordersRes] = await Promise.all([
-    supabase.from("products").select("stock_sqft"),
-    supabase.from("orders").select("status")
-  ]);
 
   const products = productsRes.data ?? [];
   const orders = ordersRes.data ?? [];

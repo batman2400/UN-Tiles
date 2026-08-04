@@ -11,26 +11,30 @@ export default async function AdminInventoryPage() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  const [profileRes, productsRes] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("products")
+      .select("id, sku, name, stock_sqft, price_per_sqft, category_slug, image")
+      .order("sku", { ascending: true }),
+  ]);
+
+  const profile = profileRes.data;
+  const error = productsRes.error;
 
   if (!profile || profile.role !== "admin") {
     redirect("/login");
   }
 
-  const { data: productsRes, error } = await supabase
-    .from("products")
-    .select("id, sku, name, stock_sqft, price_per_sqft, category_slug, image")
-    .order("sku", { ascending: true });
-
   if (error) {
     console.error("Failed to load inventory:", error);
   }
 
-  const adminProducts: AdminProduct[] = (productsRes ?? []).map((row) => ({
+  const adminProducts: AdminProduct[] = (productsRes.data ?? []).map((row) => ({
     id: row.id,
     sku: row.sku,
     name: row.name,
