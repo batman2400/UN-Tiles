@@ -159,7 +159,7 @@ function ProfileContent() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
-        (payload) => {
+        (payload: any) => {
           setOrders((current) =>
             current.map((o) =>
               o.id === payload.new.id
