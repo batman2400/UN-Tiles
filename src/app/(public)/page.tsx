@@ -5,6 +5,7 @@ import { ArrowRight, Shield, Truck, Award, Gem } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
+import { ProductCard } from "@/components/ProductCard";
 
 export default async function Home() {
   const { featuredProducts, categories } = await getCatalogData();
@@ -182,29 +183,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {featuredProducts.map((product, idx) => (
             <ScrollReveal key={product.id} delay={idx * 100}>
-              <div className="group bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500">
-                <div className="relative aspect-square overflow-hidden bg-surface-container">
-                  <Image 
-                    src={product.image} 
-                    alt={product.name} 
-                    fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="product-card-overlay">
-                    <button className="overlay-btn bg-white text-on-surface px-6 py-3 text-xs font-semibold uppercase tracking-widest hover:bg-accent hover:text-on-accent transition-colors">
-                      Quick View
-                    </button>
-                  </div>
-                </div>
-                <div className="p-5">
-                  <p className="text-xs uppercase tracking-widest text-accent mb-1">{product.category}</p>
-                  <h3 className="text-lg font-display font-semibold text-on-surface mb-2">{product.name}</h3>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-on-surface-variant">{product.dimensions}</span>
-                    <span className="font-bold text-on-surface">{product.price} / tile</span>
-                  </div>
-                </div>
-              </div>
+              <ProductCard product={product} />
             </ScrollReveal>
           ))}
         </div>
