@@ -304,6 +304,37 @@ export default function Contact() {
         
       </section>
 
+      {/* ══════ MAP ══════ */}
+      <section className="w-full">
+        <ScrollReveal>
+          <div className="relative w-full h-[480px] overflow-hidden">
+            {/* Accent top border */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent z-10" />
+            {/* Dark overlay label */}
+            <div className="absolute top-6 left-6 z-10 bg-surface-dark/90 backdrop-blur-sm px-5 py-3 premium-shadow flex items-center gap-3">
+              <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-on-surface-dark-variant">Head Office</p>
+                <p className="text-sm font-semibold text-on-surface-dark">No. 161/A, Polhengoda Road, Colombo 05</p>
+              </div>
+            </div>
+            <iframe
+              title="UN Tiles Location"
+              src="https://maps.google.com/maps?q=6.8823419,79.8808345&z=17&output=embed"
+              width="100%"
+              height="100%"
+              style={{ border: 0, filter: "grayscale(30%) contrast(1.05)" }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0"
+            />
+            {/* Bottom gradient fade */}
+            <div className="absolute bottom-0 inset-x-0 h-12 bg-gradient-to-t from-background/20 to-transparent pointer-events-none z-10" />
+          </div>
+        </ScrollReveal>
+      </section>
+
     </div>
   );
 }
