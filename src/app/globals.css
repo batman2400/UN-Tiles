@@ -65,6 +65,19 @@
     background-color: var(--color-accent);
     color: white;
   }
+
+  /* Hide browser native password reveal button (Edge/IE/Chrome) to prevent
+     double eye icons when a custom toggle is present */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+
+  input[type="password"]::-webkit-contacts-auto-fill-button,
+  input[type="password"]::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 /* ═══════════════════════════════════════════
