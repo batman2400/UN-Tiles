@@ -25,7 +25,7 @@
     {
       "id": "tile-floor-1",
       "sku": "UN-FLO-100",
-      "name": "Agaria",
+      "name": "Agaria Italian Marble",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 1500,
       "image": "/tiles/floor_agaria.jpg",
@@ -38,7 +38,7 @@
     {
       "id": "tile-floor-2",
       "sku": "UN-FLO-101",
-      "name": "Alubel",
+      "name": "Alubel Natural Stone",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 1650,
       "image": "/tiles/floor_alubel.jpg",
@@ -51,7 +51,7 @@
     {
       "id": "tile-floor-3",
       "sku": "UN-FLO-102",
-      "name": "Ambekke",
+      "name": "Ambekke Heritage Slab",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 1800,
       "image": "/tiles/floor_ambekke.jpg",
@@ -64,7 +64,7 @@
     {
       "id": "tile-floor-4",
       "sku": "UN-FLO-103",
-      "name": "Arabescato Fay",
+      "name": "Arabescato Fay Marble",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 1950,
       "image": "/tiles/floor_arabescato___fay.jpg",
@@ -77,7 +77,7 @@
     {
       "id": "tile-floor-5",
       "sku": "UN-FLO-104",
-      "name": "Arabescato",
+      "name": "Arabescato White Marble",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2100,
       "image": "/tiles/floor_arabescato.jpg",
@@ -90,7 +90,7 @@
     {
       "id": "tile-floor-6",
       "sku": "UN-FLO-105",
-      "name": "Aurora Fay",
+      "name": "Aurora Fay Vein Porcelain",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2250,
       "image": "/tiles/floor_aurora___fay.jpg",
@@ -103,7 +103,7 @@
     {
       "id": "tile-floor-7",
       "sku": "UN-FLO-106",
-      "name": "Aurora",
+      "name": "Aurora Soft Silk Porcelain",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2400,
       "image": "/tiles/floor_aurora.jpg",
@@ -116,7 +116,7 @@
     {
       "id": "tile-floor-8",
       "sku": "UN-FLO-107",
-      "name": "Bastia",
+      "name": "Bastia Tuscan Stone",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2550,
       "image": "/tiles/floor_bastia.jpg",
@@ -129,7 +129,7 @@
     {
       "id": "tile-floor-9",
       "sku": "UN-FLO-108",
-      "name": "Cool Rooftop",
+      "name": "Cool Solar Rooftop Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2700,
       "image": "/tiles/floor_cool_rooftop.jpg",
@@ -142,7 +142,7 @@
     {
       "id": "tile-floor-10",
       "sku": "UN-FLO-109",
-      "name": "Caramella Fay",
+      "name": "Caramella Fay Amber Slab",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2850,
       "image": "/tiles/floor_caramella___fay.jpg",
@@ -155,7 +155,7 @@
     {
       "id": "tile-mosaics-1",
       "sku": "UN-MOS-100",
-      "name": "2.2 Square",
+      "name": "Square Grid Micro Mosaic",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 1500,
       "image": "/tiles/mosaics_2.2_square.jpg",
@@ -168,7 +168,7 @@
     {
       "id": "tile-mosaics-2",
       "sku": "UN-MOS-101",
-      "name": "2X2 Square Mosaic",
+      "name": "2x2 Classic Square Mosaic",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 1650,
       "image": "/tiles/mosaics_2x2_square_mosaic.jpg",
@@ -181,7 +181,7 @@
     {
       "id": "tile-mosaics-3",
       "sku": "UN-MOS-102",
-      "name": "2X4 Bevel Mosaic",
+      "name": "2x4 Bevel Edge Mosaic",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 1800,
       "image": "/tiles/mosaics_2x4_bevel_mosaic.jpg",
@@ -194,7 +194,7 @@
     {
       "id": "tile-mosaics-4",
       "sku": "UN-MOS-103",
-      "name": "2X4 Flat Mosaic",
+      "name": "2x4 Architectural Flat Mosaic",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1950,
       "image": "/tiles/mosaics_2x4_flat_mosaic.jpg",
@@ -207,7 +207,7 @@
     {
       "id": "tile-mosaics-5",
       "sku": "UN-MOS-104",
-      "name": "Arabesque",
+      "name": "Lantern Arabesque Mosaic",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 2100,
       "image": "/tiles/mosaics_arabesque.jpg",
@@ -220,7 +220,7 @@
     {
       "id": "tile-mosaics-6",
       "sku": "UN-MOS-105",
-      "name": "Circular",
+      "name": "Penny Round Circular Mosaic",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2250,
       "image": "/tiles/mosaics_circular.jpg",
@@ -233,7 +233,7 @@
     {
       "id": "tile-mosaics-7",
       "sku": "UN-MOS-106",
-      "name": "Diamondback",
+      "name": "Diamond Pattern Mosaic",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2400,
       "image": "/tiles/mosaics_diamondback.jpg",
@@ -246,7 +246,7 @@
     {
       "id": "tile-mosaics-8",
       "sku": "UN-MOS-107",
-      "name": "Elongated Hexagon",
+      "name": "Stretched Hexagon Mosaic",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2550,
       "image": "/tiles/mosaics_elongated_hexagon.jpg",
@@ -259,7 +259,7 @@
     {
       "id": "tile-mosaics-9",
       "sku": "UN-MOS-108",
-      "name": "Fan",
+      "name": "Japanese Fan Scale Mosaic",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 2700,
       "image": "/tiles/mosaics_fan.jpg",
@@ -272,7 +272,7 @@
     {
       "id": "tile-mosaics-10",
       "sku": "UN-MOS-109",
-      "name": "Geometric",
+      "name": "Multi-Tone Geometric Mosaic",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2850,
       "image": "/tiles/mosaics_geometric.jpg",
@@ -285,7 +285,7 @@
     {
       "id": "tile-pool-tiles-1",
       "sku": "UN-POO-100",
-      "name": "Ocean Cyan Pool Tile",
+      "name": "Ocean Cyan Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1500,
       "image": "/tiles/pool-tiles_pool___kafhsqlobs_0108b52.jpg",
@@ -298,7 +298,7 @@
     {
       "id": "tile-pool-tiles-2",
       "sku": "UN-POO-101",
-      "name": "Azure Blue Pool Tile",
+      "name": "Azure Sky Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1650,
       "image": "/tiles/pool-tiles_pool___kafhsqlocr_0105a52.jpg",
@@ -311,7 +311,7 @@
     {
       "id": "tile-pool-tiles-3",
       "sku": "UN-POO-102",
-      "name": "Deep Cobalt Pool Tile",
+      "name": "Deep Cobalt Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1800,
       "image": "/tiles/pool-tiles_pool___kafhsqlocr_0105c52.jpg",
@@ -324,7 +324,7 @@
     {
       "id": "tile-pool-tiles-4",
       "sku": "UN-POO-103",
-      "name": "Turquoise Lagoon Pool Tile",
+      "name": "Turquoise Lagoon Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1950,
       "image": "/tiles/pool-tiles_pool___kafhsqloka_0109b52.jpg",
@@ -337,7 +337,7 @@
     {
       "id": "tile-pool-tiles-5",
       "sku": "UN-POO-104",
-      "name": "Royal Sapphire Pool Tile",
+      "name": "Royal Sapphire Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2100,
       "image": "/tiles/pool-tiles_pool___kafhsqloka_0109c52.jpg",
@@ -350,7 +350,7 @@
     {
       "id": "tile-pool-tiles-6",
       "sku": "UN-POO-105",
-      "name": "Aquamarine Glass Pool Tile",
+      "name": "Aquamarine Glass Sheet Pool Mosaic",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2250,
       "image": "/tiles/pool-tiles_pool___kafhsqlooe_0107a52.jpg",
@@ -363,7 +363,7 @@
     {
       "id": "tile-pool-tiles-7",
       "sku": "UN-POO-106",
-      "name": "Pacific Blue Pool Tile",
+      "name": "Pacific Blue Glazed Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2400,
       "image": "/tiles/pool-tiles_pool___kafhsqlowa_0106a52.jpg",
@@ -376,7 +376,7 @@
     {
       "id": "tile-pool-tiles-8",
       "sku": "UN-POO-107",
-      "name": "Teal Reflection Pool Tile",
+      "name": "Teal Reflection Glazed Pool Tile",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2550,
       "image": "/tiles/pool-tiles_pool___kafhsqlowa_0106b52.jpg",
@@ -389,7 +389,7 @@
     {
       "id": "tile-wall-1",
       "sku": "UN-WAL-100",
-      "name": "Agate",
+      "name": "Agate Gemstone Feature Wall Slab",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 1500,
       "image": "/tiles/wall_agate.jpg",
@@ -402,7 +402,7 @@
     {
       "id": "tile-wall-2",
       "sku": "UN-WAL-101",
-      "name": "Autumn Gloss",
+      "name": "Autumn Amber Gloss Wall Tile",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 1650,
       "image": "/tiles/wall_autumn_gloss.jpg",
@@ -415,7 +415,7 @@
     {
       "id": "tile-wall-3",
       "sku": "UN-WAL-102",
-      "name": "Cement Wash",
+      "name": "Industrial Cement Wash Wall Tile",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 1800,
       "image": "/tiles/wall_cement_wash.jpg",
@@ -428,7 +428,7 @@
     {
       "id": "tile-wall-4",
       "sku": "UN-WAL-103",
-      "name": "Colonize",
+      "name": "Colonize Textured Wall Slab",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 1950,
       "image": "/tiles/wall_colonize.jpg",
@@ -441,7 +441,7 @@
     {
       "id": "tile-wall-5",
       "sku": "UN-WAL-104",
-      "name": "Ensign",
+      "name": "Ensign Architectural Wall Tile",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2100,
       "image": "/tiles/wall_ensign.jpg",
@@ -454,7 +454,7 @@
     {
       "id": "tile-wall-6",
       "sku": "UN-WAL-105",
-      "name": "Hexagon",
+      "name": "Geometric Hexagon Wall Accent",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2250,
       "image": "/tiles/wall_hexagon.jpg",
@@ -467,7 +467,7 @@
     {
       "id": "tile-wall-7",
       "sku": "UN-WAL-106",
-      "name": "Ketayama",
+      "name": "Ketayama Relief Feature Wall Tile",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2400,
       "image": "/tiles/wall_ketayama.jpg",
@@ -480,7 +480,7 @@
     {
       "id": "tile-wall-8",
       "sku": "UN-WAL-107",
-      "name": "Lasquire",
+      "name": "Lasquire Minimalist Wall Slab",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 2550,
       "image": "/tiles/wall_lasquire.jpg",
@@ -493,7 +493,7 @@
     {
       "id": "tile-wall-9",
       "sku": "UN-WAL-108",
-      "name": "Luminara",
+      "name": "Luminara Polished Accent Wall Tile",
       "dimensions": "120x60 cm",
       "pricePerSqFt": 2700,
       "image": "/tiles/wall_luminara.jpg",
@@ -506,7 +506,7 @@
     {
       "id": "tile-wall-10",
       "sku": "UN-WAL-109",
-      "name": "Lushfade",
+      "name": "Lushfade Gradient Wall Tile",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2850,
       "image": "/tiles/wall_lushfade.jpg",
