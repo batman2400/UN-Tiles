@@ -52,7 +52,7 @@ export default function RegisterPage() {
 
     if (result.success) {
       setSuccess(true);
-      setTimeout(() => router.push("/login"), 2000);
+      setTimeout(() => router.push("/login"), 5000);
     } else {
       setError(result.error || "Registration failed.");
       setIsSubmitting(false);
@@ -80,7 +80,11 @@ export default function RegisterPage() {
             <div className="mb-8 bg-primary/5 border-l-2 border-primary px-5 py-4 motion-fade-up">
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
-                <p className="text-sm text-on-surface">Account created! Redirecting to login...</p>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-on-surface">Account created successfully!</p>
+                  <p className="text-sm text-on-surface-variant">We've sent a verification link to your email. Please verify your email before signing in.</p>
+                  <p className="text-xs text-on-surface-variant/70 italic pt-2">Redirecting to login...</p>
+                </div>
               </div>
             </div>
           )}
