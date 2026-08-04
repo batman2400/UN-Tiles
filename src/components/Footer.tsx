@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Mail, Phone, LayoutGrid, Globe } from "lucide-react";
+import { ArrowRight, Mail, Phone, LayoutGrid, Globe, Instagram } from "lucide-react";
 import Image from "next/image";
 
 export function Footer() {
@@ -24,6 +24,9 @@ export function Footer() {
             Architectural precision in high-end tiling. Materializing your vision with structural integrity and timeless design.
           </p>
           <div className="flex space-x-4 pt-2">
+            <a href="https://www.instagram.com/un_tiles_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
+              <Instagram className="w-4 h-4" />
+            </a>
             <a href="mailto:studio@untiles.com" className="w-9 h-9 bg-surface-dark-elevated flex items-center justify-center text-on-surface-dark-variant hover:bg-accent hover:text-on-accent transition-colors duration-300">
               <Mail className="w-4 h-4" />
             </a>
