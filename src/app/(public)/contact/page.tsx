@@ -65,7 +65,7 @@ export default function Contact() {
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-surface-dark overflow-hidden">
+      <section className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-surface-dark overflow-hidden pt-32">
         <ParallaxLayer
           speed={0.2}
           maxOffset={48}
@@ -89,19 +89,21 @@ export default function Contact() {
       </section>
 
       {/* ══════ QUICK CONTACT STRIP ══════ */}
-      <section className="bg-surface-dark border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <section className="bg-surface-dark border-t border-white/10 relative z-10 premium-shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { icon: Phone, label: "Call Us", value: "+94 773508325" },
             { icon: Mail, label: "Email", value: "studio@untiles.com" },
             { icon: MapPin, label: "Location", value: "Kirulapona,Colombo 05." },
             { icon: Clock, label: "Hours", value: "Mon-Sat: 9.00am-6.30pm " },
           ].map((item) => (
-            <div key={item.label} className="flex items-center gap-3 text-on-surface-dark-variant">
-              <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
+            <div key={item.label} className="flex items-center gap-4 text-on-surface-dark-variant group cursor-default">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                <item.icon className="w-4 h-4 text-accent flex-shrink-0" />
+              </div>
               <div>
-                <p className="text-[10px] uppercase tracking-widest opacity-60">{item.label}</p>
-                <p className="text-sm text-on-surface-dark font-medium">{item.value}</p>
+                <p className="text-[10px] uppercase tracking-widest opacity-60 group-hover:opacity-100 transition-opacity">{item.label}</p>
+                <p className="text-sm text-on-surface-dark font-medium group-hover:text-accent transition-colors">{item.value}</p>
               </div>
             </div>
           ))}
@@ -112,59 +114,65 @@ export default function Contact() {
       <section className="max-w-7xl mx-auto px-6 py-24 w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
         
         {/* Info */}
-        <div className="space-y-12">
-          <ScrollReveal>
-            <div>
+        <div className="space-y-12 flex flex-col justify-center">
+          <div className="flex flex-col">
+            <ScrollReveal>
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Visit Us</p>
               <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Colombo Showroom (Head Office)</h2>
+            </ScrollReveal>
+            <ScrollReveal delay={100}>
               <div className="space-y-2 text-on-surface-variant leading-relaxed">
                 <p>No. 161/A, Polhengoda Road,</p>
                 <p>Kirulapona, Colombo 05.</p>
                 <p className="pt-4 font-semibold text-on-surface">P: +94 773508325 / +94 772303950</p>
                 <p className="font-semibold text-on-surface">E: studio@untiles.com</p>
               </div>
-            </div>
-          </ScrollReveal>
+            </ScrollReveal>
+          </div>
           
           <ScrollReveal delay={100}>
             <div className="section-divider" />
           </ScrollReveal>
 
-          <ScrollReveal delay={150}>
-            <div>
+          <div className="flex flex-col">
+            <ScrollReveal delay={150}>
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Islandwide</p>
               <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Other Showrooms</h2>
+            </ScrollReveal>
+            <ScrollReveal delay={250}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="bg-surface-container-low p-6 premium-shadow">
-                  <p className="font-display font-semibold text-on-surface mb-1">Benthota</p>
+                <div className="bg-surface-container-low p-6 premium-shadow interactive-card cursor-default group">
+                  <p className="font-display font-semibold text-on-surface mb-1 group-hover:text-accent transition-colors">Benthota</p>
                   <p className="text-sm text-on-surface-variant">No 105, Gasdeka watta, Dope , Benthota</p>
                 </div>
               </div>
-            </div>
-          </ScrollReveal>
+            </ScrollReveal>
+          </div>
 
           <ScrollReveal delay={200}>
             <div className="section-divider" />
           </ScrollReveal>
 
-          <ScrollReveal delay={250}>
-            <div>
+          <div className="flex flex-col">
+            <ScrollReveal delay={250}>
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Schedule</p>
               <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface mb-6">Business Hours</h2>
+            </ScrollReveal>
+            <ScrollReveal delay={350}>
               <div className="space-y-3 text-sm">
                 {[
                   { day: "Monday – Saturday", time: "9:00 AM – 6:30 PM" },
                   { day: "Sunday", time: "Closed" },
                   { day: "Public Holidays", time: "Closed" },
                 ].map((item) => (
-                  <div key={item.day} className="flex justify-between py-2 border-b ghost-border">
+                  <div key={item.day} className="flex justify-between py-2 border-b ghost-border hover:bg-surface-container-low transition-colors px-2 rounded">
                     <span className="text-on-surface font-medium">{item.day}</span>
                     <span className="text-on-surface-variant">{item.time}</span>
                   </div>
                 ))}
               </div>
-            </div>
-          </ScrollReveal>
+            </ScrollReveal>
+          </div>
         </div>
 
         {/* Form */}
