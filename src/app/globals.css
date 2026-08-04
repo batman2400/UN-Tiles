@@ -221,30 +221,32 @@ html {
    ═══════════════════════════════════════════ */
 
 .motion-fade-up {
-  animation: fade-up-soft 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-up-soft 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.motion-delay-1 { animation-delay: 90ms; }
-.motion-delay-2 { animation-delay: 170ms; }
-.motion-delay-3 { animation-delay: 260ms; }
-.motion-delay-4 { animation-delay: 350ms; }
+.motion-delay-1 { animation-delay: 100ms; }
+.motion-delay-2 { animation-delay: 190ms; }
+.motion-delay-3 { animation-delay: 280ms; }
+.motion-delay-4 { animation-delay: 370ms; }
 
 .page-enter {
-  animation: page-enter 520ms cubic-bezier(0.19, 1, 0.22, 1) both;
+  animation: page-enter 580ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Scroll-reveal: hidden by default, revealed by IntersectionObserver */
 .scroll-reveal {
   opacity: 0;
-  transform: translate3d(0, 40px, 0);
+  transform: translate3d(0, 36px, 0) scale(0.98);
   transition:
-    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 850ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 850ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 
 .scroll-reveal.revealed {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 
 .shimmer-skeleton {
