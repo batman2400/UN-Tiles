@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
+import { AddCategoryModal } from "@/components/admin/AddCategoryModal";
+import { AddProductModal } from "@/components/admin/AddProductModal";
 
 export interface AdminProduct {
   id: string;
@@ -21,7 +23,7 @@ interface RowState {
   feedback: { type: "success" | "error"; message: string } | null;
 }
 
-export function InventoryTable({ initialProducts }: { initialProducts: AdminProduct[] }) {
+export function InventoryTable({ initialProducts, categories }: { initialProducts: AdminProduct[], categories: { name: string, slug: string }[] }) {
   const supabase = useMemo(() => createClient(), []);
 
   const [products, setProducts] = useState<AdminProduct[]>(initialProducts);
@@ -151,16 +153,21 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
           <p className="text-sm text-gray-500 mt-1">Manage stock levels for all products.</p>
         </div>
-        <div className="relative max-w-md w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search SKU, name, or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
-          />
+        <div className="flex items-center gap-3">
+          <AddCategoryModal />
+          <AddProductModal categories={categories} />
         </div>
+      </div>
+      
+      <div className="mb-6 relative max-w-md w-full">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search SKU, name, or category..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+        />
       </div>
 
       <div className="overflow-x-auto pb-8">

@@ -11,7 +11,7 @@ export default async function AdminInventoryPage() {
 
   if (!user) redirect("/login");
 
-  const [profileRes, productsRes] = await Promise.all([
+  const [profileRes, productsRes, categoriesRes] = await Promise.all([
     supabase
       .from("profiles")
       .select("role")
@@ -21,6 +21,10 @@ export default async function AdminInventoryPage() {
       .from("products")
       .select("id, sku, name, stock_sqft, price_per_sqft, category_slug, image")
       .order("sku", { ascending: true }),
+    supabase
+      .from("categories")
+      .select("name, slug")
+      .order("name", { ascending: true }),
   ]);
 
   const profile = profileRes.data;
@@ -44,9 +48,11 @@ export default async function AdminInventoryPage() {
     image: row.image,
   }));
 
+  const categories = categoriesRes.data ?? [];
+
   return (
     <div className="max-w-6xl mx-auto">
-      <InventoryTable initialProducts={adminProducts} />
+      <InventoryTable initialProducts={adminProducts} categories={categories} />
     </div>
   );
 }
