@@ -16,6 +16,11 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "UN Tiles | Premium Architectural Tiles",
   description: "High-end tiling with weight, texture, and structural integrity.",
+  icons: {
+    icon: "/images/final Logo without background.png",
+    shortcut: "/images/final Logo without background.png",
+    apple: "/images/final Logo without background.png",
+  },
 };
 
 export default function RootLayout({
