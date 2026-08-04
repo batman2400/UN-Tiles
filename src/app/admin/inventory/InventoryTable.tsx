@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 
@@ -28,6 +28,28 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
   const [rowStates, setRowStates] = useState<Record<string, RowState>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+
+  // Subscribe to real-time inventory updates
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-products-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "products" },
+        (payload: any) => {
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.id === payload.new.id ? { ...p, stock_sqft: payload.new.stock_sqft } : p
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   const filteredProducts = useMemo(() => {
     let result = products;
@@ -227,25 +249,39 @@ export function InventoryTable({ initialProducts }: { initialProducts: AdminProd
                     </div>
                   </td>
                   <td className="px-6 py-3">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="flex items-center gap-1.5 p-1 bg-white rounded-lg border border-gray-200 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/50 transition-all shadow-sm">
+                    <div className="flex flex-col items-center justify-center gap-1.5">
+                      <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-gray-200 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all shadow-sm">
                         <input
                           type="number"
                           min={0}
-                          placeholder="Qty"
+                          placeholder="New Stock"
                           value={row.editValue}
                           onChange={(e) => updateRowState(product.id, { editValue: e.target.value })}
-                          className="w-16 text-center px-1 py-1.5 text-sm font-mono bg-transparent outline-none text-gray-900 placeholder:text-gray-300"
+                          className="w-20 text-center px-2 py-1 text-xs font-mono font-bold bg-transparent outline-none text-gray-900 placeholder:text-gray-400 placeholder:font-sans"
                         />
-                        <div className="overflow-hidden w-0 opacity-0 translate-x-2 group-hover:w-[48px] group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 ease-out">
+                        <button
+                          onClick={() => handleUpdate(product)}
+                          disabled={row.isUpdating || !row.editValue.trim()}
+                          className="px-3 py-1 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-yellow-500 hover:text-black disabled:opacity-30 disabled:hover:bg-zinc-900 disabled:hover:text-white transition-all active:scale-95 flex items-center justify-center min-w-[40px]"
+                        >
+                          {row.isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                        </button>
+                      </div>
+                      
+                      {/* Quick Increment Buttons */}
+                      <div className="flex items-center gap-1">
+                        {[50, 100].map((inc) => (
                           <button
-                            onClick={() => handleUpdate(product)}
-                            disabled={row.isUpdating || !row.editValue.trim()}
-                            className="w-12 py-1.5 flex justify-center items-center bg-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-md hover:bg-accent/90 disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed transition-all active:scale-95"
+                            key={inc}
+                            onClick={() => {
+                              const currentStock = product.stock_sqft || 0;
+                              updateRowState(product.id, { editValue: String(currentStock + inc) });
+                            }}
+                            className="text-[9px] font-mono font-bold text-gray-500 hover:text-zinc-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded transition-colors"
                           >
-                            {row.isUpdating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Set"}
+                            +{inc}
                           </button>
-                        </div>
+                        ))}
                       </div>
                       {row.feedback && (
                         <div className={`mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider motion-fade-up ${

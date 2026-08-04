@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -34,6 +34,32 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<string>("All");
+
+  // Subscribe to real-time order changes across the store
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin-orders-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        (payload: any) => {
+          if (payload.eventType === "INSERT") {
+            setOrders((prev) => [payload.new as AdminOrder, ...prev]);
+          } else if (payload.eventType === "UPDATE") {
+            setOrders((prev) =>
+              prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
+            );
+          } else if (payload.eventType === "DELETE") {
+            setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
