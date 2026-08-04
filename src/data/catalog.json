@@ -257,15 +257,15 @@
       "stockSqFt": 1000
     },
     {
-      "id": "tile-mosaics-9",
-      "sku": "UN-MOS-108",
-      "name": "Fan",
-      "dimensions": "120x60 cm",
-      "pricePerSqFt": 2700,
-      "image": "/tiles/mosaics_fan.jpg",
-      "categorySlug": "mosaics",
+      "id": "tile-wall-11",
+      "sku": "UN-WAL-110",
+      "name": "Autumn Matte",
+      "dimensions": "60x60 cm",
+      "pricePerSqFt": 1650,
+      "image": "/tiles/wall_autumn.jpg",
+      "categorySlug": "wall",
       "featured": false,
-      "finish": "Glossy",
+      "finish": "Matte",
       "application": "Interior",
       "stockSqFt": 1000
     },
@@ -285,7 +285,7 @@
     {
       "id": "tile-pool-tiles-1",
       "sku": "UN-POO-100",
-      "name": "Pool Kafhsqlobs 0108B52",
+      "name": "Ocean Cyan Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1500,
       "image": "/tiles/pool-tiles_pool___kafhsqlobs_0108b52.jpg",
@@ -298,7 +298,7 @@
     {
       "id": "tile-pool-tiles-2",
       "sku": "UN-POO-101",
-      "name": "Pool Kafhsqlocr 0105A52",
+      "name": "Sapphire Deep Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1650,
       "image": "/tiles/pool-tiles_pool___kafhsqlocr_0105a52.jpg",
@@ -311,7 +311,7 @@
     {
       "id": "tile-pool-tiles-3",
       "sku": "UN-POO-102",
-      "name": "Pool Kafhsqlocr 0105C52",
+      "name": "Navy Blue Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1800,
       "image": "/tiles/pool-tiles_pool___kafhsqlocr_0105c52.jpg",
@@ -324,7 +324,7 @@
     {
       "id": "tile-pool-tiles-4",
       "sku": "UN-POO-103",
-      "name": "Pool Kafhsqloka 0109B52",
+      "name": "Turquoise Lagoon Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 1950,
       "image": "/tiles/pool-tiles_pool___kafhsqloka_0109b52.jpg",
@@ -337,7 +337,7 @@
     {
       "id": "tile-pool-tiles-5",
       "sku": "UN-POO-104",
-      "name": "Pool Kafhsqloka 0109C52",
+      "name": "Royal Azure Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2100,
       "image": "/tiles/pool-tiles_pool___kafhsqloka_0109c52.jpg",
@@ -350,7 +350,7 @@
     {
       "id": "tile-pool-tiles-6",
       "sku": "UN-POO-105",
-      "name": "Pool Kafhsqlooe 0107A52",
+      "name": "Cobalt Sea Pool Tile",
       "dimensions": "30x30 cm Sheet",
       "pricePerSqFt": 2250,
       "image": "/tiles/pool-tiles_pool___kafhsqlooe_0107a52.jpg",
@@ -363,7 +363,7 @@
     {
       "id": "tile-pool-tiles-7",
       "sku": "UN-POO-106",
-      "name": "Pool Kafhsqlowa 0106A52",
+      "name": "Marine Blue Pool Tile",
       "dimensions": "80x80 cm",
       "pricePerSqFt": 2400,
       "image": "/tiles/pool-tiles_pool___kafhsqlowa_0106a52.jpg",
@@ -376,7 +376,7 @@
     {
       "id": "tile-pool-tiles-8",
       "sku": "UN-POO-107",
-      "name": "Pool Kafhsqlowa 0106B52",
+      "name": "Aqua Clear Pool Tile",
       "dimensions": "60x60 cm",
       "pricePerSqFt": 2550,
       "image": "/tiles/pool-tiles_pool___kafhsqlowa_0106b52.jpg",
