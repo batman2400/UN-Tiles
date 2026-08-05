@@ -30,6 +30,6 @@ create policy "Only admins can view inquiries."
   using (
     auth.role() = 'authenticated'
     and auth.jwt() ->> 'email' in (
-      'uvarammohan90@gmail.com'
+      'fade16022025@gmail.com'
     )
   );

@@ -7,6 +7,9 @@ interface ContactRequestBody {
   name: string;
   email: string;
   message: string;
+  company?: string;
+  phone?: string;
+  projectType?: string;
 }
 
 function isValidContactBody(body: unknown): body is ContactRequestBody {
@@ -69,7 +72,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Success
+    // 4. Send email notification via Web3Forms
+    try {
+      const web3FormsRes = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: "38b1e744-4baa-4b00-be82-402dd2797666",
+          subject: `New UN Tiles Inquiry from ${body.name}`,
+          from_name: "UN Tiles Contact Form",
+          name: body.name,
+          email: body.email,
+          company: body.company || "N/A",
+          phone: body.phone || "N/A",
+          projectType: body.projectType || "N/A",
+          message: body.message,
+        }),
+      });
+
+      if (!web3FormsRes.ok) {
+        console.error("Web3Forms error:", await web3FormsRes.text());
+      }
+    } catch (web3Error) {
+      console.error("Web3Forms fetch error:", web3Error);
+      // We still return success to the user since the DB insert succeeded
+    }
+
+    // 5. Success
     return Response.json({
       success: true,
       message: "Your inquiry has been received.",

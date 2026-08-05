@@ -168,7 +168,7 @@ drop policy if exists "Only admins can view inquiries." on public.inquiries;
 create policy "Only admins can view inquiries." on public.inquiries
   for select using (
     auth.role() = 'authenticated'
-    and auth.jwt() ->> 'email' in ('uvarammohan90@gmail.com')
+    and auth.jwt() ->> 'email' in ('fade16022025@gmail.com')
   );
 
 -- ═══════════════════════════════════════════════════════════

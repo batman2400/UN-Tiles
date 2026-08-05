@@ -29,7 +29,7 @@ export default function Contact() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, company, phone, projectType, message }),
       });
 
       const data = await res.json();
@@ -38,13 +38,6 @@ export default function Contact() {
         setErrorMsg(data.error || "Something went wrong. Please try again.");
         return;
       }
-
-      // Open the device's default mail app with the inquiry pre-filled
-      const subject = encodeURIComponent(`UN Tiles Inquiry from ${name}`);
-      const body = encodeURIComponent(
-        `Name: ${name}\nEmail: ${email}\nCompany: ${company || "N/A"}\nPhone: ${phone || "N/A"}\nProject Type: ${projectType}\n\nMessage:\n${message}`
-      );
-      window.open(`mailto:studio@untiles.com?subject=${subject}&body=${body}`, "_self");
 
       // Clear form & show success
       setName("");
@@ -93,7 +86,7 @@ export default function Contact() {
         <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {[
             { icon: Phone, label: "Call Us", value: "+94 773508325", href: "tel:+94773508325" },
-            { icon: Mail, label: "Email", value: "studio@untiles.com", href: "mailto:studio@untiles.com" },
+            { icon: Mail, label: "Email", value: "fade16022025@gmail.com", href: "mailto:fade16022025@gmail.com" },
             { icon: MapPin, label: "Location", value: "Kirulapona, Colombo 05.", href: "https://maps.google.com/maps?q=6.8823419,79.8808345", target: "_blank" },
             { icon: Clock, label: "Hours", value: "Mon-Sat: 9.00am-6.30pm", href: null },
           ].map((item) => (
@@ -154,7 +147,7 @@ export default function Contact() {
                 <p>No. 161/A, Polhengoda Road,</p>
                 <p>Kirulapona, Colombo 05.</p>
                 <p className="pt-4 font-semibold text-on-surface">P: +94 773508325 / +94 772303950</p>
-                <p className="font-semibold text-on-surface">E: studio@untiles.com</p>
+                <p className="font-semibold text-on-surface">E: fade16022025@gmail.com</p>
               </div>
             </ScrollReveal>
           </div>
