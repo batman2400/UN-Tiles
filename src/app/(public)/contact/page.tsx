@@ -26,6 +26,31 @@ export default function Contact() {
     setErrorMsg("");
 
     try {
+      // 1. Send to Web3Forms directly from the browser (to bypass Cloudflare bot protection)
+      const web3FormsRes = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          access_key: "38b1e744-4baa-4b00-be82-402dd2797666",
+          subject: `New UN Tiles Inquiry from ${name}`,
+          from_name: "UN Tiles Contact Form",
+          name,
+          email,
+          company: company || "N/A",
+          phone: phone || "N/A",
+          projectType: projectType || "N/A",
+          message,
+        })
+      });
+
+      if (!web3FormsRes.ok) {
+        console.error("Web3Forms submission failed");
+      }
+
+      // 2. Save to our database
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
