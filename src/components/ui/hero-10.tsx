@@ -163,7 +163,7 @@ export function Hero10({
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
-          className="mb-0 flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between"
+          className="mb-0 flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-center"
         >
           <motion.div
             variants={contentItem}

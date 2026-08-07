@@ -95,7 +95,7 @@ export function TopNavBar() {
 
             {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
             <nav
-              className={`pointer-events-auto hidden md:flex items-center gap-8 rounded-full px-8 py-3 transition-all duration-500 ${pillClass}`}
+              className={`pointer-events-auto hidden md:flex items-center gap-8 rounded-full px-8 py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label }) => {
                 const isActive =
