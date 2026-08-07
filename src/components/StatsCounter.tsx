@@ -63,12 +63,12 @@ export function StatsCounter({
 
   return (
     <div ref={ref} className="text-center transition-all duration-700">
-      <div className={`text-4xl md:text-5xl font-mono font-bold tracking-tight mb-2 text-accent drop-shadow-[0_0_16px_rgba(184,134,11,0.4)] transition-transform duration-500 ${
+      <div className={`text-4xl md:text-5xl font-display font-bold tracking-tight mb-2 text-zinc-900 transition-transform duration-500 ${
         hasStarted ? "scale-100 opacity-100" : "scale-90 opacity-0"
       }`}>
         {prefix}{count}{suffix}
       </div>
-      <div className="text-xs md:text-sm uppercase tracking-widest font-semibold text-on-surface-dark-variant">
+      <div className="text-xs md:text-sm uppercase tracking-widest font-semibold text-slate-600">
         {label}
       </div>
     </div>

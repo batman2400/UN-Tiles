@@ -183,9 +183,9 @@ export default async function Home() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/contact"
-                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-blue-700 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-blue-800 transition-colors shadow-lg"
+                className="inline-flex items-center justify-center space-x-3 bg-zinc-900 hover:bg-black text-white font-semibold px-6 py-3 rounded-lg transition-all"
               >
-                <span>Get in Touch</span>
+                <span>GET IN TOUCH</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link

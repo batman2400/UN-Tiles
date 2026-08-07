@@ -59,16 +59,11 @@ export function TopNavBar() {
 
   // Glassmorphism style for center & right pills
   const pillClass = scrolled
-    ? "bg-white/80 backdrop-blur-2xl shadow-lg shadow-black/5 border border-white/30"
-    : "bg-black/35 backdrop-blur-2xl border border-white/10";
-
-  // Text colors
-  const linkColor = scrolled
-    ? "text-gray-700 hover:text-accent"
-    : "text-white/90 hover:text-accent";
+    ? "bg-white/80 backdrop-blur-md border border-zinc-200/80 shadow-sm"
+    : "bg-black/35 backdrop-blur-md border border-white/10";
 
   const iconColor = scrolled
-    ? "text-slate-600 hover:text-blue-700"
+    ? "text-zinc-700 hover:text-black"
     : "text-white/85 hover:text-white";
 
   return (
@@ -101,16 +96,16 @@ export function TopNavBar() {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
                 let currentLinkColor;
                 if (isActive) {
-                  currentLinkColor = scrolled ? "text-blue-700" : "text-white";
+                  currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
                 } else {
-                  currentLinkColor = scrolled ? "text-slate-600 hover:text-blue-700" : "text-white/80 hover:text-white";
+                  currentLinkColor = scrolled ? "text-zinc-700 hover:text-black font-medium" : "text-white/80 hover:text-white font-medium";
                 }
 
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors duration-300 ${currentLinkColor}`}
+                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 ${currentLinkColor}`}
                   >
                     {label.toUpperCase()}
                   </Link>
