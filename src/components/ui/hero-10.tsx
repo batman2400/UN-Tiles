@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { AnimatePresence, motion, type Variants } from 'motion/react';
-import { FaArrowRight, FaChevronDown, FaXmark } from 'react-icons/fa6';
+import { motion, type Variants } from 'motion/react';
+import { FaArrowRight } from 'react-icons/fa6';
 
 export interface Hero10NavItem {
   label: string;
@@ -74,14 +73,6 @@ const backgroundVariants: Variants = {
   },
 };
 
-function MobileMenuIcon() {
-  return (
-    <span
-      className="h-3.5 w-4 bg-[linear-gradient(to_bottom,currentColor_0_2px,transparent_2px_6px,currentColor_6px_8px,transparent_8px_12px,currentColor_12px_14px)]"
-      aria-hidden="true"
-    />
-  );
-}
 
 export function Hero10({
   brandName = 'UN Tiles',
@@ -96,7 +87,6 @@ export function Hero10({
   usersText = '500+ Projects Completed',
   backgroundImage = defaultBackground,
 }: Hero10Props) {
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <section className="relative isolate min-h-screen w-full overflow-hidden bg-slate-200 font-sans text-slate-900 antialiased">
@@ -125,106 +115,6 @@ export function Hero10({
       />
 
       <div className="relative z-10 mx-auto flex min-h-[760px] w-full max-w-[1440px] flex-col px-5 py-5 sm:min-h-screen sm:px-10 lg:px-[74px]">
-        <motion.header
-          variants={headerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.8 }}
-          className="flex h-12 items-center justify-between"
-        >
-          <a
-            href="#"
-            className="inline-flex min-h-10 items-center font-serif text-[25px] leading-none font-medium tracking-[-0.035em] text-slate-800 transition-[opacity,transform] duration-200 ease-out hover:opacity-75 active:scale-[0.96]"
-          >
-            {brandName}
-          </a>
-
-          <nav className="hidden items-center gap-[54px] lg:flex">
-            {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="group inline-flex min-h-10 items-center gap-1.5 text-sm leading-none font-normal text-slate-800 transition-colors duration-200 ease-out hover:text-slate-500"
-              >
-                <span>{item.label}</span>
-                {item.hasMenu ? (
-                  <FaChevronDown className="size-2.5 transition-transform duration-200 ease-out group-hover:translate-y-0.5" />
-                ) : null}
-              </a>
-            ))}
-          </nav>
-          <div className='flex gap-2'>
-            <motion.a
-              href={ctaHref}
-              whileTap={{ scale: 0.96 }}
-              className="hidden min-h-10 items-center gap-2 rounded-full border border-sky-900/90 bg-white/10 px-5 text-sm leading-none font-medium text-slate-900 shadow-[0_1px_1px_rgba(255,255,255,0.45)_inset] backdrop-blur-md transition-[background-color,border-color,transform] duration-200 ease-out hover:border-sky-950 hover:bg-white/28 sm:inline-flex"
-            >
-              <span>{ctaText}</span>
-              <FaArrowRight className="size-3" />
-            </motion.a>
-
-            <button
-              type="button"
-              aria-label="Open navigation menu"
-              onClick={() => setMobileOpen(true)}
-              className="inline-flex size-10 items-center justify-center rounded-full border border-sky-900/70 bg-white/16 text-slate-900 backdrop-blur-md transition-[background-color,transform] duration-200 ease-out hover:bg-white/30 active:scale-[0.96] lg:hidden"
-            >
-              <MobileMenuIcon />
-            </button>
-          </div>
-        </motion.header>
-
-        <AnimatePresence initial={false}>
-          {mobileOpen ? (
-            <motion.div
-              initial={{ opacity: 0, y: -10, filter: 'blur(8px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              exit={{ opacity: 0, y: -6, filter: 'blur(5px)' }}
-              transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
-              className="fixed inset-x-4 top-4 z-50 rounded-[28px] bg-white/86 p-4 text-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.22)] outline outline-1 outline-white/70 backdrop-blur-xl lg:hidden"
-            >
-              <div className="flex items-center justify-between pl-3">
-                <a
-                  href="#"
-                  className="font-serif text-2xl font-medium tracking-[-0.035em]"
-                >
-                  {brandName}
-                </a>
-                <button
-                  type="button"
-                  aria-label="Close navigation menu"
-                  onClick={() => setMobileOpen(false)}
-                  className="inline-flex size-10 items-center justify-center rounded-full text-slate-950 transition-[background-color,transform] duration-200 ease-out hover:bg-slate-950/5 active:scale-[0.96]"
-                >
-                  <FaXmark className="size-4" />
-                </button>
-              </div>
-
-              <nav className="mt-5 grid gap-1">
-                {navItems.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="inline-flex min-h-11 items-center justify-between rounded-2xl px-3 text-sm font-medium text-slate-900 transition-colors duration-200 ease-out hover:bg-slate-950/5"
-                  >
-                    <span>{item.label}</span>
-                    {item.hasMenu ? <FaChevronDown className="size-3" /> : null}
-                  </a>
-                ))}
-              </nav>
-
-              <motion.a
-                href={ctaHref}
-                whileTap={{ scale: 0.96 }}
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-5 text-sm font-medium text-white transition-[background-color,transform] duration-200 ease-out hover:bg-slate-700"
-              >
-                {ctaText}
-                <FaArrowRight className="size-3" />
-              </motion.a>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
 
         <motion.div
           variants={contentContainer}
