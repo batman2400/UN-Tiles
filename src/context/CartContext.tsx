@@ -19,13 +19,14 @@ export interface CartItem {
   category: string;
   price_per_sqft: number;
   cartQuantitySqft: number;
+  stockSqft?: number;
 }
 
 interface CartContextType {
   items: CartItem[];
   cartCount: number;
   cartTotal: number;
-  addToCart: (product: Omit<CartItem, "cartQuantitySqft">, sqft: number) => void;
+  addToCart: (product: Omit<CartItem, "cartQuantitySqft">, sqft: number) => boolean;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, sqft: number) => void;
   clearCart: () => void;
