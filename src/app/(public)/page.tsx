@@ -148,8 +148,8 @@ export default async function Home() {
       </section>
 
       {/* ══════ STATS BAR ══════ */}
-      <section className="bg-surface-dark py-20">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark">
+      <section className="bg-slate-50 py-20 border-t border-slate-200">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-slate-900">
           <StatsCounter end={500} suffix="+" label="Projects Completed" />
           <StatsCounter end={20} suffix="+" label="Years Experience" />
           <StatsCounter end={4} label="Sourcing Locations" />
@@ -171,26 +171,26 @@ export default async function Home() {
             className="object-cover"
           />
         </ParallaxLayer>
-        <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
         <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
           <ScrollReveal>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 mb-6">
               Ready to Transform Your Space?
             </h2>
-            <p className="text-lg text-white/80 mb-10 max-w-xl mx-auto">
+            <p className="text-lg text-slate-700 mb-10 max-w-xl mx-auto">
               Visit our showroom or speak with a design consultant to find the perfect tile for your project.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 href="/contact"
-                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-accent text-on-accent px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-accent/90 transition-colors"
+                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-blue-700 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-blue-800 transition-colors shadow-lg"
               >
                 <span>Get in Touch</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/collections"
-                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white/10 backdrop-blur-sm text-white border border-white/20 px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-white/20 transition-colors"
+                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-slate-900 border border-slate-300 px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors shadow-sm"
               >
                 <span>Browse Collections</span>
               </Link>
