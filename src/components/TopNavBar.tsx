@@ -181,7 +181,7 @@ export function TopNavBar() {
 
       {/* ── Mobile Drawer ── */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-[60] md:hidden">
+        <div className="fixed inset-0 z-[110] md:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"

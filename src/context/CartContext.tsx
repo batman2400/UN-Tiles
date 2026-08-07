@@ -94,20 +94,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, storageKey, isLoaded]);
 
   const addToCart = useCallback(
-    (product: Omit<CartItem, "cartQuantitySqft">, sqft: number) => {
-      if (sqft <= 0) return;
+    (product: Omit<CartItem, "cartQuantitySqft">, sqft: number): boolean => {
+      if (sqft <= 0) return false;
 
+      // Validate against available stock
+      const maxStock = product.stockSqft ?? Infinity;
+      if (sqft > maxStock) return false;
+
+      let added = false;
       setItems((prev) => {
         const existing = prev.find((item) => item.id === product.id);
         if (existing) {
+          const newTotal = existing.cartQuantitySqft + sqft;
+          // Cap at available stock
+          if (newTotal > maxStock) return prev;
+          added = true;
           return prev.map((item) =>
             item.id === product.id
-              ? { ...item, cartQuantitySqft: item.cartQuantitySqft + sqft }
+              ? { ...item, cartQuantitySqft: newTotal }
               : item
           );
         }
-        return [...prev, { ...product, cartQuantitySqft: sqft }];
+        added = true;
+        return [...prev, { ...product, cartQuantitySqft: Math.min(sqft, maxStock) }];
       });
+      return added;
     },
     []
   );

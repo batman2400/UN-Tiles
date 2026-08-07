@@ -6,7 +6,7 @@ import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
 import { ProductCard } from "@/components/ProductCard";
-
+import { Hero10 } from "@/components/ui/hero-10";
 export default async function Home() {
   const { featuredProducts, categories } = await getCatalogData();
 
@@ -14,49 +14,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO SECTION ══════ */}
-      <section className="relative h-screen flex items-center justify-center bg-surface-container-highest overflow-hidden">
-        <ParallaxLayer
-          speed={0.18}
-          maxOffset={54}
-          className="absolute -inset-x-0 -top-[8%] h-[116%] w-full"
-        >
-          <Image 
-            src="/images/landing_hero.png" 
-            alt="Luxury modern interior with slate tiles" 
-            fill 
-            sizes="100vw"
-            className="object-cover object-center opacity-90"
-            priority
-          />
-        </ParallaxLayer>
-        {/* Dark overlay for text contrast */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col items-center text-center">
-          <div className="max-w-3xl motion-fade-up motion-delay-1">
-            <p className="text-sm uppercase tracking-[0.3em] text-white/70 font-semibold mb-6">Premium Architectural Tiles</p>
-            <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight text-white mb-6">
-              Materializing <br/> <span className="text-gradient-gold italic">Vision.</span>
-            </h1>
-            <p className="text-lg text-white/80 max-w-xl mx-auto mb-10">
-              Architectural precision in high-end tiling. Structural integrity meets timeless design.
-            </p>
-            <Link 
-              href="/collections" 
-              className="kinetic-button inline-flex items-center space-x-3 bg-accent text-on-accent px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-accent/90 transition-colors"
-            >
-              <span>Explore Premium Tiles</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 opacity-60">
-          <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">Scroll</span>
-          <div className="w-[1px] h-8 bg-gradient-to-b from-white/60 to-transparent" />
-        </div>
-      </section>
+      <Hero10 />
 
       {/* ══════ TRUST BAR ══════ */}
       <section className="bg-surface-dark py-6">

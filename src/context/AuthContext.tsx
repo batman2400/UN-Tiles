@@ -284,17 +284,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateProfile = async (data: UserData) => {
     if (!user?.id) return { success: false, error: "Not logged in" };
     try {
-      const { error } = await getSupabase()
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          first_name: data.firstName,
-          last_name: data.lastName,
-          phone: data.phone,
-          email: data.email,
-        });
+      // Use server-side action with field whitelisting — role is never sent
+      const { updateUserProfile } = await import('@/app/actions/admin');
+      const result = await updateUserProfile({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phone: data.phone,
+        email: data.email,
+      });
 
-      if (error) return { success: false, error: error.message };
+      if (!result.success) return { success: false, error: result.error || "Update failed" };
       
       setUser((prev) => prev ? { ...prev, ...data } : data);
       return { success: true };

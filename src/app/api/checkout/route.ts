@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { revalidatePath } from "next/cache";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -93,11 +94,12 @@ export async function POST(request: NextRequest) {
     //    The process_checkout PL/pgSQL function handles:
     //    - Row-level locking (SELECT ... FOR UPDATE)
     //    - Stock validation & deduction
-    //    - Order creation
+    //    - Order creation with delivery method
     //    All within a single database transaction.
     const { data, error: rpcError } = await supabase.rpc("process_checkout", {
       p_user_id: user.id,
       p_items: mappedItems,
+      p_delivery_method: body.deliveryMethod,
     });
 
     if (rpcError) {
@@ -128,19 +130,9 @@ export async function POST(request: NextRequest) {
         ? (data as { order_id: string }).order_id
         : data;
 
-    // 7. Set the delivery method on the newly created order
-    //    Done as a separate UPDATE to avoid modifying the existing process_checkout RPC.
-    if (orderId) {
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({ delivery_method: body.deliveryMethod })
-        .eq("id", orderId);
-
-      if (updateError) {
-        // Non-critical: order was already placed, just log the failure
-        console.error("Failed to set delivery method on order:", updateError);
-      }
-    }
+    // 7. Revalidate cached pages so stock is immediately accurate
+    revalidatePath("/");
+    revalidatePath("/collections");
 
     // 8. Return success with order ID
     return NextResponse.json({
@@ -155,4 +147,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

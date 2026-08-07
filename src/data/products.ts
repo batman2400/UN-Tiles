@@ -212,15 +212,7 @@ export async function getRawCatalogPayload(
   return liveCatalog ?? FALLBACK_CATALOG;
 }
 
-let catalogCache: { timestamp: number; data: CatalogViewModel } | null = null;
-const CACHE_TTL_MS = 60 * 1000; // 60s in-memory cache for instant performance
-
 export async function getCatalogData(): Promise<CatalogViewModel> {
-  const now = Date.now();
-  if (catalogCache && (now - catalogCache.timestamp < CACHE_TTL_MS)) {
-    return catalogCache.data;
-  }
-
   const payload = await getRawCatalogPayload();
   const categoryLookup = new Map(
     payload.categories.map((category) => [category.slug, category])
@@ -271,12 +263,9 @@ export async function getCatalogData(): Promise<CatalogViewModel> {
     image: category.image || UNKNOWN_CATEGORY_IMAGE,
   }));
 
-  const result: CatalogViewModel = {
+  return {
     featuredProducts,
     allProducts,
     categories,
   };
-
-  catalogCache = { timestamp: now, data: result };
-  return result;
 }
