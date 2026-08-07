@@ -68,8 +68,8 @@ export function TopNavBar() {
     : "text-white/90 hover:text-accent";
 
   const iconColor = scrolled
-    ? "text-gray-600 hover:text-accent"
-    : "text-white/85 hover:text-accent";
+    ? "text-slate-600 hover:text-blue-700"
+    : "text-white/85 hover:text-white";
 
   return (
     <>
@@ -98,15 +98,19 @@ export function TopNavBar() {
               className={`pointer-events-auto hidden md:flex items-center gap-8 rounded-full px-8 py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label }) => {
-                const isActive =
-                  href === "/" ? pathname === "/" : pathname.startsWith(href);
+                const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+                let currentLinkColor;
+                if (isActive) {
+                  currentLinkColor = scrolled ? "text-blue-700" : "text-white";
+                } else {
+                  currentLinkColor = scrolled ? "text-slate-600 hover:text-blue-700" : "text-white/80 hover:text-white";
+                }
+
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors duration-300 ${
-                      isActive ? "text-accent" : linkColor
-                    }`}
+                    className={`text-xs font-bold tracking-[0.18em] uppercase transition-colors duration-300 ${currentLinkColor}`}
                   >
                     {label.toUpperCase()}
                   </Link>
