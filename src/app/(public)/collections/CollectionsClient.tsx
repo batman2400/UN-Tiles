@@ -29,6 +29,11 @@ export function CollectionsClient({
   const [selectedDims, setSelectedDims] = useState<string[]>(initialDims);
   const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
+  const [visibleCount, setVisibleCount] = useState(12);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [searchQuery, selectedCategory, selectedDims, sortBy]);
 
   // Keep local state synchronized if URL search params change (e.g., from top navbar search)
   useEffect(() => {
@@ -170,7 +175,7 @@ export function CollectionsClient({
               placeholder="Search by tile name, category, finish, dimension..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500/20 transition-all placeholder:text-gray-400 font-medium"
+              className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
             />
             {searchQuery && (
               <button
@@ -186,7 +191,7 @@ export function CollectionsClient({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active:</span>
               {selectedCategory && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold bg-yellow-500/10 text-yellow-700 px-2.5 py-1 rounded-lg border border-yellow-500/20">
+                <span className="inline-flex items-center gap-1 text-xs font-bold bg-accent/10 text-accent px-2.5 py-1 rounded-lg border border-accent/20">
                   {categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}
                   <button onClick={() => handleCategorySelect(selectedCategory)} className="hover:text-black">
                     <X className="w-3 h-3" />
@@ -194,16 +199,16 @@ export function CollectionsClient({
                 </span>
               )}
               {selectedDims.map((dim) => (
-                <span key={dim} className="inline-flex items-center gap-1 text-xs font-bold bg-zinc-100 text-zinc-800 px-2.5 py-1 rounded-lg border border-zinc-200">
+                <span key={dim} className="inline-flex items-center gap-1 text-xs font-bold bg-surface-container text-on-surface px-2.5 py-1 rounded-lg border border-outline-variant">
                   {dim}
-                  <button onClick={() => handleDimToggle(dim)} className="hover:text-black">
+                  <button onClick={() => handleDimToggle(dim)} className="hover:text-accent">
                     <X className="w-3 h-3" />
                   </button>
                 </span>
               ))}
               <button
                 onClick={clearAllFilters}
-                className="text-xs font-bold uppercase tracking-wider text-red-600 hover:underline px-2 py-1"
+                className="text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-on-surface hover:underline px-2 py-1 transition-colors"
               >
                 Reset All
               </button>
@@ -228,8 +233,8 @@ export function CollectionsClient({
                       onClick={() => setSelectedCategory("")}
                       className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-all ${
                         !selectedCategory
-                          ? "bg-zinc-900 text-white font-bold shadow-sm"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-zinc-900"
+                          ? "bg-surface-dark text-on-surface-dark font-bold shadow-sm"
+                          : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
                       }`}
                     >
                       <span>All Categories</span>
@@ -245,8 +250,8 @@ export function CollectionsClient({
                           onClick={() => handleCategorySelect(c.slug)}
                           className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-all ${
                             isSelected
-                              ? "bg-yellow-500 text-zinc-950 font-bold shadow-sm"
-                              : "text-gray-600 hover:bg-gray-100 hover:text-zinc-900"
+                              ? "bg-accent text-on-accent font-bold shadow-sm"
+                              : "text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
                           }`}
                         >
                           <span>{c.name}</span>
@@ -263,24 +268,21 @@ export function CollectionsClient({
               {/* Dimensions Filter */}
               <div>
                 <h3 className="text-xs font-bold tracking-widest uppercase text-zinc-900 mb-4">Dimensions</h3>
-                <div className="space-y-2">
+                <div className="flex flex-wrap gap-2">
                   {availableDimensions.map((dim) => {
                     const isChecked = selectedDims.includes(dim);
                     return (
-                      <label
+                      <button
                         key={dim}
-                        className={`flex items-center space-x-3 p-2 rounded-lg cursor-pointer transition-colors text-xs font-medium ${
-                          isChecked ? "bg-gray-100 text-zinc-900 font-semibold" : "text-gray-600 hover:bg-gray-50"
+                        onClick={() => handleDimToggle(dim)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                          isChecked 
+                            ? "bg-accent border-accent text-on-accent premium-shadow-sm" 
+                            : "bg-surface border-outline-variant text-on-surface hover:border-accent hover:text-accent"
                         }`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleDimToggle(dim)}
-                          className="w-4 h-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-500 cursor-pointer"
-                        />
-                        <span>{dim}</span>
-                      </label>
+                        {dim}
+                      </button>
                     );
                   })}
                 </div>
@@ -301,7 +303,7 @@ export function CollectionsClient({
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "featured" | "price-asc" | "price-desc")}
-                  className="bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-zinc-900 px-3 py-2 outline-none cursor-pointer focus:border-yellow-500 transition-all"
+                  className="bg-surface border border-outline-variant rounded-lg text-xs font-bold text-on-surface px-3 py-2 outline-none cursor-pointer focus:border-accent transition-all"
                 >
                   <option value="featured">Featured First</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -319,19 +321,31 @@ export function CollectionsClient({
                 </p>
                 <button
                   onClick={clearAllFilters}
-                  className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all shadow-md"
+                  className="bg-surface-dark text-on-surface-dark hover:bg-accent hover:text-on-accent font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all shadow-md"
                 >
                   Clear All Filters
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product, idx) => (
-                  <ScrollReveal key={product.id} delay={(idx % 6) * 40}>
-                    <ProductCard product={product} />
-                  </ScrollReveal>
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProducts.slice(0, visibleCount).map((product, idx) => (
+                    <ScrollReveal key={product.id} delay={(idx % 6) * 40}>
+                      <ProductCard product={product} />
+                    </ScrollReveal>
+                  ))}
+                </div>
+                {visibleCount < filteredProducts.length && (
+                  <div className="mt-12 flex justify-center motion-fade-up">
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 12)}
+                      className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-on-surface border border-outline-variant px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-surface-container hover:border-accent transition-colors shadow-sm rounded-lg"
+                    >
+                      <span>Load More Products</span>
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
