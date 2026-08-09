@@ -35,12 +35,12 @@ interface ServiceOption {
 
 interface ContactFormProps {
   badge?: string;
-  headline: string;
-  headlineAccent: string;
-  subheadline: string;
-  contactInfo: ContactInfo;
-  serviceOptions: ServiceOption[];
-  ctaLabel: string;
+  headline?: string;
+  headlineAccent?: string;
+  subheadline?: string;
+  contactInfo?: ContactInfo;
+  serviceOptions?: ServiceOption[];
+  ctaLabel?: string;
 }
 
 interface FormData {
