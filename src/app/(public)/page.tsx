@@ -41,16 +41,41 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ══════ ABOUT US (SHORT) ══════ */}
-      <section className="bg-surface-container-low py-20 px-6 border-b ghost-border">
-        <div className="max-w-4xl mx-auto text-center">
-          <ScrollReveal>
-            <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Our Heritage</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-8">UN Tiles (Unicorn Enterprises)</h2>
-            <p className="text-lg leading-relaxed text-on-surface-variant max-w-3xl mx-auto">
-              Since 2004, UN Tiles (Unicorn Enterprises) has been a trusted importer and distributor of premium ceramic tiles and related products in Sri Lanka. Sourcing from leading manufacturers in China, Vietnam, India, and Lanka Tiles, we offer high-quality products, competitive pricing, and a wide range of designs for homes, businesses, and large-scale construction projects. With over two decades of experience and thousands of satisfied customers, we remain committed to delivering quality, reliability, and exceptional customer service.
-            </p>
-          </ScrollReveal>
+      {/* ══════ ABOUT US (EDITORIAL) ══════ */}
+      <section className="bg-surface-container-low py-24 px-6 border-b ghost-border overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <ScrollReveal className="order-2 lg:order-1 relative">
+              <div className="aspect-[4/5] md:aspect-square lg:aspect-[4/5] relative rounded-xl overflow-hidden premium-shadow-lg">
+                <Image 
+                  src="/images/contact_hero.png"
+                  alt="UN Tiles Showroom"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              </div>
+              {/* Decorative element */}
+              <div className="absolute -bottom-8 -left-8 w-48 h-48 bg-accent/10 rounded-full blur-3xl -z-10" />
+            </ScrollReveal>
+            
+            <ScrollReveal className="order-1 lg:order-2">
+              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Our Heritage</p>
+              <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-8 leading-tight">
+                Crafting Spaces Since <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">2004</span>
+              </h2>
+              <p className="text-lg leading-relaxed text-on-surface-variant mb-6">
+                UN Tiles (Unicorn Enterprises) has been a trusted importer and distributor of premium ceramic tiles in Sri Lanka. Sourcing from leading manufacturers across the globe, we bring world-class quality to your doorstep.
+              </p>
+              <p className="text-lg leading-relaxed text-on-surface-variant mb-10">
+                With over two decades of experience, we remain committed to delivering unparalleled reliability, competitive pricing, and exceptional service for homes and large-scale projects alike.
+              </p>
+              <Link href="/about" className="kinetic-button inline-flex items-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
+                <span>Discover Our Story</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </ScrollReveal>
+          </div>
         </div>
       </section>
 
@@ -62,8 +87,9 @@ export default async function Home() {
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Browse by Space</p>
               <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Curated Collections</h2>
             </div>
-            <Link href="/collections" className="kinetic-link text-sm font-semibold uppercase tracking-widest text-accent border-b border-accent/30 pb-1 hover:border-accent transition-colors">
-              View All
+            <Link href="/collections" className="group flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-on-surface hover:text-accent transition-colors">
+              <span className="border-b border-transparent group-hover:border-accent pb-0.5 transition-all">View All</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </ScrollReveal>
@@ -73,22 +99,27 @@ export default async function Home() {
             <ScrollReveal key={cat.slug} delay={idx * 100}>
               <Link
                 href={`/collections?category=${cat.slug}`}
-                className="group relative block aspect-[4/5] bg-surface-container overflow-hidden premium-shadow hover:premium-shadow-lg transition-shadow duration-500"
+                className="group relative block aspect-[4/5] bg-surface-container overflow-hidden rounded-2xl"
               >
                 <Image 
                   src={cat.image} 
                   alt={cat.name} 
                   fill 
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                  className="object-cover transform group-hover:scale-105 transition-transform duration-700 ease-in-out"
+                  className="object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-6">
-                  <h3 className="text-xl font-display font-semibold text-white mb-1">{cat.name}</h3>
-                  <p className="text-sm text-white/70">{cat.items} Styles</p>
-                </div>
-                <div className="absolute top-4 right-4 w-10 h-10 bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <ArrowRight className="w-4 h-4 text-white" />
+                {/* Gradient overlay that darkens on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
+                
+                {/* Content block sliding up */}
+                <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <h3 className="text-2xl font-display font-semibold text-white mb-2">{cat.name}</h3>
+                  <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    <p className="text-sm text-white/80 font-medium tracking-wide uppercase">{cat.items} Styles</p>
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
+                      <ArrowRight className="w-4 h-4 text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
+                    </div>
+                  </div>
                 </div>
               </Link>
             </ScrollReveal>
@@ -97,7 +128,10 @@ export default async function Home() {
       </section>
 
       {/* ══════ WHY CHOOSE US ══════ */}
-      <section className="bg-surface-container-low py-24 border-y ghost-border">
+      <section className="bg-surface py-24 border-y ghost-border relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[100px] -z-10" />
+        
         <div className="max-w-7xl mx-auto px-6">
           <ScrollReveal>
             <div className="text-center mb-16">
@@ -113,12 +147,14 @@ export default async function Home() {
               { icon: Award, title: "Expert Guidance", desc: "Our design consultants help you choose the perfect tile for every space." },
             ].map((item, idx) => (
               <ScrollReveal key={item.title} delay={idx * 100}>
-                <div className="bg-surface-container-lowest p-8 text-center premium-shadow hover:premium-shadow-lg transition-shadow duration-500 group">
-                  <div className="w-14 h-14 mx-auto mb-6 bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors duration-300">
-                    <item.icon className="w-6 h-6 text-accent" />
+                <div className="group relative bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 p-8 rounded-2xl hover:bg-white/60 dark:hover:bg-black/60 transition-all duration-500 hover:-translate-y-2 hover:premium-shadow-lg overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/0 dark:from-white/5 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                  
+                  <div className="relative z-10 w-14 h-14 mb-6 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center group-hover:scale-110 group-hover:from-accent group-hover:to-accent transition-all duration-500">
+                    <item.icon className="w-6 h-6 text-accent group-hover:text-white transition-colors duration-500" />
                   </div>
-                  <h3 className="text-lg font-display font-semibold text-on-surface mb-3">{item.title}</h3>
-                  <p className="text-sm text-on-surface-variant leading-relaxed">{item.desc}</p>
+                  <h3 className="relative z-10 text-xl font-display font-semibold text-on-surface mb-3">{item.title}</h3>
+                  <p className="relative z-10 text-sm text-on-surface-variant leading-relaxed">{item.desc}</p>
                 </div>
               </ScrollReveal>
             ))}
@@ -148,12 +184,20 @@ export default async function Home() {
       </section>
 
       {/* ══════ STATS BAR ══════ */}
-      <section className="bg-slate-50 py-20 border-t border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-slate-900">
-          <StatsCounter end={500} suffix="+" label="Projects Completed" />
-          <StatsCounter end={20} suffix="+" label="Years Experience" />
-          <StatsCounter end={4} label="Sourcing Locations" />
-          <StatsCounter end={1000} suffix="+" label="Satisfied Customers" />
+      <section className="relative py-24 overflow-hidden bg-zinc-950 text-white">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-8">
+          {[
+            { end: 500, suffix: "+", label: "Projects Completed" },
+            { end: 20, suffix: "+", label: "Years Experience" },
+            { end: 4, suffix: "", label: "Sourcing Locations" },
+            { end: 1000, suffix: "+", label: "Satisfied Customers" },
+          ].map((stat, idx) => (
+            <ScrollReveal key={stat.label} delay={idx * 100}>
+              <div className="flex flex-col items-center text-center group">
+                <StatsCounter end={stat.end} suffix={stat.suffix} label={stat.label} dark />
+              </div>
+            </ScrollReveal>
+          ))}
         </div>
       </section>
 

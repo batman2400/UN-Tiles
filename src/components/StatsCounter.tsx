@@ -8,6 +8,7 @@ type StatsCounterProps = {
   prefix?: string;
   duration?: number;
   label: string;
+  dark?: boolean;
 };
 
 export function StatsCounter({
@@ -16,6 +17,7 @@ export function StatsCounter({
   prefix = "",
   duration = 2000,
   label,
+  dark = false,
 }: StatsCounterProps) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -63,12 +65,14 @@ export function StatsCounter({
 
   return (
     <div ref={ref} className="text-center transition-all duration-700">
-      <div className={`text-4xl md:text-5xl font-display font-bold tracking-tight mb-2 text-zinc-900 transition-transform duration-500 ${
+      <div className={`text-4xl md:text-5xl font-display font-bold tracking-tight mb-2 transition-transform duration-500 ${
         hasStarted ? "scale-100 opacity-100" : "scale-90 opacity-0"
-      }`}>
+      } ${dark ? "text-white" : "text-zinc-900"}`}>
         {prefix}{count}{suffix}
       </div>
-      <div className="text-xs md:text-sm uppercase tracking-widest font-semibold text-slate-600">
+      <div className={`text-xs md:text-sm uppercase tracking-widest font-semibold ${
+        dark ? "text-white/60" : "text-slate-600"
+      }`}>
         {label}
       </div>
     </div>

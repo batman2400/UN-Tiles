@@ -35,7 +35,7 @@ export function ProductCard({ product }: { product: Product }) {
   }, [addToCart, product, isOutOfStock, justAdded, qty]);
 
   return (
-    <div className="group bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500">
+    <div className="group bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500 rounded-2xl overflow-hidden">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-surface-container">
         <Image
@@ -132,12 +132,12 @@ export function ProductCard({ product }: { product: Product }) {
             <button
               onClick={handleQuickAdd}
               disabled={isOutOfStock || justAdded}
-              className={`flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 whitespace-nowrap ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 whitespace-nowrap rounded ${
                 isOutOfStock
                   ? "bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed w-full"
                   : justAdded
                   ? "bg-primary/10 text-primary"
-                  : "bg-surface-container-high text-on-surface-variant hover:bg-accent hover:text-on-accent"
+                  : "bg-surface-container-high text-on-surface-variant hover:bg-accent hover:text-white hover:scale-105"
               }`}
             >
               {isOutOfStock ? (
