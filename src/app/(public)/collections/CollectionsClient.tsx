@@ -132,16 +132,17 @@ export function CollectionsClient({
   return (
     <div className="flex flex-col min-h-screen">
       {/* ══════ HERO HEADER ══════ */}
-      <section className="relative h-[35vh] min-h-[260px] flex items-end bg-surface-dark overflow-hidden">
+      <section className="relative h-[50vh] min-h-[350px] flex items-end bg-surface-dark overflow-hidden">
         <Image
-          src="/images/contact_hero.png"
+          src="/images/contact_hero_v6.png"
           alt="Tile showroom"
           fill
           sizes="100vw"
           className="object-cover opacity-40"
           priority
+          quality={95}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 via-60% to-background/90" />
         <div className="relative z-10 max-w-7xl mx-auto px-6 pb-10 w-full motion-fade-up">
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-2">
             {searchQuery

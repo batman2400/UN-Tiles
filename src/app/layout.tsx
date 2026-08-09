@@ -36,7 +36,7 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable, "font-sans", geist.variable)}
     >
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans bg-noise ambient-glow-bg">
         <Providers>
           <main className="flex-1">
             {children}

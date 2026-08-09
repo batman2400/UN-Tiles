@@ -4,8 +4,21 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon, ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+  
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/collections", label: "Collections" },
+    { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  // Only show links that are NOT the current page
+  const displayedLinks = navLinks.filter(link => link.href !== pathname);
+
   return (
     <footer className="relative flex w-full flex-col justify-between overflow-hidden bg-white text-stone-900 font-sans antialiased selection:bg-stone-900 selection:text-white border-t border-slate-200">
       {/* Main Content Container */}
@@ -20,9 +33,15 @@ export function Footer() {
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col gap-4"
           >
-            <Link href="/collections" className="text-2xl font-semibold tracking-tight transition-opacity hover:opacity-70 sm:text-3xl">Collections</Link>
-            <Link href="/about" className="text-2xl font-semibold tracking-tight transition-opacity hover:opacity-70 sm:text-3xl">About Us</Link>
-            <Link href="/contact" className="text-2xl font-semibold tracking-tight transition-opacity hover:opacity-70 sm:text-3xl">Contact</Link>
+            {displayedLinks.map((link) => (
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                className="text-2xl font-semibold tracking-tight transition-opacity hover:opacity-70 sm:text-3xl"
+              >
+                {link.label}
+              </Link>
+            ))}
           </motion.div>
 
           {/* Socials - Moved up */}

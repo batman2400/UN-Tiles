@@ -156,12 +156,49 @@
       0 8px 16px rgba(28, 25, 23, 0.06),
       0 24px 48px rgba(28, 25, 23, 0.08);
   }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-attachment: fixed;
+  }
+
+  .ambient-glow-bg {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .ambient-glow-bg::before,
+  .ambient-glow-bg::after {
+    content: "";
+    position: fixed;
+    width: 80vw;
+    height: 80vw;
+    max-width: 800px;
+    max-height: 800px;
+    border-radius: 50%;
+    filter: blur(140px);
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.15;
+  }
+
+  .ambient-glow-bg::before {
+    top: -20%;
+    left: -20%;
+    background: var(--color-accent);
+  }
+
+  .ambient-glow-bg::after {
+    bottom: -20%;
+    right: -20%;
+    background: var(--color-primary-dim);
+  }
 }
 
 /* ═══════════════════════════════════════════
    PARALLAX
    ═══════════════════════════════════════════ */
-
 .parallax-layer {
   transform: translate3d(0, var(--parallax-offset, 0px), 0);
   will-change: transform;
