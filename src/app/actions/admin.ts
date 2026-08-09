@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { logAdminAction } from "@/lib/auditLog";
 
 // ── Zod Schemas ────────────────────────────────────────
 
@@ -63,7 +64,7 @@ export async function createCategory(rawData: { name: string; slug: string; imag
   const data = parsed.data;
 
   const supabase = await createClient();
-  await requireAdmin(supabase);
+  const admin = await requireAdmin(supabase);
 
   const { error } = await supabase
     .from("categories")
@@ -76,6 +77,15 @@ export async function createCategory(rawData: { name: string; slug: string; imag
   if (error) {
     return { success: false, error: error.message };
   }
+
+  await logAdminAction(supabase, {
+    adminId: admin.id,
+    adminEmail: admin.email,
+    action: "category.created",
+    entityType: "category",
+    entityId: data.slug,
+    details: { name: data.name },
+  });
 
   revalidatePath("/admin/inventory");
   revalidatePath("/collections");
@@ -101,7 +111,7 @@ export async function createProduct(rawData: {
   const data = parsed.data;
 
   const supabase = await createClient();
-  await requireAdmin(supabase);
+  const admin = await requireAdmin(supabase);
 
   // Generate a sequential ID like "tile-123"
   // Using UUID for robust identification instead to avoid sequence issues
@@ -126,6 +136,15 @@ export async function createProduct(rawData: {
   if (error) {
     return { success: false, error: error.message };
   }
+
+  await logAdminAction(supabase, {
+    adminId: admin.id,
+    adminEmail: admin.email,
+    action: "product.created",
+    entityType: "product",
+    entityId: id,
+    details: { sku: data.sku, name: data.name, stock_sqft: data.stock_sqft },
+  });
 
   revalidatePath("/admin/inventory");
   revalidatePath("/collections");

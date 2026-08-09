@@ -17,8 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle } from "lucide-react";
 import {
-  FaEnvelope,
-  FaPhoneAlt,
   FaArrowRight,
   FaSeedling,
 } from "react-icons/fa";
@@ -79,7 +77,6 @@ export default function ContactSolutionForm(
     headline,
     headlineAccent,
     subheadline,
-    contactInfo,
     serviceOptions,
     ctaLabel,
   } = { ...defaultProps, ...props };

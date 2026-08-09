@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from 'motion/react';
 import { FaArrowRight } from 'react-icons/fa6';
+import Image from 'next/image';
 
 export interface Hero10NavItem {
   label: string;
@@ -32,15 +33,7 @@ const defaultNavItems: Hero10NavItem[] = [
 
 const defaultBackground = '/images/light_luxury_tiles.png';
 
-const headerVariants: Variants = {
-  hidden: { opacity: 0, y: -16, filter: 'blur(8px)' },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { type: 'spring', duration: 0.68, bounce: 0 },
-  },
-};
+
 
 const contentContainer: Variants = {
   hidden: { opacity: 0 },
@@ -75,10 +68,10 @@ const backgroundVariants: Variants = {
 
 
 export function Hero10({
-  brandName = 'UN Tiles',
-  navItems = defaultNavItems,
-  ctaText = 'Explore Tiles',
-  ctaHref = '/collections',
+  _brandName = 'UN Tiles',
+  _navItems = defaultNavItems,
+  _ctaText = 'Explore Tiles',
+  _ctaHref = '/collections',
   eyebrowText = 'Premium Architectural Tiles',
   title = 'Materializing Vision.\nElevating Spaces.',
   description = 'Architectural precision in high-end tiling. Structural integrity meets timeless design in every square foot.',
@@ -98,9 +91,12 @@ export function Hero10({
         className="absolute inset-0 will-change-transform"
         aria-hidden="true"
       >
-        <img
+        <Image
           src={backgroundImage}
           alt=""
+          fill
+          priority
+          sizes="100vw"
           className="h-full w-full object-cover object-center outline outline-1 outline-black/10"
         />
       </motion.div>

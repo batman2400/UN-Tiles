@@ -1,7 +1,71 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { Package, ShoppingCart, AlertCircle, CheckCircle2, TrendingUp } from "lucide-react";
+import { Package, ShoppingCart, AlertCircle, CheckCircle2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import Link from "next/link";
+import { OrdersActivityChart } from "@/components/admin/OrdersActivityChart";
+
+const LOW_STOCK_THRESHOLD = 50;
+const ACTIVITY_WINDOW_DAYS = 14;
+
+/** Buckets a flat list of order timestamps into per-day counts for the trailing N days. */
+function bucketOrdersByDay(dates: string[], days: number) {
+  const counts = new Map<string, number>();
+  for (const iso of dates) {
+    const key = iso.slice(0, 10); // YYYY-MM-DD
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const buckets = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(today);
+    day.setDate(today.getDate() - i);
+    const key = day.toISOString().slice(0, 10);
+    buckets.push({
+      label: day.toLocaleDateString("en-US", { weekday: "narrow" }),
+      fullLabel: day.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      count: counts.get(key) ?? 0,
+    });
+  }
+  return buckets;
+}
+
+/** Computes the ISO boundaries for "this week" vs "the week before" comparisons. */
+function getTrendWindowBoundaries() {
+  const now = Date.now();
+  return {
+    sevenDaysAgo: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    fourteenDaysAgo: new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString(),
+  };
+}
+
+/**
+ * Computes a human-readable week-over-week trend label from two real counts.
+ * `higherIsGood` controls whether an increase is styled as positive (emerald)
+ * or cautionary (amber) — e.g. more completed orders is good, more active
+ * (unfulfilled) orders is not.
+ */
+function computeTrend(current: number, previous: number, higherIsGood: boolean) {
+  if (previous === 0 && current === 0) {
+    return { label: "No activity this week", color: "text-gray-500", Icon: Minus };
+  }
+  if (previous === 0) {
+    return { label: "New activity this week", color: "text-emerald-600", Icon: TrendingUp };
+  }
+
+  const percent = Math.round(((current - previous) / previous) * 100);
+  if (percent === 0) {
+    return { label: "Flat vs last week", color: "text-gray-500", Icon: Minus };
+  }
+
+  const isIncrease = percent > 0;
+  const isGood = isIncrease === higherIsGood;
+  return {
+    label: `${isIncrease ? "+" : ""}${percent}% vs last week`,
+    color: isGood ? "text-emerald-600" : "text-red-500",
+    Icon: isIncrease ? TrendingUp : TrendingDown,
+  };
+}
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
@@ -16,15 +80,39 @@ export default async function AdminDashboardPage() {
     redirect("/login");
   }
 
-  // 2. Verify admin role
-  const [profileRes, productsRes, ordersRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single(),
-    supabase.from("products").select("stock_sqft"),
-    supabase.from("orders").select("status"),
+  const { sevenDaysAgo, fourteenDaysAgo } = getTrendWindowBoundaries();
+  const activeStatuses = ["Pending", "Processing"];
+
+  // 2. Verify admin role + fetch all metrics as lightweight count-only
+  // queries (head: true) instead of downloading every order/product row.
+  // This keeps the dashboard fast as the store's data grows.
+  const [
+    profileRes,
+    totalOrdersRes,
+    activeOrdersRes,
+    completedOrdersRes,
+    lowStockRes,
+    ordersLast7Res,
+    ordersPrev7Res,
+    activeLast7Res,
+    activePrev7Res,
+    completedLast7Res,
+    completedPrev7Res,
+    activityWindowRes,
+  ] = await Promise.all([
+    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase.from("orders").select("*", { count: "exact", head: true }),
+    supabase.from("orders").select("*", { count: "exact", head: true }).in("status", activeStatuses),
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "Delivered"),
+    supabase.from("products").select("*", { count: "exact", head: true }).lte("stock_sqft", LOW_STOCK_THRESHOLD),
+    supabase.from("orders").select("*", { count: "exact", head: true }).gte("date", sevenDaysAgo),
+    supabase.from("orders").select("*", { count: "exact", head: true }).gte("date", fourteenDaysAgo).lt("date", sevenDaysAgo),
+    supabase.from("orders").select("*", { count: "exact", head: true }).in("status", activeStatuses).gte("date", sevenDaysAgo),
+    supabase.from("orders").select("*", { count: "exact", head: true }).in("status", activeStatuses).gte("date", fourteenDaysAgo).lt("date", sevenDaysAgo),
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "Delivered").gte("date", sevenDaysAgo),
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "Delivered").gte("date", fourteenDaysAgo).lt("date", sevenDaysAgo),
+    // Only the `date` column, bounded to the chart window — never the full orders table.
+    supabase.from("orders").select("date").gte("date", fourteenDaysAgo),
   ]);
 
   const profile = profileRes.data;
@@ -32,13 +120,19 @@ export default async function AdminDashboardPage() {
     redirect("/login");
   }
 
-  const products = productsRes.data ?? [];
-  const orders = ordersRes.data ?? [];
+  const totalOrders = totalOrdersRes.count ?? 0;
+  const pendingOrders = activeOrdersRes.count ?? 0;
+  const completedOrders = completedOrdersRes.count ?? 0;
+  const lowStockProducts = lowStockRes.count ?? 0;
 
-  const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length;
-  const completedOrders = orders.filter(o => o.status === 'Delivered').length;
-  const lowStockProducts = products.filter(p => Number(p.stock_sqft) <= 50).length;
+  const totalTrend = computeTrend(ordersLast7Res.count ?? 0, ordersPrev7Res.count ?? 0, true);
+  const activeTrend = computeTrend(activeLast7Res.count ?? 0, activePrev7Res.count ?? 0, false);
+  const completedTrend = computeTrend(completedLast7Res.count ?? 0, completedPrev7Res.count ?? 0, true);
+
+  const activityBuckets = bucketOrdersByDay(
+    (activityWindowRes.data ?? []).map((r) => r.date),
+    ACTIVITY_WINDOW_DAYS
+  );
 
   const metrics = [
     {
@@ -48,8 +142,9 @@ export default async function AdminDashboardPage() {
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       href: "/admin/orders",
-      trend: "+12% this month",
-      trendColor: "text-emerald-600"
+      trend: totalTrend.label,
+      trendColor: totalTrend.color,
+      TrendIcon: totalTrend.Icon,
     },
     {
       title: "Active Orders",
@@ -58,8 +153,9 @@ export default async function AdminDashboardPage() {
       color: "text-amber-600",
       bgColor: "bg-amber-50",
       href: "/admin/orders",
-      trend: "-2% this month",
-      trendColor: "text-red-500"
+      trend: activeTrend.label,
+      trendColor: activeTrend.color,
+      TrendIcon: activeTrend.Icon,
     },
     {
       title: "Low Stock SKUs",
@@ -68,8 +164,9 @@ export default async function AdminDashboardPage() {
       color: lowStockProducts > 0 ? "text-red-600" : "text-green-600",
       bgColor: lowStockProducts > 0 ? "bg-red-50" : "bg-green-50",
       href: "/admin/inventory",
-      trend: "Requires attention",
-      trendColor: "text-amber-600"
+      trend: lowStockProducts > 0 ? "Requires attention" : "Fully stocked",
+      trendColor: lowStockProducts > 0 ? "text-amber-600" : "text-emerald-600",
+      TrendIcon: lowStockProducts > 0 ? AlertCircle : CheckCircle2,
     },
     {
       title: "Completed Orders",
@@ -78,8 +175,9 @@ export default async function AdminDashboardPage() {
       color: "text-emerald-600",
       bgColor: "bg-emerald-50",
       href: "/admin/orders",
-      trend: "+8% this month",
-      trendColor: "text-emerald-600"
+      trend: completedTrend.label,
+      trendColor: completedTrend.color,
+      TrendIcon: completedTrend.Icon,
     }
   ];
 
@@ -93,6 +191,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric, i) => {
           const Icon = metric.icon;
+          const TrendIcon = metric.TrendIcon;
           const delayClass = `motion-delay-${(i % 4) + 1}`;
           
           return (
@@ -115,7 +214,7 @@ export default async function AdminDashboardPage() {
                 </div>
                 
                 <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full shadow-sm border border-gray-100`}>
-                  <TrendingUp className="w-3.5 h-3.5" />
+                  <TrendIcon className="w-3.5 h-3.5" />
                   {metric.trend}
                 </div>
               </div>
@@ -127,6 +226,10 @@ export default async function AdminDashboardPage() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="mt-6">
+        <OrdersActivityChart data={activityBuckets} />
       </div>
     </div>
   );

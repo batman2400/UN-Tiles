@@ -52,7 +52,12 @@ export default async function AdminInventoryPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <InventoryTable initialProducts={adminProducts} categories={categories} />
+      <InventoryTable
+        initialProducts={adminProducts}
+        categories={categories}
+        adminId={user.id}
+        adminEmail={user.email ?? null}
+      />
     </div>
   );
 }

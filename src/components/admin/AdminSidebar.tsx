@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingCart, LogOut, ArrowLeft } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, ArrowLeft, Search, History } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
 
@@ -10,11 +11,13 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/inventory", label: "Inventory", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/customers", label: "Customers", icon: Users },
+  { href: "/admin/audit-log", label: "Audit Log", icon: History },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -40,7 +43,16 @@ export function AdminSidebar() {
         <p className="px-3 text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">
           Admin Panel
         </p>
-        
+
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("admin:open-command-palette"))}
+          className="w-full flex items-center gap-3 px-3 py-2.5 mb-2 rounded-lg text-sm font-semibold text-gray-500 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <Search className="w-4 h-4" />
+          <span className="flex-1 text-left">Search</span>
+          <kbd className="px-1.5 py-0.5 text-[10px] font-bold text-gray-400 bg-white rounded border border-gray-200">⌘K</kbd>
+        </button>
+
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;

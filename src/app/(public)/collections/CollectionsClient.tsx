@@ -31,9 +31,9 @@ export function CollectionsClient({
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
-  useEffect(() => {
-    setVisibleCount(12);
-  }, [searchQuery, selectedCategory, selectedDims, sortBy]);
+  // Reset pagination when filters change — setState in effect is intentional here
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setVisibleCount(12); }, [searchQuery, selectedCategory, selectedDims, sortBy]);
 
   // Keep local state synchronized if URL search params change (e.g., from top navbar search)
   useEffect(() => {

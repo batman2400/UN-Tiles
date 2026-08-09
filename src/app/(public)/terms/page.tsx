@@ -18,21 +18,21 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">2. Use License</h2>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              [Placeholder: Detail the permissions granted to users to temporarily download one copy of the materials (information or software) on UN Tiles' website for personal, non-commercial transitory viewing only.]
+              [Placeholder: Detail the permissions granted to users to temporarily download one copy of the materials (information or software) on UN Tiles&apos; website for personal, non-commercial transitory viewing only.]
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">3. Disclaimer</h2>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              [Placeholder: The materials on UN Tiles' website are provided on an 'as is' basis. UN Tiles makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.]
+              [Placeholder: The materials on UN Tiles&apos; website are provided on an &apos;as is&apos; basis. UN Tiles makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.]
             </p>
           </section>
 
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">4. Limitations</h2>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              [Placeholder: In no event shall UN Tiles or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on UN Tiles' website.]
+              [Placeholder: In no event shall UN Tiles or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on UN Tiles&apos; website.]
             </p>
           </section>
         </div>

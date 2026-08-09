@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowRight01Icon, ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
+import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 

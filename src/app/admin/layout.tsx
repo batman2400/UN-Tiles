@@ -1,4 +1,6 @@
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { NewOrderNotifier } from "@/components/admin/NewOrderNotifier";
+import { CommandPalette } from "@/components/admin/CommandPalette";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -30,6 +32,8 @@ export default async function AdminLayout({
       <div className="flex-1 min-h-screen">
         {children}
       </div>
+      <NewOrderNotifier />
+      <CommandPalette />
     </div>
   );
 }

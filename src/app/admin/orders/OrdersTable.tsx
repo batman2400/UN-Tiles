@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { downloadCsv } from "@/lib/csv";
+import { logAdminAction } from "@/lib/auditLog";
 
 export interface AdminOrder {
   id: string;
@@ -25,8 +27,17 @@ interface RowState {
 }
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+const PAGE_SIZE = 10;
 
-export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) {
+export function OrdersTable({
+  initialOrders,
+  adminId,
+  adminEmail,
+}: {
+  initialOrders: AdminOrder[];
+  adminId: string;
+  adminEmail: string | null;
+}) {
   const supabase = useMemo(() => createClient(), []);
 
   const [orders, setOrders] = useState<AdminOrder[]>(initialOrders);
@@ -34,6 +45,11 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [deliveryMethodFilter, setDeliveryMethodFilter] = useState<string>("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState(ORDER_STATUSES[0]);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
 
   // Subscribe to real-time order changes across the store
   useEffect(() => {
@@ -78,6 +94,12 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
     });
   }, [orders, searchQuery, statusFilter, deliveryMethodFilter]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredOrders.slice(start, start + PAGE_SIZE);
+  }, [filteredOrders, currentPage]);
+
   const getRowState = (id: string): RowState => {
     return rowStates[id] ?? { isUpdating: false, feedback: null };
   };
@@ -90,6 +112,7 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
   };
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const previousStatus = orders.find((o) => o.id === orderId)?.status;
     updateRowState(orderId, { isUpdating: true, feedback: null });
 
     const { error } = await supabase
@@ -117,6 +140,84 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
     setTimeout(() => {
       updateRowState(orderId, { feedback: null });
     }, 3000);
+
+    logAdminAction(supabase, {
+      adminId,
+      adminEmail,
+      action: "order.status_updated",
+      entityType: "order",
+      entityId: orderId,
+      details: { from: previousStatus, to: newStatus },
+    });
+  };
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allVisibleSelected = paginatedOrders.length > 0 && paginatedOrders.every((o) => selectedIds.has(o.id));
+
+  const toggleSelectAllVisible = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        paginatedOrders.forEach((o) => next.delete(o.id));
+      } else {
+        paginatedOrders.forEach((o) => next.add(o.id));
+      }
+      return next;
+    });
+  };
+
+  const handleBulkStatusUpdate = async () => {
+    if (selectedIds.size === 0) return;
+    setIsBulkUpdating(true);
+
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: bulkStatus })
+      .in("id", ids);
+
+    if (!error) {
+      setOrders((prev) =>
+        prev.map((o) => (selectedIds.has(o.id) ? { ...o, status: bulkStatus } : o))
+      );
+      logAdminAction(supabase, {
+        adminId,
+        adminEmail,
+        action: "order.bulk_status_updated",
+        entityType: "order",
+        entityId: ids.join(","),
+        details: { count: ids.length, to: bulkStatus, orderIds: ids },
+      });
+      setSelectedIds(new Set());
+    }
+
+    setIsBulkUpdating(false);
+  };
+
+  const handleExportCsv = () => {
+    downloadCsv(
+      `orders-export-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Items", "Total", "Status"],
+      filteredOrders.map((o) => [
+        o.id,
+        new Date(o.date).toLocaleString(),
+        `${o.profiles?.first_name || ""} ${o.profiles?.last_name || ""}`.trim(),
+        o.profiles?.email || "",
+        o.profiles?.phone || "",
+        o.delivery_method,
+        o.items,
+        o.total,
+        o.status,
+      ])
+    );
   };
 
   const formatCurrency = (amountStr: string): string => {
@@ -154,7 +255,10 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
           <select 
             className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer w-full md:w-auto"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="All">All Statuses</option>
             {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -162,7 +266,10 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
           <select 
             className="bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 py-2.5 px-3 transition-all cursor-pointer w-full md:w-auto"
             value={deliveryMethodFilter}
-            onChange={(e) => setDeliveryMethodFilter(e.target.value)}
+            onChange={(e) => {
+              setDeliveryMethodFilter(e.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="All">All Delivery Methods</option>
             <option value="Cash on Delivery">Cash on Delivery</option>
@@ -174,41 +281,101 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
               type="text"
               placeholder="Search ID, name, email..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
               className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
             />
           </div>
+          <button
+            onClick={handleExportCsv}
+            title="Export currently filtered orders to CSV"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-900 rounded-lg text-sm font-bold tracking-wide hover:bg-gray-200 transition-colors w-full md:w-auto justify-center"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex flex-col sm:flex-row items-center gap-3 bg-zinc-900 text-white rounded-xl px-5 py-3 motion-fade-up">
+          <span className="text-sm font-semibold">{selectedIds.size} selected</span>
+          <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5 outline-none cursor-pointer"
+            >
+              {ORDER_STATUSES.map((s) => (
+                <option key={s} value={s} className="bg-zinc-900">{s}</option>
+              ))}
+            </select>
+            <button
+              onClick={handleBulkStatusUpdate}
+              disabled={isBulkUpdating}
+              className="px-3 py-1.5 bg-accent text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
+            >
+              {isBulkUpdating ? "Updating..." : "Apply Status"}
+            </button>
+          </div>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs font-semibold text-gray-300 hover:text-white transition-colors"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
       <div className="overflow-x-auto pb-8">
-        <table className="w-full text-left border-collapse min-w-[900px]">
+        <table className="w-full text-left border-collapse min-w-[960px]">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[18%] text-left">Order ID & Date</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[22%] text-left">Customer</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-left">Delivery Method</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Items</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[12%] text-right">Total Price</th>
+              <th className="px-4 py-3 w-[3%]">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAllVisible}
+                  className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-accent"
+                  aria-label="Select all visible orders"
+                />
+              </th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[16%] text-left">Order ID & Date</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Customer</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[14%] text-left">Delivery Method</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[18%] text-left">Items</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[11%] text-right">Total Price</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[13%] text-right">Status Action</th>
+              <th className="px-4 py-3 w-[5%] text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">View</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length === 0 && (
+            {paginatedOrders.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <td colSpan={8} className="px-6 py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100 shadow-sm">
                   <Package className="w-8 h-8 mx-auto mb-3 opacity-20" />
                   No orders found.
                 </td>
               </tr>
             )}
             
-            {filteredOrders.map((order, index) => {
+            {paginatedOrders.map((order, index) => {
               const row = getRowState(order.id);
               const delayClass = `motion-delay-${(index % 4) + 1}`;
               
               return (
                 <tr key={order.id} className={`group bg-white border-b border-gray-100 border-l-2 border-l-transparent hover:border-l-accent hover:bg-gray-50/80 transition-all motion-fade-up ${delayClass}`}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(order.id)}
+                      onChange={() => toggleSelected(order.id)}
+                      className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-accent"
+                      aria-label={`Select order ${order.id}`}
+                    />
+                  </td>
                   <td className="px-6 py-3 text-left">
                     <span className="font-mono text-sm font-semibold text-gray-900 group-hover:text-accent transition-colors">
                       {order.id.startsWith("UN-") 
@@ -282,6 +449,15 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
                       </div>
                     )}
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => setViewOrder(order)}
+                      title="View full order details"
+                      className="p-2 rounded-lg text-gray-400 hover:text-accent hover:bg-accent/10 transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               );
             })}
@@ -291,18 +467,104 @@ export function OrdersTable({ initialOrders }: { initialOrders: AdminOrder[] }) 
       
       <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
-          Showing {filteredOrders.length} {filteredOrders.length === 1 ? 'order' : 'orders'}
+          Showing {paginatedOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
+          {"–"}
+          {Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}{" "}
+          {filteredOrders.length === 1 ? "order" : "orders"}
         </p>
         <div className="flex gap-1">
-          <button className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50" disabled>
+          <button
+            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">1</button>
-          <button className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50" disabled>
+          <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+            {currentPage}
+          </span>
+          <button
+            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+          >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
+
+      {viewOrder && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in duration-200"
+            onClick={() => setViewOrder(null)}
+          />
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0">
+              <div>
+                <h3 className="font-bold text-gray-900">Order Details</h3>
+                <p className="font-mono text-xs text-gray-500 mt-0.5">
+                  {viewOrder.id.startsWith("UN-")
+                    ? `#${viewOrder.id.substring(0, 18).toUpperCase()}`
+                    : `#UN-2026-${viewOrder.id.substring(0, 8).toUpperCase()}`}
+                </p>
+              </div>
+              <button onClick={() => setViewOrder(null)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 flex flex-col gap-6">
+              <span className={`inline-flex self-start px-3 py-1.5 rounded-md border text-xs font-bold uppercase tracking-widest ${getStatusBadgeColor(viewOrder.status)}`}>
+                {viewOrder.status}
+              </span>
+
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer</p>
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {viewOrder.profiles?.first_name} {viewOrder.profiles?.last_name}
+                  </p>
+                  {viewOrder.profiles?.email && (
+                    <p className="text-sm text-gray-600 flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-gray-400" />{viewOrder.profiles.email}</p>
+                  )}
+                  {viewOrder.profiles?.phone && (
+                    <p className="text-sm text-gray-600 flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-gray-400" />{viewOrder.profiles.phone}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Order Info</p>
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 text-sm text-gray-700">
+                  <p className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                    {new Date(viewOrder.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                  </p>
+                  <p className="flex items-center gap-2">
+                    {viewOrder.delivery_method === "Cash on Delivery" ? <Truck className="w-3.5 h-3.5 text-gray-400" /> : <Store className="w-3.5 h-3.5 text-gray-400" />}
+                    {viewOrder.delivery_method || "Pickup from Store"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <ListOrdered className="w-3.5 h-3.5" /> Items
+                </p>
+                <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                  {viewOrder.items}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <span className="text-sm font-semibold text-gray-500">Total</span>
+                <span className="font-mono text-xl font-bold text-gray-900">{formatCurrency(viewOrder.total)}</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
