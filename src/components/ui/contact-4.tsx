@@ -283,7 +283,7 @@ export default function ContactSolutionForm(
                   </Label>
                   <Select
                     value={form.projectType}
-                    onValueChange={(val) => handleChange("projectType", val)}
+                    onValueChange={(val) => handleChange("projectType", val ?? "")}
                   >
                     <SelectTrigger
                       id="projectType"
@@ -292,7 +292,7 @@ export default function ContactSolutionForm(
                       <SelectValue placeholder="Choose a project type..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      {serviceOptions.map((opt) => (
+                      {(serviceOptions ?? []).map((opt) => (
                         <SelectItem
                           key={opt.value}
                           value={opt.value}
