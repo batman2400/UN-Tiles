@@ -68,10 +68,10 @@ const backgroundVariants: Variants = {
 
 
 export function Hero10({
-  _brandName = 'UN Tiles',
-  _navItems = defaultNavItems,
-  _ctaText = 'Explore Tiles',
-  _ctaHref = '/collections',
+  brandName: _brandName = 'UN Tiles',
+  navItems: _navItems = defaultNavItems,
+  ctaText: _ctaText = 'Explore Tiles',
+  ctaHref: _ctaHref = '/collections',
   eyebrowText = 'Premium Architectural Tiles',
   title = 'Materializing Vision.\nElevating Spaces.',
   description = 'Architectural precision in high-end tiling. Structural integrity meets timeless design in every square foot.',
