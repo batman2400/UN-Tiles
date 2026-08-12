@@ -34,9 +34,9 @@ export function Footer() {
 
   return (
     <footer className="w-full px-4 py-8 md:px-6 md:py-12 bg-background">
-      <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] bg-surface-dark before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/40 before:to-transparent">
+      <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] bg-primary before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/60 before:to-transparent premium-shadow-lg">
         <div className="p-1.5">
-          <div className="rounded-[2.25rem] bg-surface-dark-elevated">
+          <div className="rounded-[2.25rem] bg-primary">
             <div className="flex min-h-[400px] flex-col justify-between px-8 pb-8 pt-12 md:px-12 md:pb-10 md:pt-16">
               {/* Top Grid Content */}
               <div className="mb-12 grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
@@ -53,7 +53,7 @@ export function Footer() {
                       UN TILES
                     </span>
                   </div>
-                  <p className="mb-8 max-w-sm text-base leading-relaxed text-on-surface-dark-variant">
+                  <p className="mb-8 max-w-sm text-base leading-relaxed text-white/80">
                     Architectural precision in high-end tiling. Materializing your vision with structural integrity and timeless design.
                   </p>
                 </motion.div>
@@ -77,7 +77,7 @@ export function Footer() {
                           <li key={link.href}>
                             <Link
                               href={link.href}
-                              className="text-lg font-medium text-on-surface-dark-variant transition-colors hover:text-on-surface-dark md:text-xl"
+                              className="text-lg font-medium text-white/80 transition-colors hover:text-white md:text-xl"
                             >
                               {link.label}
                             </Link>
@@ -104,7 +104,7 @@ export function Footer() {
                               href={social.href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="group flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-on-surface-dark-variant transition-colors hover:text-accent"
+                              className="group flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-white/80 transition-colors hover:text-accent"
                             >
                               {social.label}
                               <HugeiconsIcon
@@ -128,7 +128,7 @@ export function Footer() {
                 transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-auto flex w-full items-center justify-center overflow-hidden pointer-events-none select-none"
               >
-                <span className="font-display text-[12vw] font-bold leading-none tracking-tighter text-white/10 md:text-[9vw]">
+                <span className="font-display text-[12vw] font-bold leading-none tracking-tighter text-white md:text-[9vw]">
                   UN TILES
                 </span>
               </motion.div>
@@ -137,23 +137,23 @@ export function Footer() {
         </div>
 
         {/* Bottom Strip */}
-        <div className="border-t border-white/5 px-8 py-6 md:px-12">
+        <div className="border-t border-white/10 px-8 py-6 md:px-12">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-sm font-medium text-on-surface-dark-variant">
+            <p className="text-sm font-medium text-white/60">
               &copy; {new Date().getFullYear()} UN Tiles (Unicorn Enterprises).
             </p>
 
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-on-surface-dark-variant">
+            <div className="flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-white/60">
               {legalLinks.map((link, index) => (
                 <React.Fragment key={index}>
                   <Link
                     href={link.href}
-                    className="transition-colors hover:text-on-surface-dark"
+                    className="transition-colors hover:text-white"
                   >
                     {link.label}
                   </Link>
                   {index < legalLinks.length - 1 && (
-                    <span className="h-4 w-px bg-white/10"></span>
+                    <span className="h-4 w-px bg-white/20"></span>
                   )}
                 </React.Fragment>
               ))}
