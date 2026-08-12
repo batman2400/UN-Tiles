@@ -49,7 +49,7 @@ export function Footer() {
                   className="flex flex-col items-start lg:col-span-5 xl:col-span-4"
                 >
                   <div className="mb-6 flex items-center gap-3">
-                    <span className="font-display text-3xl font-bold tracking-tight text-on-surface-dark">
+                    <span className="font-display text-3xl font-bold tracking-tight text-white">
                       UN TILES
                     </span>
                   </div>
@@ -128,7 +128,7 @@ export function Footer() {
                 transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                 className="mt-auto flex w-full items-center justify-center overflow-hidden pointer-events-none select-none"
               >
-                <span className="font-display text-[12vw] font-bold leading-none tracking-tighter text-on-surface-dark/[0.06] md:text-[9vw]">
+                <span className="font-display text-[12vw] font-bold leading-none tracking-tighter text-white/10 md:text-[9vw]">
                   UN TILES
                 </span>
               </motion.div>
