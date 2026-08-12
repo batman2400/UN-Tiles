@@ -1,7 +1,4 @@
-"use client";
-
 import Image from "next/image";
-import contactHeroImage from "../../../../public/images/contact_hero.png";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { MapPin } from "lucide-react";
@@ -13,20 +10,20 @@ export default function Contact() {
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-surface-dark overflow-hidden pt-32">
+      <section className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-background overflow-hidden pt-32">
         <ParallaxLayer
           speed={0.2}
           maxOffset={48}
           className="absolute -inset-x-0 -top-[10%] h-[120%] w-full"
         >
           <Image 
-            src={contactHeroImage} 
+            src="/images/contact_hero.jpg" 
             alt="UN Tiles Showroom" 
             fill 
             sizes="100vw"
             className="object-cover"
             priority
-            quality={95}
+            unoptimized
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-background/90" />

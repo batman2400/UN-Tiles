@@ -206,6 +206,8 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #faf8f5;
+  color-scheme: light;
 }
 
 /* ═══════════════════════════════════════════
@@ -216,12 +218,10 @@ html {
   0% {
     opacity: 0;
     transform: translate3d(0, 24px, 0) scale(0.985);
-    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
-    filter: blur(0);
   }
 }
 

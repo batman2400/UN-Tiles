@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Manrope, Geist } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  themeColor: "#faf8f5",
+  colorScheme: "light",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,8 +40,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn("h-full", "antialiased", inter.variable, manrope.variable, "font-sans", geist.variable)}
+      style={{ backgroundColor: "#faf8f5", colorScheme: "light" }}
     >
-      <body className="min-h-full flex flex-col font-sans bg-noise ambient-glow-bg">
+      <body
+        className="min-h-full flex flex-col font-sans bg-noise ambient-glow-bg bg-background"
+        style={{ backgroundColor: "#faf8f5" }}
+      >
         <Providers>
           <main className="flex-1">
             {children}

@@ -64,7 +64,7 @@ type CatalogLoadOptions = {
   remote?: boolean;
 };
 
-const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.png";
+const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.jpg";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
 
 function isRecord(value: unknown): value is Record<string, unknown> {

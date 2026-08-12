@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getCatalogData } from "@/data/products";
 import { ArrowRight, Shield, Truck, Award, Gem } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
@@ -7,11 +8,10 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
 import { ProductCard } from "@/components/ProductCard";
 import { Hero10 } from "@/components/ui/hero-10";
-export default async function Home() {
-  const { featuredProducts, categories } = await getCatalogData();
 
+export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       
       {/* ══════ HERO SECTION ══════ */}
       <Hero10 />
@@ -48,12 +48,12 @@ export default async function Home() {
             <ScrollReveal className="order-2 lg:order-1 relative">
               <div className="aspect-[4/5] md:aspect-square lg:aspect-[4/5] relative rounded-xl overflow-hidden premium-shadow-lg">
                 <Image 
-                  src="/images/contact_hero_v6.png"
+                  src="/images/contact_hero_v6.jpg"
                   alt="UN Tiles Showroom"
                   fill
                   sizes="100vw"
                   className="object-cover"
-                  quality={95}
+                  unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               </div>
@@ -81,6 +81,18 @@ export default async function Home() {
         </div>
       </section>
 
+      <Suspense fallback={<div className="min-h-[50vh] bg-background" aria-hidden="true" />}>
+        <HomeBelowFold />
+      </Suspense>
+    </div>
+  );
+}
+
+async function HomeBelowFold() {
+  const { featuredProducts, categories } = await getCatalogData();
+
+  return (
+    <>
       {/* ══════ CATEGORY GRID ══════ */}
       <section className="max-w-7xl mx-auto px-6 py-24 w-full">
         <ScrollReveal>
@@ -220,12 +232,12 @@ export default async function Home() {
           className="absolute -inset-x-0 -top-[10%] h-[120%] w-full"
         >
           <Image
-            src="/images/contact_hero_v6.png"
+            src="/images/contact_hero_v6.jpg"
             alt="Premium tile showroom"
             fill
             sizes="100vw"
             className="object-cover"
-            quality={95}
+            unoptimized
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
@@ -255,7 +267,6 @@ export default async function Home() {
           </ScrollReveal>
         </div>
       </section>
-
-    </div>
+    </>
   );
 }

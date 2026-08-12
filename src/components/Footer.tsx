@@ -120,18 +120,6 @@ export function Footer() {
                 </div>
               </div>
 
-              {/* Massive Logo at the bottom of the card */}
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-auto flex w-full items-center justify-center overflow-hidden pointer-events-none select-none"
-              >
-                <span className="font-display text-[12vw] font-bold leading-none tracking-tighter text-white md:text-[9vw]">
-                  UN TILES
-                </span>
-              </motion.div>
             </div>
           </div>
         </div>

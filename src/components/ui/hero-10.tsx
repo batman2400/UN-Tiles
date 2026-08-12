@@ -31,7 +31,7 @@ const defaultNavItems: Hero10NavItem[] = [
   { label: 'Contact', href: '/contact' },
 ];
 
-const defaultBackground = '/images/light_luxury_tiles.png';
+const defaultBackground = '/images/light_luxury_tiles.jpg';
 
 
 
@@ -47,24 +47,14 @@ const contentContainer: Variants = {
 };
 
 const contentItem: Variants = {
-  hidden: { opacity: 0, y: 18, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 18 },
   visible: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: { type: 'spring', duration: 0.72, bounce: 0 },
   },
 };
 
-const backgroundVariants: Variants = {
-  hidden: { opacity: 0, scale: 1.035, filter: 'blur(10px)' },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    filter: 'blur(0px)',
-    transition: { type: 'spring', duration: 1.15, bounce: 0 },
-  },
-};
 
 
 export function Hero10({
@@ -82,24 +72,18 @@ export function Hero10({
 }: Hero10Props) {
 
   return (
-    <section className="relative isolate min-h-screen w-full overflow-hidden bg-slate-200 font-sans text-slate-900 antialiased">
-      <motion.div
-        variants={backgroundVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.35 }}
-        className="absolute inset-0 will-change-transform"
-        aria-hidden="true"
-      >
+    <section className="relative isolate min-h-screen w-full overflow-hidden bg-background font-sans text-slate-900 antialiased">
+      <div className="absolute inset-0" aria-hidden="true">
         <Image
           src={backgroundImage}
           alt=""
           fill
           priority
+          unoptimized
           sizes="100vw"
-          className="h-full w-full object-cover object-center outline outline-1 outline-black/10"
+          className="h-full w-full object-cover object-center"
         />
-      </motion.div>
+      </div>
 
       <div
         className="absolute inset-0 bg-[linear-gradient(180deg,rgba(226,232,240,0.82)_0%,rgba(241,245,249,0.58)_32%,rgba(226,232,240,0.08)_66%,rgba(15,23,42,0.08)_100%)]"

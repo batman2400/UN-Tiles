@@ -1,6 +1,4 @@
 import Image from "next/image";
-import aboutHeroImage from "../../../../public/images/about.jpg";
-import landingHeroImage from "../../../../public/images/landing_hero.png";
 import { Star } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -10,20 +8,20 @@ export default function About() {
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[85vh] flex items-center justify-center bg-surface-dark overflow-hidden pt-32">
+      <section className="relative h-[85vh] flex items-center justify-center bg-background overflow-hidden pt-32">
         <ParallaxLayer
           speed={0.2}
           maxOffset={64}
           className="absolute -inset-x-0 -top-[10%] h-[120%] w-full"
         >
           <Image 
-            src={aboutHeroImage} 
+            src="/images/about.jpg" 
             alt="Monolith Texture" 
             fill 
             sizes="100vw"
-            quality={90}
-            className="object-cover object-center opacity-100"
             priority
+            unoptimized
+            className="object-cover object-center"
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-black/20" />
@@ -72,9 +70,11 @@ export default function About() {
               className="absolute -inset-x-0 -top-[12%] h-[124%] w-full"
             >
               <Image 
-                src={landingHeroImage} 
+                src="/images/landing_hero.jpg" 
                 alt="Studio Process" 
                 fill 
+                sizes="(max-width: 768px) 100vw, 50vw"
+                unoptimized
                 className="object-cover"
               />
             </ParallaxLayer>
