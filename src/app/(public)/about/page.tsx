@@ -24,7 +24,6 @@ export default function About() {
             quality={90}
             className="object-cover object-center opacity-100"
             priority
-            placeholder="blur"
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-black/20" />
@@ -77,7 +76,6 @@ export default function About() {
                 alt="Studio Process" 
                 fill 
                 className="object-cover"
-                placeholder="blur"
               />
             </ParallaxLayer>
           </div>

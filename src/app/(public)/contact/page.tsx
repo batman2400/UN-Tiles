@@ -27,7 +27,6 @@ export default function Contact() {
             className="object-cover"
             priority
             quality={95}
-            placeholder="blur"
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-background/90" />
