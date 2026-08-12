@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import contactHeroImage from "../../../../public/images/contact_hero.png";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { MapPin } from "lucide-react";
@@ -19,13 +20,14 @@ export default function Contact() {
           className="absolute -inset-x-0 -top-[10%] h-[120%] w-full"
         >
           <Image 
-            src="/images/contact_hero.png" 
+            src={contactHeroImage} 
             alt="UN Tiles Showroom" 
             fill 
             sizes="100vw"
             className="object-cover"
             priority
             quality={95}
+            placeholder="blur"
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-background/90" />

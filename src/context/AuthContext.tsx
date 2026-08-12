@@ -28,6 +28,7 @@ interface AuthContextType {
   register: (data: UserData & { password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (data: UserData) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -281,6 +282,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const { error } = await getSupabase().auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    } catch (error: unknown) {
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
   const updateProfile = async (data: UserData) => {
     if (!user?.id) return { success: false, error: "Not logged in" };
     try {
@@ -303,7 +319,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile, loginWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

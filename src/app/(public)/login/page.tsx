@@ -4,11 +4,12 @@ import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, isLoading } = useAuth();
+  const { login, loginWithGoogle, user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -69,7 +70,31 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="space-y-8">
+            <button
+              type="button"
+              onClick={async () => {
+                const result = await loginWithGoogle();
+                if (!result.success) {
+                  setError(result.error || "Google login failed.");
+                }
+              }}
+              className="w-full flex items-center justify-center gap-3 bg-surface border border-outline hover:bg-surface-container-highest py-4 text-sm font-semibold text-on-surface uppercase tracking-widest transition-colors"
+            >
+              <FcGoogle className="w-5 h-5" />
+              Sign In with Google
+            </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-outline" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                <span className="bg-surface-container-lowest px-2 text-on-surface-variant">Or continue with</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-8">
             <div className="space-y-2">
               <label htmlFor="login-email" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">
                 Email Address
@@ -135,6 +160,7 @@ export default function LoginPage() {
               </span>
             </button>
           </form>
+          </div>
 
           <p className="text-center text-sm text-on-surface-variant mt-10">
             Don&apos;t have an account?{" "}

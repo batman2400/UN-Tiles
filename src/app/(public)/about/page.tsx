@@ -1,4 +1,6 @@
 import Image from "next/image";
+import aboutHeroImage from "../../../../public/images/about.png";
+import landingHeroImage from "../../../../public/images/landing_hero.png";
 import { Star } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -15,11 +17,12 @@ export default function About() {
           className="absolute -inset-x-0 -top-[10%] h-[120%] w-full"
         >
           <Image 
-            src="/images/about.png" 
+            src={aboutHeroImage} 
             alt="Monolith Texture" 
             fill 
             className="object-cover object-center opacity-100"
             priority
+            placeholder="blur"
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-black/20" />
@@ -68,10 +71,11 @@ export default function About() {
               className="absolute -inset-x-0 -top-[12%] h-[124%] w-full"
             >
               <Image 
-                src="/images/landing_hero.png" 
+                src={landingHeroImage} 
                 alt="Studio Process" 
                 fill 
                 className="object-cover"
+                placeholder="blur"
               />
             </ParallaxLayer>
           </div>
