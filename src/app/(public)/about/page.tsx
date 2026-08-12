@@ -1,5 +1,5 @@
 import Image from "next/image";
-import aboutHeroImage from "../../../../public/images/about.png";
+import aboutHeroImage from "../../../../public/images/about.jpg";
 import landingHeroImage from "../../../../public/images/landing_hero.png";
 import { Star } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
@@ -20,6 +20,8 @@ export default function About() {
             src={aboutHeroImage} 
             alt="Monolith Texture" 
             fill 
+            sizes="100vw"
+            quality={90}
             className="object-cover object-center opacity-100"
             priority
             placeholder="blur"
