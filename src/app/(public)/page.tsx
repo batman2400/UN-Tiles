@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import { preload } from "react-dom";
 import { getCatalogData } from "@/data/products";
 import { ArrowRight, Shield, Truck, Award, Gem } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
@@ -10,6 +11,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { Hero10 } from "@/components/ui/hero-10";
 
 export default function Home() {
+  preload("/images/light_luxury_tiles.jpg", { as: "image", fetchPriority: "high" });
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
       

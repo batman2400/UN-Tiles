@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { preload } from "react-dom";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { MapPin } from "lucide-react";
@@ -6,11 +7,20 @@ import ContactBlock from "@/components/ui/contact-1";
 import ContactSolutionForm from "@/components/ui/contact-4";
 
 export default function Contact() {
+  preload("/images/contact_hero.jpg", { as: "image", fetchPriority: "high" });
+
   return (
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-background overflow-hidden pt-32">
+      <section
+        className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-background overflow-hidden pt-32"
+        style={{
+          backgroundImage: "url(/images/contact_hero.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <ParallaxLayer
           speed={0.2}
           maxOffset={48}

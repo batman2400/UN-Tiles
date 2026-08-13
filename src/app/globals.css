@@ -210,18 +210,42 @@ html {
   color-scheme: light;
 }
 
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: vt-fade-out 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 /* ═══════════════════════════════════════════
    KEYFRAMES
    ═══════════════════════════════════════════ */
 
 @keyframes fade-up-soft {
   0% {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0) scale(0.985);
+    opacity: 1;
+    transform: translate3d(0, 10px, 0);
   }
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 
@@ -284,7 +308,7 @@ html {
    ═══════════════════════════════════════════ */
 
 .motion-fade-up {
-  animation: fade-up-soft 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: fade-up-soft 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .motion-delay-1 { animation-delay: 100ms; }
@@ -548,6 +572,11 @@ html {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
   }
 
   .scroll-reveal {

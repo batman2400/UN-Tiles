@@ -1,5 +1,6 @@
 import { getCatalogData } from "@/data/products";
 import { CollectionsClient } from "./CollectionsClient";
+import { preload } from "react-dom";
 
 type CollectionsPageProps = {
   searchParams: Promise<{
@@ -12,6 +13,8 @@ type CollectionsPageProps = {
 export default async function Collections({
   searchParams,
 }: CollectionsPageProps) {
+  preload("/images/contact_hero_v6.jpg", { as: "image", fetchPriority: "high" });
+
   const [{ allProducts, categories }, resolvedSearchParams] = await Promise.all([
     getCatalogData(),
     searchParams,

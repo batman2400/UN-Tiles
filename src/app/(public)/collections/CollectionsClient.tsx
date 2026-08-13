@@ -132,7 +132,14 @@ export function CollectionsClient({
   return (
     <div className="flex flex-col min-h-screen">
       {/* ══════ HERO HEADER ══════ */}
-      <section className="relative h-[50vh] min-h-[350px] flex items-end bg-background overflow-hidden">
+      <section
+        className="relative h-[50vh] min-h-[350px] flex items-end bg-background overflow-hidden"
+        style={{
+          backgroundImage: "url(/images/contact_hero_v6.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <Image
           src="/images/contact_hero_v6.jpg"
           alt="Tile showroom"

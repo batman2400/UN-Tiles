@@ -1,14 +1,24 @@
 import Image from "next/image";
+import { preload } from "react-dom";
 import { Star } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
 export default function About() {
+  preload("/images/about.jpg", { as: "image", fetchPriority: "high" });
+
   return (
     <div className="flex flex-col min-h-screen">
       
       {/* ══════ HERO ══════ */}
-      <section className="relative h-[85vh] flex items-center justify-center bg-background overflow-hidden pt-32">
+      <section
+        className="relative h-[85vh] flex items-center justify-center bg-background overflow-hidden pt-32"
+        style={{
+          backgroundImage: "url(/images/about.jpg)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <ParallaxLayer
           speed={0.2}
           maxOffset={64}
