@@ -116,6 +116,7 @@ function ProfileContent() {
   const [profileEdits, setProfileEdits] = useState<Partial<ProfileFormState>>({});
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
+  const [viewOrder, setViewOrder] = useState<OrderRecord | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const supabase = createClient();
@@ -602,7 +603,10 @@ function ProfileContent() {
                               <span>Invoice Generated</span>
                             </div>
                             
-                            <button className="flex items-center gap-1 text-xs font-semibold text-zinc-900 hover:text-yellow-600 transition-colors">
+                            <button 
+                              onClick={() => setViewOrder(order)}
+                              className="flex items-center gap-1 text-xs font-semibold text-zinc-900 hover:text-yellow-600 transition-colors"
+                            >
                               <span>View Order Details</span>
                               <ArrowUpRight className="w-3.5 h-3.5" />
                             </button>
@@ -698,6 +702,77 @@ function ProfileContent() {
           </div>
         </div>
       </div>
+
+      {/* Order Details Modal */}
+      {viewOrder && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in duration-200"
+            onClick={() => setViewOrder(null)}
+          />
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0">
+              <div>
+                <h3 className="font-bold text-zinc-900">Order Details</h3>
+                <p className="font-mono text-xs text-gray-500 mt-0.5">
+                  #{viewOrder.id.startsWith("UN-")
+                    ? viewOrder.id.toUpperCase()
+                    : `UN-2026-${viewOrder.id.substring(0, 8).toUpperCase()}`}
+                </p>
+              </div>
+              <button onClick={() => setViewOrder(null)} className="text-gray-400 hover:text-zinc-900 p-1 rounded-md transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 flex flex-col gap-6">
+              <span className={`inline-flex self-start px-3 py-1.5 rounded-md border text-[10px] font-bold uppercase tracking-widest ${getStatusBadgeStyle(viewOrder.status)}`}>
+                {viewOrder.status}
+              </span>
+
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Date Placed</span>
+                  <p className="text-sm font-semibold text-zinc-900">
+                    {new Date(viewOrder.date).toLocaleString("en-US", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Total Amount</span>
+                  <p className="font-mono text-xl font-bold text-zinc-900">
+                    {parseAndFormatTotal(viewOrder.total)}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Delivery Method</span>
+                  <p className="text-sm font-medium text-gray-700">
+                    {viewOrder.delivery_method || "Pickup at Showroom"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-gray-100">
+                <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Order Items</h4>
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm text-gray-700 whitespace-pre-wrap">
+                  {viewOrder.items}
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-auto p-6 border-t border-gray-100 bg-gray-50/50">
+              <button
+                onClick={() => setViewOrder(null)}
+                className="w-full bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }

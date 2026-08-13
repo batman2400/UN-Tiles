@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
         name: body.name.trim(),
         email: body.email.trim(),
         message: body.message.trim(),
+        company: body.company?.trim(),
+        phone: body.phone?.trim(),
+        project_type: body.projectType?.trim(),
       });
 
     if (insertError) {
