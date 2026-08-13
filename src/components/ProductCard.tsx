@@ -86,28 +86,30 @@ export function ProductCard({
 
         {/* Hover Overlay with Quick Add */}
         {!isOutOfStock && (
-          <div className="product-card-overlay hidden sm:flex">
-            <button
-              onClick={handleQuickAdd}
-              disabled={justAdded}
-              className={`overlay-btn px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-colors flex items-center gap-2 ${
-                justAdded
-                  ? "bg-primary text-on-primary"
-                  : "bg-white text-on-surface hover:bg-accent hover:text-on-accent"
-              }`}
-            >
-              {justAdded ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Added to Cart</span>
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  <span>Quick Add</span>
-                </>
-              )}
-            </button>
+          <div className="hidden sm:block">
+            <div className="product-card-overlay">
+              <button
+                onClick={handleQuickAdd}
+                disabled={justAdded}
+                className={`overlay-btn px-6 py-3 text-xs font-semibold uppercase tracking-widest transition-colors flex items-center gap-2 ${
+                  justAdded
+                    ? "bg-primary text-on-primary"
+                    : "bg-white text-on-surface hover:bg-accent hover:text-on-accent"
+                }`}
+              >
+                {justAdded ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Added to Cart</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-3.5 h-3.5" />
+                    <span>Quick Add</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
