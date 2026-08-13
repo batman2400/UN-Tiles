@@ -147,7 +147,7 @@ export function AdminSidebar() {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="absolute top-0 left-0 h-full w-[min(18rem,88vw)] bg-white shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <div className="absolute top-0 right-0 h-full w-[min(18rem,88vw)] bg-white shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
