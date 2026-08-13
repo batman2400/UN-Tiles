@@ -6,6 +6,7 @@ import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import { FaInstagram, FaFacebookF, FaWhatsapp, FaEnvelope } from "react-icons/fa";
 
 export function Footer() {
   const pathname = usePathname();
@@ -18,10 +19,10 @@ export function Footer() {
   ];
 
   const socialLinks = [
-    { label: "INSTAGRAM", href: "https://www.instagram.com/un_tiles_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" },
-    { label: "FACEBOOK", href: "https://www.facebook.com/unicornenterpriseslk/" },
-    { label: "WHATSAPP", href: "https://wa.me/94773508325" },
-    { label: "EMAIL", href: "mailto:fade16022025@gmail.com" },
+    { label: "INSTAGRAM", icon: FaInstagram, href: "https://www.instagram.com/un_tiles_?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" },
+    { label: "FACEBOOK", icon: FaFacebookF, href: "https://www.facebook.com/unicornenterpriseslk/" },
+    { label: "WHATSAPP", icon: FaWhatsapp, href: "https://wa.me/94773508325" },
+    { label: "EMAIL", icon: FaEnvelope, href: "mailto:fade16022025@gmail.com" },
   ];
 
   const legalLinks = [
@@ -98,7 +99,9 @@ export function Footer() {
                         Connect
                       </h4>
                       <ul className="flex flex-col gap-4">
-                        {socialLinks.map((social) => (
+                        {socialLinks.map((social) => {
+                          const Icon = social.icon;
+                          return (
                           <li key={social.label}>
                             <a
                               href={social.href}
@@ -106,14 +109,15 @@ export function Footer() {
                               rel="noopener noreferrer"
                               className="group flex items-center gap-2 text-sm font-bold tracking-[0.15em] text-white/80 transition-colors hover:text-accent"
                             >
+                              <Icon className="size-4" />
                               {social.label}
                               <HugeiconsIcon
                                 icon={ArrowUpRight01Icon}
-                                className="size-4 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                                className="size-4 ml-1 opacity-50 transition-all duration-300 group-hover:opacity-100 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                               />
                             </a>
                           </li>
-                        ))}
+                        )})}
                       </ul>
                     </motion.div>
                   </div>
