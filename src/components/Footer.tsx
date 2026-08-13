@@ -37,9 +37,9 @@ export function Footer() {
       <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] bg-primary before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/60 before:to-transparent premium-shadow-lg">
         <div className="p-1.5">
           <div className="rounded-[2.25rem] bg-primary">
-            <div className="flex min-h-[400px] flex-col justify-between px-8 pb-8 pt-12 md:px-12 md:pb-10 md:pt-16">
+            <div className="flex flex-col justify-between px-8 pb-8 pt-12 md:px-12 md:pb-8 md:pt-16">
               {/* Top Grid Content */}
-              <div className="mb-12 grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
+              <div className="grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
                 {/* Brand & Description */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
