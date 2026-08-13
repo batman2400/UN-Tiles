@@ -25,9 +25,11 @@ export function AdminSidebar() {
     window.location.href = "/login";
   };
 
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
+    if (mobileOpen) setMobileOpen(false);
+  }
 
   useEffect(() => {
     if (!mobileOpen) return;
