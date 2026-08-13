@@ -129,7 +129,7 @@ export function TopNavBar() {
 
             {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
             <div
-              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-5 rounded-full px-2 sm:px-6 py-1 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
+              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-5 rounded-full px-1.5 sm:px-6 py-1 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
             >
               {/* Mobile menu trigger (replaces center nav on small screens) */}
               <button
@@ -176,12 +176,14 @@ export function TopNavBar() {
                 </Link>
               )}
 
-              <AuthNavIcon className={iconColor} />
+              <div className="hidden sm:block">
+                <AuthNavIcon className={iconColor} />
+              </div>
 
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative h-10 w-10 sm:min-h-11 sm:min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`relative hidden sm:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <ShoppingCart className="w-[18px] h-[18px]" />
                 {cartCount > 0 && (
