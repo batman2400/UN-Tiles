@@ -86,7 +86,7 @@ export function ProductCard({
 
         {/* Hover Overlay with Quick Add */}
         {!isOutOfStock && (
-          <div className="product-card-overlay">
+          <div className="product-card-overlay hidden sm:flex">
             <button
               onClick={handleQuickAdd}
               disabled={justAdded}
@@ -136,7 +136,7 @@ export function ProductCard({
               }).format(product.pricePerSqft * qty)}
             </span>
           </div>
-          <div className="hidden sm:flex flex-shrink-0 justify-end items-center gap-2">
+          <div className="flex flex-shrink-0 justify-end items-center gap-2">
             {!isOutOfStock && (
               <input
                 type="number"
