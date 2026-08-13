@@ -29,7 +29,7 @@ const defaultBackground = "/images/light_luxury_tiles.jpg";
 export function Hero10({
   eyebrowText = "Premium Architectural Tiles",
   title = "Materializing Vision.\nElevating Spaces.",
-  description = "Architectural precision in high-end tiling. Structural integrity meets timeless design in every square foot.",
+  description = "",
   primaryText = "View Collections",
   primaryHref = "/collections",
   usersText = "500+ Projects Completed",
@@ -58,7 +58,7 @@ export function Hero10({
       />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1440px] flex-col px-4 py-4 sm:px-10 lg:px-[74px]">
-        <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col items-center justify-center pt-[88px] text-center sm:justify-start sm:pt-[94px] lg:pt-[68px]">
+        <div className="mx-auto flex w-full max-w-[760px] flex-1 flex-col items-center justify-start pt-[88px] text-center sm:pt-[94px] lg:pt-[68px]">
           <div className="inline-flex min-h-7 max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-slate-700/13 bg-white/18 px-3 py-1.5 text-[11px] leading-none font-medium text-slate-600 shadow-[0_1px_1px_rgba(255,255,255,0.45)_inset] backdrop-blur-md">
             <span className="grid size-4 place-items-center rounded-full border border-slate-500/30 bg-slate-100/70">
               <span className="size-2 rounded-full bg-slate-700 shadow-[0_0_0_2px_rgba(51,65,85,0.1)]" />
@@ -66,18 +66,20 @@ export function Hero10({
             <span>{eyebrowText}</span>
           </div>
 
-          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.15rem,9vw,5.35rem)] leading-[1.1] sm:leading-[0.95] font-medium tracking-[-0.06em] text-balance whitespace-pre-line text-slate-700">
+          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.15rem,7vw,4rem)] leading-[1.2] sm:leading-[0.95] font-medium tracking-[-0.06em] text-balance whitespace-pre-line text-slate-700">
             {title}
           </h1>
 
-          <p className="mt-5 max-w-[570px] px-1 text-[0.95rem] leading-[1.5] font-normal text-pretty whitespace-pre-line text-slate-900 sm:mt-6 sm:text-[clamp(1rem,1.35vw,1.16rem)] sm:leading-[1.42] sm:text-slate-700">
-            {description}
-          </p>
+          {description && (
+            <p className="mt-5 max-w-[570px] px-1 text-[0.95rem] leading-[1.5] font-normal text-pretty whitespace-pre-line text-slate-900 sm:mt-6 sm:text-[clamp(1rem,1.35vw,1.16rem)] sm:leading-[1.42] sm:text-slate-700">
+              {description}
+            </p>
+          )}
 
           <motion.a
             href={primaryHref}
             whileTap={{ scale: 0.96 }}
-            className="text-md mt-6 inline-flex min-h-12 items-center gap-2 rounded-full bg-linear-to-b from-blue-700 to-blue-900 px-6 font-normal text-white shadow-[0_1px_2px_rgba(15,23,42,0.18),0_12px_30px_rgba(15,23,42,0.08),inset_0_1px_0_0_var(--color-blue-600),inset_0_-1px_4px_0_var(--color-blue-600)] transition-[background-color,box-shadow,transform] duration-200 ease-out hover:bg-blue-800 hover:shadow-[0_2px_5px_rgba(15,23,42,0.2),0_16px_36px_rgba(15,23,42,0.1)]"
+            className="text-md mt-[35vh] sm:mt-8 inline-flex min-h-12 items-center gap-2 rounded-full bg-linear-to-b from-blue-700 to-blue-900 px-6 font-normal text-white shadow-[0_1px_2px_rgba(15,23,42,0.18),0_12px_30px_rgba(15,23,42,0.08),inset_0_1px_0_0_var(--color-blue-600),inset_0_-1px_4px_0_var(--color-blue-600)] transition-[background-color,box-shadow,transform] duration-200 ease-out hover:bg-blue-800 hover:shadow-[0_2px_5px_rgba(15,23,42,0.2),0_16px_36px_rgba(15,23,42,0.1)]"
           >
             <span>{primaryText}</span>
             <FaArrowRight className="size-3" />
