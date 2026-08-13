@@ -3,31 +3,30 @@
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import { ProductCard } from "@/components/ProductCard";
-import { Product, CategoryCard } from "@/data/products";
+import type { Product, CategoryCard } from "@/data/products";
 import { Search, X, SlidersHorizontal } from "lucide-react";
 
 interface CollectionsClientProps {
   allProducts: Product[];
   categories: CategoryCard[];
-  initialCategory?: string;
-  initialDims?: string[];
-  initialQuery?: string;
 }
 
 export function CollectionsClient({
   allProducts,
   categories,
-  initialCategory = "",
-  initialDims = [],
-  initialQuery = "",
 }: CollectionsClientProps) {
   const searchParams = useSearchParams();
 
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [selectedDims, setSelectedDims] = useState<string[]>(initialDims);
-  const [searchQuery, setSearchQuery] = useState<string>(initialQuery);
+  const [selectedCategory, setSelectedCategory] = useState(
+    () => searchParams.get("category") || ""
+  );
+  const [selectedDims, setSelectedDims] = useState(
+    () => searchParams.getAll("dim").map((d) => d.replace(/\+/g, " "))
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get("q") || ""
+  );
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
   const [visibleCount, setVisibleCount] = useState(12);
 
@@ -132,14 +131,7 @@ export function CollectionsClient({
   return (
     <div className="flex flex-col min-h-screen">
       {/* ══════ HERO HEADER ══════ */}
-      <section
-        className="relative h-[50vh] min-h-[350px] flex items-end bg-background overflow-hidden"
-        style={{
-          backgroundImage: "url(/images/contact_hero_v6.jpg)",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <section className="relative h-[50vh] min-h-[350px] flex items-end bg-background overflow-hidden">
         <Image
           src="/images/contact_hero_v6.jpg"
           alt="Tile showroom"
@@ -239,7 +231,10 @@ export function CollectionsClient({
                   <li>
                     <button
                       type="button"
-                      onClick={() => setSelectedCategory("")}
+                      onClick={() => {
+                        setSelectedCategory("");
+                        updateURL("", selectedDims, searchQuery);
+                      }}
                       className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-lg transition-all ${
                         !selectedCategory
                           ? "bg-surface-dark text-on-surface-dark font-bold shadow-sm"
@@ -339,9 +334,11 @@ export function CollectionsClient({
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredProducts.slice(0, visibleCount).map((product, idx) => (
-                    <ScrollReveal key={product.id} delay={(idx % 6) * 40}>
-                      <ProductCard product={product} />
-                    </ScrollReveal>
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      priority={idx < 3}
+                    />
                   ))}
                 </div>
                 {visibleCount < filteredProducts.length && (

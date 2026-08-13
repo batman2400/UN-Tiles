@@ -2,7 +2,8 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
 import { z } from "zod";
 import { logAdminAction } from "@/lib/auditLog";
 
@@ -87,6 +88,8 @@ export async function createCategory(rawData: { name: string; slug: string; imag
     details: { name: data.name },
   });
 
+  invalidateLocalCatalogCache();
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/inventory");
   revalidatePath("/collections");
   return { success: true };
@@ -146,6 +149,8 @@ export async function createProduct(rawData: {
     details: { sku: data.sku, name: data.name, stock_sqft: data.stock_sqft },
   });
 
+  invalidateLocalCatalogCache();
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/inventory");
   revalidatePath("/collections");
   revalidatePath("/");

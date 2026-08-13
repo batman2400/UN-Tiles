@@ -1,3 +1,5 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import catalogSeed from "./catalog.json";
 import { createClient } from "@supabase/supabase-js";
 
@@ -66,6 +68,30 @@ type CatalogLoadOptions = {
 
 const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.jpg";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
+export const CATALOG_CACHE_TAG = "catalog";
+const LIVE_CATALOG_TTL_MS = 30_000;
+
+let catalogSupabase: ReturnType<typeof createClient> | null = null;
+let liveCatalogMemory: { payload: RawCatalogPayload; expiresAt: number } | null = null;
+
+export function invalidateLocalCatalogCache() {
+  liveCatalogMemory = null;
+}
+
+function getCatalogSupabase() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return null;
+  }
+
+  if (!catalogSupabase) {
+    catalogSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
+  }
+
+  return catalogSupabase;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -136,17 +162,17 @@ function humanizeSlug(slug: string): string {
  * transaction engine to accurately validate stock before deduction.
  */
 async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
+  if (liveCatalogMemory && Date.now() < liveCatalogMemory.expiresAt) {
+    return liveCatalogMemory.payload;
+  }
+
   try {
     // During Vercel build-time prerendering, env vars may not be available.
     // Gracefully return null so getCatalogData falls back to the static seed.
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const supabase = getCatalogSupabase();
+    if (!supabase) {
       return null;
     }
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
 
     // Use a 5-second timeout so the page falls back quickly if Supabase is unreachable.
     const timeout = AbortSignal.timeout(5000);
@@ -188,6 +214,11 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
       })),
     };
 
+    liveCatalogMemory = {
+      payload,
+      expiresAt: Date.now() + LIVE_CATALOG_TTL_MS,
+    };
+
     return payload;
   } catch (err) {
     console.error("Failed to connect to live catalog database:", err);
@@ -212,8 +243,7 @@ export async function getRawCatalogPayload(
   return liveCatalog ?? FALLBACK_CATALOG;
 }
 
-export async function getCatalogData(): Promise<CatalogViewModel> {
-  const payload = await getRawCatalogPayload();
+function toCatalogViewModel(payload: RawCatalogPayload): CatalogViewModel {
   const categoryLookup = new Map(
     payload.categories.map((category) => [category.slug, category])
   );
@@ -269,3 +299,15 @@ export async function getCatalogData(): Promise<CatalogViewModel> {
     categories,
   };
 }
+
+async function loadCatalogViewModel(): Promise<CatalogViewModel> {
+  const payload = await getRawCatalogPayload();
+  return toCatalogViewModel(payload);
+}
+
+export const getCatalogData = cache(
+  unstable_cache(loadCatalogViewModel, ["catalog-view-model"], {
+    revalidate: 60,
+    tags: [CATALOG_CACHE_TAG],
+  })
+);

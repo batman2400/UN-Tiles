@@ -8,7 +8,13 @@ import type { Product } from "@/data/products";
 
 // ── Component ──────────────────────────────────────────
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product;
+  priority?: boolean;
+}) {
   const { addToCart } = useCart();
   const [justAdded, setJustAdded] = useState(false);
   const [qty, setQty] = useState(10);
@@ -44,6 +50,7 @@ export function ProductCard({ product }: { product: Product }) {
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-700"
+          priority={priority}
         />
 
         {/* Low Stock Badge */}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
+import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -131,6 +132,8 @@ export async function POST(request: NextRequest) {
         : data;
 
     // 7. Revalidate cached pages so stock is immediately accurate
+    invalidateLocalCatalogCache();
+    revalidateTag(CATALOG_CACHE_TAG, "max");
     revalidatePath("/");
     revalidatePath("/collections");
 
