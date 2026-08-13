@@ -19,6 +19,7 @@ export interface UserData {
   email: string;
   phone: string;
   role?: string;
+  avatarUrl?: string;
 }
 
 interface AuthContextType {
@@ -48,10 +49,11 @@ function getErrorMessage(error: unknown): string {
 function createFallbackUser(authUser: User, fallbackEmail?: string): UserData {
   return {
     id: authUser.id,
-    firstName: "",
-    lastName: "",
+    firstName: authUser.user_metadata?.first_name || "",
+    lastName: authUser.user_metadata?.last_name || "",
     email: authUser.email ?? fallbackEmail ?? "",
     phone: "",
+    avatarUrl: authUser.user_metadata?.avatar_url || authUser.user_metadata?.picture || "",
   };
 }
 
@@ -141,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: data.email || email,
             phone: data.phone || "",
             role: data.role || "user",
+            avatarUrl: data.avatar_url || "",
           });
           return;
         }
