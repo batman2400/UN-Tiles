@@ -175,9 +175,9 @@ export default function CartPage() {
                       {/* Sleek Rounded Pill Quantity Selector */}
                       <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
                         <button
-                          onClick={() =>
-                            updateQuantity(item.id, Math.max(1, item.cartQuantitySqft - 1))
-                          }
+                          onClick={() => {
+                            updateQuantity(item.id, Math.max(1, item.cartQuantitySqft - 1));
+                          }}
                           className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
                           aria-label="Decrease quantity"
                         >
@@ -191,16 +191,27 @@ export default function CartPage() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
                             if (!isNaN(val) && val > 0) {
-                              updateQuantity(item.id, val);
+                              const max = item.stockSqft ?? Infinity;
+                              if (val > max) {
+                                alert(`Only ${max} sqft available in stock.`);
+                                updateQuantity(item.id, max);
+                              } else {
+                                updateQuantity(item.id, val);
+                              }
                             }
                           }}
                           className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         
                         <button
-                          onClick={() =>
-                            updateQuantity(item.id, item.cartQuantitySqft + 1)
-                          }
+                          onClick={() => {
+                            const max = item.stockSqft ?? Infinity;
+                            if (item.cartQuantitySqft + 1 > max) {
+                              alert(`Only ${max} sqft available in stock.`);
+                            } else {
+                              updateQuantity(item.id, item.cartQuantitySqft + 1);
+                            }
+                          }}
                           className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
                           aria-label="Increase quantity"
                         >

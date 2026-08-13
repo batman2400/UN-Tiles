@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download, Trash2 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { AddCategoryModal } from "@/components/admin/AddCategoryModal";
@@ -191,6 +191,42 @@ export function InventoryTable({
     });
   };
 
+  const handleDelete = async (productId: string, productName: string) => {
+    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) return;
+
+    updateRowState(productId, { isUpdating: true, feedback: null });
+
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", productId);
+
+    if (error) {
+      updateRowState(productId, {
+        isUpdating: false,
+        feedback: { type: "error", message: error.message },
+      });
+      return;
+    }
+
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(productId);
+      return next;
+    });
+
+    logAdminAction(supabase, {
+      adminId,
+      adminEmail,
+      action: "product.deleted",
+      entityType: "product",
+      entityId: productId,
+      details: { name: productName },
+    });
+  };
+
   const toggleSelected = (id: string) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -370,7 +406,7 @@ export function InventoryTable({
               >
                 <div className="flex items-center justify-end gap-1">Stock (sq ft) {renderSortIcon('stock_sqft')}</div>
               </th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-center">Restock</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -463,20 +499,30 @@ export function InventoryTable({
                         </button>
                       </div>
                       
-                      {/* Quick Increment Buttons */}
-                      <div className="flex items-center gap-1">
-                        {[50, 100].map((inc) => (
-                          <button
-                            key={inc}
-                            onClick={() => {
-                              const currentStock = product.stock_sqft || 0;
-                              updateRowState(product.id, { editValue: String(currentStock + inc) });
-                            }}
-                            className="text-[9px] font-mono font-bold text-gray-500 hover:text-zinc-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded transition-colors"
-                          >
-                            +{inc}
-                          </button>
-                        ))}
+                      {/* Quick Increment Buttons and Delete */}
+                      <div className="flex items-center gap-1 justify-between w-full">
+                        <div className="flex items-center gap-1">
+                          {[50, 100].map((inc) => (
+                            <button
+                              key={inc}
+                              onClick={() => {
+                                const currentStock = product.stock_sqft || 0;
+                                updateRowState(product.id, { editValue: String(currentStock + inc) });
+                              }}
+                              className="text-[9px] font-mono font-bold text-gray-500 hover:text-zinc-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded transition-colors"
+                            >
+                              +{inc}
+                            </button>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => handleDelete(product.id, product.name)}
+                          disabled={row.isUpdating}
+                          className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                       {row.feedback && (
                         <div className={`mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider motion-fade-up ${

@@ -25,16 +25,28 @@ export function ProductCard({
   const handleQuickAdd = useCallback(() => {
     if (isOutOfStock || justAdded) return;
 
-    addToCart(
+    if (qty > product.stockSqft) {
+      alert(`Only ${product.stockSqft} sqft available in stock.`);
+      setQty(product.stockSqft);
+      return;
+    }
+
+    const added = addToCart(
       {
         id: product.id,
         name: product.name,
         image: product.image,
         category: product.category,
         price_per_sqft: product.pricePerSqft,
+        stockSqft: product.stockSqft, // Ensure stock is passed to cart
       },
       qty
     );
+
+    if (!added) {
+      alert(`Cannot add more to cart. You may have reached the maximum available stock of ${product.stockSqft} sqft.`);
+      return;
+    }
 
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1800);
@@ -131,7 +143,15 @@ export function ProductCard({
                 min={1}
                 max={product.stockSqft}
                 value={qty}
-                onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value) || 1;
+                  if (val > product.stockSqft) {
+                    alert(`Only ${product.stockSqft} sqft available in stock.`);
+                    setQty(product.stockSqft);
+                  } else {
+                    setQty(Math.max(1, val));
+                  }
+                }}
                 className="w-14 min-h-10 px-2 py-1.5 text-xs border border-outline bg-transparent rounded outline-none focus:border-primary text-center"
                 disabled={justAdded}
               />
