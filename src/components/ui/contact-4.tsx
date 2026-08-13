@@ -103,18 +103,37 @@ export default function ContactSolutionForm(
     setErrorMsg("");
 
     try {
-      // 1. Send email notification via server-side route (API key stays on server)
-      const web3FormsRes = await fetch("/api/web3forms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      // Web3Forms free plan requires a client-side submit (server proxy returns 403).
+      const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
+      if (accessKey) {
+        const web3FormsRes = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            access_key: accessKey,
+            subject: `New UN Tiles Inquiry from ${form.name}`,
+            from_name: "UN Tiles Contact Form",
+            name: form.name,
+            email: form.email,
+            company: form.company || "N/A",
+            phone: form.phone || "N/A",
+            projectType: form.projectType || "N/A",
+            message: form.message,
+          }),
+        });
 
-      if (!web3FormsRes.ok) {
-        console.error("Web3Forms submission failed");
+        const web3Data = await web3FormsRes.json().catch(() => null);
+        if (!web3FormsRes.ok || !web3Data?.success) {
+          console.error("Web3Forms submission failed", web3Data);
+        }
+      } else {
+        console.error("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is not set");
       }
 
-      // 2. Save to our database
+      // Save to our database
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
