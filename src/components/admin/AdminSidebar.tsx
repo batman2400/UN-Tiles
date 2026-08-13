@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Package, ShoppingCart, Users, LogOut, ArrowLeft, Search, History, Menu, X } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/utils/supabase/client";
+import { motion, AnimatePresence } from "motion/react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -141,25 +142,37 @@ export function AdminSidebar() {
         </button>
       </div>
 
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[200] lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="absolute top-0 right-0 h-full w-[min(18rem,88vw)] bg-white shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-            <button
-              type="button"
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[200] lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
-              aria-label="Close admin menu"
-              className="absolute top-3 right-3 min-h-11 min-w-11 inline-flex items-center justify-center text-gray-400 hover:text-gray-900"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute top-0 right-0 h-full w-[min(18rem,88vw)] bg-white shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
             >
-              <X className="w-5 h-5" />
-            </button>
-            {renderNav()}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Close admin menu"
+                className="absolute top-3 right-3 min-h-11 min-w-11 inline-flex items-center justify-center text-gray-400 hover:text-gray-900 z-10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              {renderNav()}
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       <div className="hidden lg:flex w-64 bg-white/80 backdrop-blur-xl border border-gray-200/60 rounded-2xl flex-col shadow-sm sticky top-4 h-[calc(100vh-2rem)] flex-shrink-0">
         {renderNav()}

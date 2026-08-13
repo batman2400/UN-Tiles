@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Search, ShoppingCart, Menu, X, Shield } from "lucide-react";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
+import { motion, AnimatePresence } from "motion/react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState, useRef } from "react";
@@ -199,16 +200,27 @@ export function TopNavBar() {
       </div>
 
       {/* ── Mobile Drawer ── */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[110] md:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-          />
-          {/* Drawer */}
-          <div className="absolute top-0 right-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-            <div className="flex items-center justify-between p-5 sm:p-6 border-b ghost-border">
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="fixed inset-0 z-[110] md:hidden">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.div 
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="absolute top-0 right-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+            >
+              <div className="flex items-center justify-between p-5 sm:p-6 border-b ghost-border">
               <Image
                 src="/images/final Logo without background.png"
                 alt="UN Tiles"
@@ -301,9 +313,10 @@ export function TopNavBar() {
                 © {new Date().getFullYear()} UN Tiles
               </p>
             </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }
