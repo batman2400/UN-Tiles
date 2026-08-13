@@ -129,14 +129,14 @@ export function TopNavBar() {
 
             {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
             <div
-              className={`pointer-events-auto flex items-center gap-2.5 sm:gap-5 rounded-full px-3 sm:px-6 py-2 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
+              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-5 rounded-full px-2 sm:px-6 py-1 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
             >
               {/* Mobile menu trigger (replaces center nav on small screens) */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
-                className={`md:hidden min-h-11 min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`md:hidden h-10 w-10 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <Menu className="w-[18px] h-[18px]" />
               </button>
@@ -161,7 +161,7 @@ export function TopNavBar() {
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
                 aria-label="Search"
-                className={`hidden md:inline-flex min-h-11 min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`hidden md:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <Search className="w-[18px] h-[18px]" />
               </button>
@@ -181,7 +181,7 @@ export function TopNavBar() {
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative min-h-11 min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`relative h-10 w-10 sm:min-h-11 sm:min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <ShoppingCart className="w-[18px] h-[18px]" />
                 {cartCount > 0 && (

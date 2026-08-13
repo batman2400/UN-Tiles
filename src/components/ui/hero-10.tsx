@@ -66,7 +66,7 @@ export function Hero10({
             <span>{eyebrowText}</span>
           </div>
 
-          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.15rem,9vw,5.35rem)] leading-[0.95] font-medium tracking-[-0.06em] text-balance whitespace-pre-line text-slate-700">
+          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.15rem,9vw,5.35rem)] leading-[1.1] sm:leading-[0.95] font-medium tracking-[-0.06em] text-balance whitespace-pre-line text-slate-700">
             {title}
           </h1>
 
