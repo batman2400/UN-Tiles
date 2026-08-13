@@ -111,7 +111,7 @@ async function HomeBelowFold() {
           </div>
         </ScrollReveal>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {categories.map((cat, idx) => (
             <ScrollReveal key={cat.slug} delay={idx * 100}>
               <Link
@@ -191,7 +191,7 @@ async function HomeBelowFold() {
           </div>
         </ScrollReveal>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
           {featuredProducts.map((product, idx) => (
             <ScrollReveal key={product.id} delay={idx * 100}>
               <ProductCard product={product} />

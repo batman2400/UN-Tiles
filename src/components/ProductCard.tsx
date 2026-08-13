@@ -125,8 +125,8 @@ export function ProductCard({
         </div>
 
         {/* Price + Quick Add row */}
-        <div className="flex items-center justify-between pt-1 gap-2 min-w-0">
-          <div className="flex flex-col min-w-0">
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between pt-1 gap-2 min-w-0">
+          <div className="flex flex-col min-w-0 w-full xl:w-auto">
             <span className="font-bold text-sm text-on-surface truncate">
               {new Intl.NumberFormat("en-LK", {
                 style: "currency",
