@@ -207,7 +207,7 @@ export function TopNavBar() {
             onClick={() => setMobileOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute top-0 left-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <div className="absolute top-0 right-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <div className="flex items-center justify-between p-5 sm:p-6 border-b ghost-border">
               <Image
                 src="/images/final Logo without background.png"
