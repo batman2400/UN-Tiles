@@ -421,33 +421,35 @@ export function OrdersTable({
                       {formatCurrency(order.total)}
                     </span>
                   </td>
-                  <td className="px-6 py-3 text-right relative">
-                    <div className="relative inline-block w-40 group/select">
-                      <select
-                        value={order.status}
-                        disabled={row.isUpdating}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        className={`w-full appearance-none px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md border outline-none cursor-pointer disabled:opacity-50 transition-all ${getStatusBadgeColor(order.status)}`}
-                      >
-                        {ORDER_STATUSES.map((s) => (
-                          <option key={s} value={s} className="bg-white text-gray-900">{s}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60 group-hover/select:opacity-100 transition-opacity" />
-                    </div>
-                    
-                    {row.feedback && (
-                      <div className={`absolute left-6 -bottom-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider motion-fade-up z-10 ${
-                        row.feedback.type === "success" ? "text-emerald-600" : "text-red-600"
-                      }`}>
-                        {row.feedback.type === "success" ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : (
-                          <AlertTriangle className="w-3 h-3" />
-                        )}
-                        {row.feedback.message}
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex flex-col items-end gap-1.5">
+                      <div className="relative inline-block w-40 group/select">
+                        <select
+                          value={order.status}
+                          disabled={row.isUpdating}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          className={`w-full appearance-none px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md border outline-none cursor-pointer disabled:opacity-50 transition-all ${getStatusBadgeColor(order.status)}`}
+                        >
+                          {ORDER_STATUSES.map((s) => (
+                            <option key={s} value={s} className="bg-white text-gray-900">{s}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60 group-hover/select:opacity-100 transition-opacity" />
                       </div>
-                    )}
+                      
+                      {row.feedback && (
+                        <div className={`flex items-center justify-start w-40 px-1 gap-1.5 text-[10px] font-bold uppercase tracking-wider motion-fade-up ${
+                          row.feedback.type === "success" ? "text-emerald-600" : "text-red-600"
+                        }`}>
+                          {row.feedback.type === "success" ? (
+                            <CheckCircle className="w-3 h-3 shrink-0" />
+                          ) : (
+                            <AlertTriangle className="w-3 h-3 shrink-0" />
+                          )}
+                          <span className="truncate">{row.feedback.message}</span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <button
