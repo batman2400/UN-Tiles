@@ -136,7 +136,7 @@ export function ProductCard({
               }).format(product.pricePerSqft * qty)}
             </span>
           </div>
-          <div className="flex flex-shrink-0 justify-end items-center gap-2">
+          <div className="hidden sm:flex flex-shrink-0 justify-end items-center gap-2">
             {!isOutOfStock && (
               <input
                 type="number"
