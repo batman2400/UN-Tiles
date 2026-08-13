@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Search, ShoppingCart, Menu, X, Shield } from "lucide-react";
+import { Search, ShoppingCart, Menu, X, Shield, LogOut } from "lucide-react";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
+import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "motion/react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -308,7 +309,20 @@ export function TopNavBar() {
                 </Link>
               )}
             </nav>
-            <div className="p-5 sm:p-6 border-t ghost-border">
+            <div className="p-5 sm:p-6 border-t ghost-border flex flex-col gap-4">
+              {user && (
+                <button
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    window.location.href = "/login";
+                  }}
+                  className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors w-full text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              )}
               <p className="text-xs text-on-surface-variant">
                 © {new Date().getFullYear()} UN Tiles
               </p>
