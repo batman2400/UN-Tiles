@@ -4,7 +4,7 @@ import Link from "next/link";
 import { UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
-export function AuthNavIcon() {
+export function AuthNavIcon({ className }: { className?: string }) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -22,7 +22,7 @@ export function AuthNavIcon() {
     return (
       <Link
         href="/profile"
-        className="icon-button-lift flex items-center justify-center w-8 h-8 bg-primary text-on-primary text-xs font-display font-bold transition-colors duration-300 hover:bg-primary-dim"
+        className="icon-button-lift flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary text-xs font-display font-bold transition-colors duration-300 hover:bg-primary-dim"
         title={user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
       >
         {initialF}{initialL}
@@ -33,7 +33,8 @@ export function AuthNavIcon() {
   return (
     <Link
       href="/login"
-      className="icon-button-lift text-on-surface-variant hover:text-on-surface transition-colors duration-300"
+      aria-label="Sign in"
+      className={`icon-button-lift min-h-11 min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${className ?? "text-on-surface-variant hover:text-on-surface"}`}
     >
       <UserCircle className="w-5 h-5" />
     </Link>

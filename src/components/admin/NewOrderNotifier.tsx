@@ -51,7 +51,7 @@ export function NewOrderNotifier() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[300] flex flex-col gap-3 w-full max-w-sm">
+    <div className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-4 sm:left-auto sm:right-4 z-[300] flex flex-col gap-3 w-auto sm:w-full max-w-sm">
       {toasts.map((toast) => (
         <div
           key={toast.id}

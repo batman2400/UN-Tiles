@@ -208,6 +208,20 @@ html {
   scroll-behavior: smooth;
   background-color: #faf8f5;
   color-scheme: light;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+}
+
+/* Prevent iOS zoom-on-focus for form fields under 16px */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 @view-transition {
@@ -408,6 +422,17 @@ html {
 .group:hover .product-card-overlay .overlay-btn {
   transform: translateY(0);
   opacity: 1;
+}
+
+@media (hover: none) {
+  .product-card-overlay {
+    opacity: 1;
+  }
+
+  .product-card-overlay .overlay-btn {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════

@@ -16,7 +16,7 @@ export function OrdersActivityChart({ data }: { data: DayBucket[] }) {
   const barWidth = width / data.length;
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 motion-fade-up motion-delay-4">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 md:p-8 motion-fade-up motion-delay-4">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-sm font-bold text-gray-900">Order Activity</h3>

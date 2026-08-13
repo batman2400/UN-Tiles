@@ -183,12 +183,12 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto animate-[page-enter_300ms_ease-out]">
-      <div className="mb-8 pl-2">
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-        <p className="text-gray-500 mt-2">Welcome back, monitor your store&apos;s performance.</p>
+      <div className="mb-6 sm:mb-8 pl-0 sm:pl-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+        <p className="text-gray-500 mt-2 text-sm sm:text-base">Welcome back, monitor your store&apos;s performance.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {metrics.map((metric, i) => {
           const Icon = metric.icon;
           const TrendIcon = metric.TrendIcon;
@@ -198,7 +198,7 @@ export default async function AdminDashboardPage() {
             <Link 
               href={metric.href} 
               key={i} 
-              className={`relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all cursor-pointer group min-h-[220px] motion-fade-up ${delayClass}`}
+              className={`relative overflow-hidden bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 sm:p-6 md:p-8 flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_12px_40px_rgb(0,0,0,0.08)] transition-all cursor-pointer group min-h-[180px] sm:min-h-[220px] motion-fade-up ${delayClass}`}
             >
               {/* Background Glow */}
               <div className={`absolute -top-12 -right-12 w-48 h-48 rounded-full blur-3xl opacity-20 pointer-events-none transition-colors group-hover:opacity-30 ${metric.bgColor.replace('bg-', 'bg-').replace('-50', '-500')}`} />
@@ -208,20 +208,20 @@ export default async function AdminDashboardPage() {
                 <Icon className="w-48 h-48" />
               </div>
 
-              <div className="relative z-10 flex justify-between items-start">
-                <div className={`p-3 rounded-2xl ${metric.bgColor} group-hover:scale-110 transition-transform`}>
+              <div className="relative z-10 flex justify-between items-start gap-2">
+                <div className={`p-3 rounded-2xl ${metric.bgColor} group-hover:scale-110 transition-transform flex-shrink-0`}>
                   <Icon className={`w-6 h-6 ${metric.color}`} />
                 </div>
                 
-                <div className={`text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-full shadow-sm border border-gray-100`}>
-                  <TrendIcon className="w-3.5 h-3.5" />
-                  {metric.trend}
+                <div className={`text-[10px] sm:text-xs font-semibold ${metric.trendColor} flex items-center gap-1.5 bg-white px-2 py-1 rounded-full shadow-sm border border-gray-100 text-right leading-tight`}>
+                  <TrendIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>{metric.trend}</span>
                 </div>
               </div>
 
-              <div className="relative z-10 mt-8">
+              <div className="relative z-10 mt-6 sm:mt-8">
                 <p className="text-sm font-semibold text-gray-500 group-hover:text-gray-900 transition-colors">{metric.title}</p>
-                <p className="text-5xl font-mono font-light text-gray-900 mt-2 tracking-tight">{metric.value}</p>
+                <p className="text-4xl sm:text-5xl font-mono font-light text-gray-900 mt-2 tracking-tight">{metric.value}</p>
               </div>
             </Link>
           );

@@ -2,9 +2,9 @@
 
 export default function PrivacyPage() {
   return (
-    <main className="flex-1 bg-surface min-h-screen pt-32 pb-20">
-      <div className="max-w-4xl mx-auto px-6">
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 mb-8">Privacy Policy</h1>
+    <main className="flex-1 bg-surface min-h-screen pt-28 sm:pt-32 pb-16 sm:pb-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-slate-900 mb-8">Privacy Policy</h1>
         <div className="prose prose-slate max-w-none">
           <p className="text-sm text-slate-500 mb-8">Last Updated: {new Date().toLocaleDateString()}</p>
           

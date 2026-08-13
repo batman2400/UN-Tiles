@@ -41,11 +41,26 @@ export function TopNavBar() {
     }
   }, [searchOpen]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [mobileOpen]);
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/collections?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchOpen(false);
+      setMobileOpen(false);
       setSearchQuery("");
     }
   };
@@ -69,20 +84,19 @@ export function TopNavBar() {
   return (
     <>
       {/* ── Split Island Navbar ── */}
-      <div className="fixed top-0 w-full z-[100] pointer-events-none">
-        <div className="max-w-[90rem] mx-auto px-6 lg:px-10 pt-5">
-          <div className="flex items-center justify-between">
+      <div className="fixed top-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)]">
+        <div className="max-w-[90rem] mx-auto px-3 sm:px-6 lg:px-10 pt-3 sm:pt-5">
+          <div className="flex items-center justify-between gap-2">
 
             {/* ═══ LEFT ISLAND — Brand Anchor (no container) ═══ */}
-            <div className="pointer-events-auto flex-shrink-0">
+            <div className="pointer-events-auto flex-shrink-0 min-w-0">
               <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/final Logo without background.png"
                   alt="UN Tiles"
                   width={320}
                   height={110}
-                  style={{ width: "auto", height: "72px" }}
-                  className={`object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]`}
+                  className="h-11 w-auto sm:h-[72px] object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
                   priority
                 />
               </Link>
@@ -115,12 +129,14 @@ export function TopNavBar() {
 
             {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
             <div
-              className={`pointer-events-auto flex items-center gap-5 rounded-full px-6 py-3 transition-all duration-500 ${pillClass}`}
+              className={`pointer-events-auto flex items-center gap-2.5 sm:gap-5 rounded-full px-3 sm:px-6 py-2 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
             >
               {/* Mobile menu trigger (replaces center nav on small screens) */}
               <button
+                type="button"
                 onClick={() => setMobileOpen(true)}
-                className={`md:hidden transition-colors duration-300 ${iconColor}`}
+                aria-label="Open menu"
+                className={`md:hidden min-h-11 min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <Menu className="w-[18px] h-[18px]" />
               </button>
@@ -144,7 +160,8 @@ export function TopNavBar() {
               <button 
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
-                className={`hidden md:block transition-colors duration-300 ${iconColor}`}
+                aria-label="Search"
+                className={`hidden md:inline-flex min-h-11 min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <Search className="w-[18px] h-[18px]" />
               </button>
@@ -152,22 +169,23 @@ export function TopNavBar() {
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
-                  className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${iconColor}`}
+                  className={`hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${iconColor}`}
                 >
                   <Shield className="w-4 h-4" />
                   <span className="hidden lg:inline">Admin</span>
                 </Link>
               )}
 
-              <AuthNavIcon />
+              <AuthNavIcon className={iconColor} />
 
               <Link
                 href="/cart"
-                className={`relative transition-colors duration-300 ${iconColor}`}
+                aria-label="Cart"
+                className={`relative min-h-11 min-w-11 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
                 <ShoppingCart className="w-[18px] h-[18px]" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute top-1 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
                     {cartCount}
                   </span>
                 )}
@@ -187,19 +205,20 @@ export function TopNavBar() {
             onClick={() => setMobileOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute top-0 left-0 h-full w-80 max-w-[85vw] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out]">
-            <div className="flex items-center justify-between p-6 border-b ghost-border">
+          <div className="absolute top-0 left-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col animate-[page-enter_300ms_ease-out] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b ghost-border">
               <Image
                 src="/images/final Logo without background.png"
                 alt="UN Tiles"
                 width={200}
                 height={70}
-                style={{ width: "auto", height: "50px" }}
-                className="object-contain"
+                className="h-10 w-auto object-contain"
               />
               <button
+                type="button"
                 onClick={() => setMobileOpen(false)}
-                className="text-on-surface-variant hover:text-on-surface transition-colors"
+                aria-label="Close menu"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -214,11 +233,11 @@ export function TopNavBar() {
                   placeholder="Search collections..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2.5 bg-surface-container-low text-xs text-on-surface rounded-xl border ghost-border outline-none focus:border-accent"
+                  className="w-full pl-9 pr-4 py-3 bg-surface-container-low text-sm text-on-surface rounded-xl border ghost-border outline-none focus:border-accent"
                 />
               </div>
             </form>
-            <nav className="flex-1 p-6 space-y-2">
+            <nav className="flex-1 p-4 sm:p-6 space-y-1 overflow-y-auto">
               {NAV_LINKS.map(({ href, label }) => {
                 const isActive =
                   href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -227,7 +246,7 @@ export function TopNavBar() {
                     key={href}
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block py-3 px-4 text-sm tracking-widest uppercase font-semibold transition-colors ${
+                    className={`block py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
                       isActive
                         ? "text-accent bg-accent-soft"
                         : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
@@ -237,8 +256,45 @@ export function TopNavBar() {
                   </Link>
                 );
               })}
+              <Link
+                href="/cart"
+                onClick={() => setMobileOpen(false)}
+                className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                  pathname.startsWith("/cart")
+                    ? "text-accent bg-accent-soft"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                }`}
+              >
+                <span>Cart</span>
+                {cartCount > 0 && (
+                  <span className="bg-accent text-on-accent text-[10px] font-bold h-5 min-w-5 px-1.5 rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href={user ? "/profile" : "/login"}
+                onClick={() => setMobileOpen(false)}
+                className={`block py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                  pathname.startsWith("/profile") || pathname.startsWith("/login")
+                    ? "text-accent bg-accent-soft"
+                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                }`}
+              >
+                {user ? "Account" : "Sign In"}
+              </Link>
+              {user?.role === "admin" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
             </nav>
-            <div className="p-6 border-t ghost-border">
+            <div className="p-5 sm:p-6 border-t ghost-border">
               <p className="text-xs text-on-surface-variant">
                 © {new Date().getFullYear()} UN Tiles
               </p>

@@ -232,7 +232,7 @@ function ProfileContent() {
   const displayName = user.firstName ? `${user.firstName} ${user.lastName}` : "Studio Member";
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-[calc(100svh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Portal Header */}
@@ -242,7 +242,7 @@ function ProfileContent() {
               <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-600 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
                 Studio Account Portal
               </span>
-              <h1 className="text-3xl sm:text-4xl font-display font-bold text-zinc-900 mt-2 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-zinc-900 mt-2 tracking-tight">
                 Welcome back, {user.firstName || "Member"}
               </h1>
             </div>
@@ -269,7 +269,7 @@ function ProfileContent() {
                 <p className="text-xs text-gray-500">{user.email}</p>
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {sidebarLinks.map(({ key, label, icon: Icon }) => {
                 const isActive = activeSection === key;
                 return (
@@ -499,8 +499,8 @@ function ProfileContent() {
                           {/* Card Header Row */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
                             <div>
-                              <div className="flex items-center gap-3">
-                                <span className="font-mono text-base font-bold text-zinc-900 group-hover:text-yellow-600 transition-colors">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className="font-mono text-sm sm:text-base font-bold text-zinc-900 group-hover:text-yellow-600 transition-colors break-all">
                                   #{order.id.startsWith("UN-") ? order.id.toUpperCase() : `UN-2026-${order.id.substring(0, 8).toUpperCase()}`}
                                 </span>
                                 <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${badgeStyle}`}>
@@ -529,7 +529,7 @@ function ProfileContent() {
                                 <p className="text-xs text-red-500/80 ml-auto hidden sm:block">Please contact support for more details.</p>
                               </div>
                             ) : (
-                              <div className="relative flex items-center justify-between w-full max-w-2xl">
+                              <div className="relative flex items-center justify-between w-full max-w-2xl pb-8">
                                 {/* Connecting Background Line */}
                                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-100 rounded-full"></div>
                                 {/* Active Connecting Line */}
@@ -549,7 +549,7 @@ function ProfileContent() {
                                       }`}>
                                         {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                                       </div>
-                                      <span className={`text-[10px] font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap transition-colors ${
+                                      <span className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-wider absolute top-8 whitespace-nowrap transition-colors ${
                                         isCurrent ? "text-zinc-900" : isCompleted ? "text-yellow-700" : "text-gray-400"
                                       }`}>
                                         {step}
@@ -623,7 +623,7 @@ function ProfileContent() {
                     <h2 className="text-2xl font-display font-bold text-zinc-900 tracking-tight">Saved Addresses</h2>
                     <p className="text-xs text-gray-500 mt-1">Manage delivery locations for faster studio checkout.</p>
                   </div>
-                  <button className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-5 text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto">
+                  <button className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-5 text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto w-full sm:w-auto justify-center">
                     <Plus className="w-4 h-4" />
                     <span>Add New Address</span>
                   </button>

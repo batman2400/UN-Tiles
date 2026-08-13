@@ -271,7 +271,7 @@ export function InventoryTable({
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
           <p className="text-sm text-gray-500 mt-1">Manage stock levels for all products.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full md:w-auto">
           <button
             onClick={handleExportCsv}
             title="Export currently filtered products to CSV"
@@ -497,7 +497,7 @@ export function InventoryTable({
         </table>
       </div>
 
-      <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
           Showing {paginatedProducts.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
           {"–"}

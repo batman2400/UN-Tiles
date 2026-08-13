@@ -33,11 +33,11 @@ export function Footer() {
   const displayedLinks = navLinks.filter((link) => link.href !== pathname);
 
   return (
-    <footer className="w-full px-4 py-8 md:px-6 md:py-12 bg-background">
-      <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[2.5rem] bg-primary before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/60 before:to-transparent premium-shadow-lg">
+    <footer className="w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 md:py-12 bg-background">
+      <div className="relative mx-auto max-w-[1400px] overflow-hidden rounded-[1.75rem] md:rounded-[2.5rem] bg-primary before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/60 before:to-transparent premium-shadow-lg">
         <div className="p-1.5">
-          <div className="rounded-[2.25rem] bg-primary">
-            <div className="flex flex-col justify-between px-8 pb-8 pt-12 md:px-12 md:pb-8 md:pt-16">
+          <div className="rounded-[1.5rem] md:rounded-[2.25rem] bg-primary">
+            <div className="flex flex-col justify-between px-5 pb-8 pt-10 sm:px-8 md:px-12 md:pb-8 md:pt-16">
               {/* Top Grid Content */}
               <div className="grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
                 {/* Brand & Description */}
@@ -125,7 +125,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Strip */}
-        <div className="border-t border-white/10 px-8 py-6 md:px-12">
+        <div className="border-t border-white/10 px-5 py-5 sm:px-8 md:px-12 md:py-6">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm font-medium text-white/60">
               &copy; {new Date().getFullYear()} UN Tiles (Unicorn Enterprises).

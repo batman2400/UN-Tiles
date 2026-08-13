@@ -12,7 +12,7 @@ export default function About() {
       
       {/* ══════ HERO ══════ */}
       <section
-        className="relative h-[85vh] flex items-center justify-center bg-background overflow-hidden pt-32"
+        className="relative h-[70svh] min-h-[420px] md:h-[85vh] flex items-center justify-center bg-background overflow-hidden pt-24 sm:pt-32"
         style={{
           backgroundImage: "url(/images/about.jpg)",
           backgroundSize: "cover",
@@ -36,9 +36,9 @@ export default function About() {
         </ParallaxLayer>
         <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-background/90" />
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-accent font-semibold mb-4 motion-fade-up">Built to Last</p>
-          <h1 className="text-5xl md:text-8xl font-display font-bold tracking-tight text-white mb-6 motion-fade-up motion-delay-1">
+          <h1 className="text-4xl sm:text-5xl md:text-8xl font-display font-bold tracking-tight text-white mb-6 motion-fade-up motion-delay-1">
             Our Story
           </h1>
           <p className="text-lg text-white/70 max-w-xl mx-auto motion-fade-up motion-delay-2">
@@ -53,7 +53,7 @@ export default function About() {
       </section>
 
       {/* ══════ HERITAGE ══════ */}
-      <section className="max-w-7xl mx-auto px-6 py-32 w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 md:py-32 w-full grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-center">
         <div className="flex flex-col justify-center">
           <ScrollReveal>
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Since 2004</p>
@@ -93,7 +93,7 @@ export default function About() {
       </section>
 
       {/* ══════ GOOGLE REVIEWS ══════ */}
-      <section className="py-24 px-6 border-t border-b ghost-border">
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-t border-b ghost-border">
         <div className="max-w-7xl mx-auto">
           <ScrollReveal>
             <div className="text-center mb-12">
@@ -112,11 +112,11 @@ export default function About() {
 
           <div className="grid gap-6 md:grid-cols-3">
             <ScrollReveal>
-              <div className="rounded-[2rem] border border-outline bg-surface-container p-8 shadow-sm">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
+              <div className="rounded-[1.5rem] md:rounded-[2rem] border border-outline bg-surface-container p-5 sm:p-8 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="min-w-0">
                     <p className="font-semibold text-on-surface">Tharushi Himadhya</p>
-                    <p className="text-sm text-on-surface-variant mt-1">Local Guide · 172 reviews · 10 photos · 2 months ago</p>
+                    <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 172 reviews · 10 photos · 2 months ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
                     <Star className="w-4 h-4" />
@@ -131,11 +131,11 @@ export default function About() {
             </ScrollReveal>
 
             <ScrollReveal delay={100}>
-              <div className="rounded-[2rem] border border-outline bg-surface-container p-8 shadow-sm">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
+              <div className="rounded-[1.5rem] md:rounded-[2rem] border border-outline bg-surface-container p-5 sm:p-8 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="min-w-0">
                     <p className="font-semibold text-on-surface">sahan dilshan weerasinghe</p>
-                    <p className="text-sm text-on-surface-variant mt-1">Local Guide · 172 reviews · 729 photos · 6 years ago</p>
+                    <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 172 reviews · 729 photos · 6 years ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
                     <Star className="w-4 h-4" />
@@ -150,11 +150,11 @@ export default function About() {
             </ScrollReveal>
 
             <ScrollReveal delay={200}>
-              <div className="rounded-[2rem] border border-outline bg-surface-container p-8 shadow-sm">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div>
+              <div className="rounded-[1.5rem] md:rounded-[2rem] border border-outline bg-surface-container p-5 sm:p-8 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div className="min-w-0">
                     <p className="font-semibold text-on-surface">Mahil Fernando</p>
-                    <p className="text-sm text-on-surface-variant mt-1">Local Guide · 21 reviews · 30 photos · 6 years ago</p>
+                    <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 21 reviews · 30 photos · 6 years ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
                     <Star className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function About() {
 
       {/* ══════ STATS ══════ */}
       <section className="bg-surface-dark py-20 relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-accent/40 before:to-transparent after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-accent/40 after:to-transparent">
-        <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-10 text-on-surface-dark relative z-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 text-on-surface-dark relative z-10">
           <StatsCounter end={20} suffix="+" label="Years of Experience" dark />
           <StatsCounter end={1000} suffix="+" label="Satisfied Customers" dark />
           <StatsCounter end={4} label="Sourcing Locations" dark />
@@ -193,7 +193,7 @@ export default function About() {
       </section>
 
       {/* ══════ PRODUCT SOURCING ══════ */}
-      <section className="py-24 px-6">
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto text-center">
           <ScrollReveal>
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Product Sourcing</p>

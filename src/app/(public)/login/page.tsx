@@ -41,9 +41,9 @@ export default function LoginPage() {
   if (isLoading) return null;
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] flex items-center justify-center bg-surface px-6 pt-32 pb-16">
+    <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
       <div className="w-full max-w-md motion-fade-up">
-        <div className="bg-surface-container-lowest p-10 md:p-14 ambient-glow">
+        <div className="bg-surface-container-lowest p-6 sm:p-10 md:p-14 ambient-glow">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl font-display font-semibold tracking-tight text-on-surface mb-3">
@@ -130,7 +130,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <label htmlFor="remember-me" className="flex items-center gap-2.5 cursor-pointer group">
                 <div className="relative">
                   <input id="remember-me" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only peer" />

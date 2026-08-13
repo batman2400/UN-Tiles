@@ -60,7 +60,7 @@ export function AddCategoryModal() {
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-gray-900">Add New Category</h3>
           <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors">

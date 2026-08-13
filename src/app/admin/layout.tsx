@@ -27,9 +27,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex p-4 gap-6">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row p-3 sm:p-4 gap-4 lg:gap-6 overflow-x-clip">
       <AdminSidebar />
-      <div className="flex-1 min-h-screen">
+      <div className="flex-1 min-w-0 min-h-0 lg:min-h-screen">
         {children}
       </div>
       <NewOrderNotifier />

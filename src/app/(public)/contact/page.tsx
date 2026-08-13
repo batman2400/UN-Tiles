@@ -14,7 +14,7 @@ export default function Contact() {
       
       {/* ══════ HERO ══════ */}
       <section
-        className="relative h-[55vh] min-h-[350px] flex items-center justify-center bg-background overflow-hidden pt-32"
+        className="relative h-[42vh] min-h-[280px] sm:h-[55vh] sm:min-h-[350px] flex items-center justify-center bg-background overflow-hidden pt-24 sm:pt-32"
         style={{
           backgroundImage: "url(/images/contact_hero.jpg)",
           backgroundSize: "cover",
@@ -37,9 +37,9 @@ export default function Contact() {
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-background/90" />
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-accent font-semibold mb-4 motion-fade-up">Let&apos;s Connect</p>
-          <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight text-white motion-fade-up motion-delay-1">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold tracking-tight text-white motion-fade-up motion-delay-1">
             Get in Touch
           </h1>
         </div>
@@ -58,15 +58,15 @@ export default function Contact() {
       {/* ══════ MAP ══════ */}
       <section className="w-full">
         <ScrollReveal>
-          <div className="relative w-full h-[480px] overflow-hidden">
+          <div className="relative w-full h-[320px] sm:h-[480px] overflow-hidden">
             {/* Accent top border */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent z-10" />
             {/* Dark overlay label */}
-            <div className="absolute top-6 right-6 z-10 bg-surface-dark/90 backdrop-blur-sm px-5 py-3 premium-shadow flex items-center gap-3">
-              <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
-              <div>
+            <div className="absolute bottom-4 left-4 right-4 sm:bottom-auto sm:top-6 sm:right-6 sm:left-auto z-10 bg-surface-dark/90 backdrop-blur-sm px-4 py-3 sm:px-5 premium-shadow flex items-start sm:items-center gap-3 max-w-full sm:max-w-md">
+              <MapPin className="w-4 h-4 text-accent flex-shrink-0 mt-0.5 sm:mt-0" />
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-widest text-on-surface-dark-variant">Head Office</p>
-                <p className="text-sm font-semibold text-on-surface-dark">No. 161/A, Polhengoda Road, Colombo 05</p>
+                <p className="text-sm font-semibold text-on-surface-dark break-words">No. 161/A, Polhengoda Road, Colombo 05</p>
               </div>
             </div>
             <iframe

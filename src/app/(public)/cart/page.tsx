@@ -78,8 +78,8 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="min-h-[calc(100vh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-32 pb-16 px-6 flex items-center justify-center">
-        <div className="text-center motion-fade-up max-w-md bg-white/90 backdrop-blur-md p-10 rounded-2xl shadow-xl border border-gray-100">
+      <section className="min-h-[calc(100svh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-28 pb-16 px-4 sm:px-6 flex items-center justify-center">
+        <div className="text-center motion-fade-up max-w-md w-full bg-white/90 backdrop-blur-md p-6 sm:p-10 rounded-2xl shadow-xl border border-gray-100">
           <div className="w-20 h-20 mx-auto mb-6 bg-yellow-500/10 text-yellow-600 rounded-full flex items-center justify-center border border-yellow-500/20 shadow-sm">
             <ShoppingBag className="w-9 h-9" />
           </div>
@@ -104,7 +104,7 @@ export default function CartPage() {
   // ── Cart with Items ─────────────────────────────────
 
   return (
-    <section className="min-h-[calc(100vh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+    <section className="min-h-[calc(100svh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-24 sm:pt-28 pb-24 sm:pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
@@ -142,8 +142,8 @@ export default function CartPage() {
                     className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:bg-gray-50/50 transition-all md:grid md:grid-cols-[2.5fr_1fr_1fr_1fr_auto] md:gap-6 md:items-center group"
                   >
                     {/* Product Info */}
-                    <div className="flex items-center gap-5 mb-4 md:mb-0">
-                      <div className="relative w-20 h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner">
+                    <div className="flex items-center gap-3 sm:gap-5 mb-4 md:mb-0 min-w-0">
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner">
                         <Image
                           src={item.image}
                           alt={item.name}
@@ -151,11 +151,11 @@ export default function CartPage() {
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 mb-1 inline-block">
                           {item.category}
                         </span>
-                        <h3 className="font-display font-bold text-zinc-900 text-base">{item.name}</h3>
+                        <h3 className="font-display font-bold text-zinc-900 text-base truncate">{item.name}</h3>
                         <p className="text-xs text-gray-400 mt-0.5">Architectural Tile Specification</p>
                       </div>
                     </div>
@@ -363,12 +363,12 @@ export default function CartPage() {
               </div>
 
               {/* Total Calculation Row */}
-              <div className="flex justify-between items-baseline mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2 mb-6">
                 <div>
                   <span className="font-display font-bold text-zinc-900 text-lg block">Total Amount</span>
                   <span className="text-[10px] text-gray-400 font-medium">Taxes included where applicable</span>
                 </div>
-                <span className="font-mono font-bold text-2xl text-zinc-900">
+                <span className="font-mono font-bold text-xl sm:text-2xl text-zinc-900 break-all">
                   {formatCurrency(cartTotal)}
                 </span>
               </div>

@@ -67,9 +67,9 @@ export default function ContactBlock({
   contactMethods = defaultMethods,
 }: ContactBlockProps) {
   return (
-    <section className="text-foreground w-full py-16 md:py-24">
+    <section className="text-foreground w-full py-12 sm:py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 max-w-2xl space-y-4">
+        <div className="mb-8 sm:mb-12 max-w-2xl space-y-4">
           {badgeText && <Badge>{badgeText}</Badge>}
           {title && (
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
@@ -97,7 +97,7 @@ export default function ContactBlock({
                 </p>
                 <div className="mt-auto">
                   <Button
-                    className="w-full py-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5),inset_0_-1px_0_0_rgba(0,0,0,0.2)]"
+                    className="w-full py-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5),inset_0_-1px_0_0_rgba(0,0,0,0.2)] truncate"
                     render={<a href={method.actionUrl} target="_blank" rel="noopener noreferrer" />}
                   >
                     {method.actionLabel}

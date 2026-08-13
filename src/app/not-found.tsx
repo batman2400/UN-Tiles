@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <section className="min-h-[calc(100vh-6rem)] flex items-center justify-center bg-surface px-6 pt-32 pb-16">
+    <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
       <div className="text-center max-w-md motion-fade-up">
         <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">404</p>
         <h1 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-4">

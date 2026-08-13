@@ -19,16 +19,31 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "UN Tiles | Premium Architectural Tiles",
   description: "High-end tiling with weight, texture, and structural integrity.",
+  applicationName: "UN Tiles",
   icons: {
-    icon: "/images/final Logo without background.png",
-    shortcut: "/images/final Logo without background.png",
-    apple: "/images/final Logo without background.png",
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    shortcut: "/icons/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "UN Tiles",
+  },
+  formatDetection: {
+    telephone: false,
   },
 };
 
 export const viewport: Viewport = {
   themeColor: "#faf8f5",
   colorScheme: "light",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

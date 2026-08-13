@@ -148,8 +148,8 @@ export default function ContactSolutionForm(
   };
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-4 py-16">
-      <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-12 md:grid-cols-2">
+    <section className="flex items-center justify-center px-4 py-12 sm:py-16 md:min-h-screen">
+      <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
         <div className="flex flex-col gap-6">
           {badge && (
             <Badge>
@@ -158,7 +158,7 @@ export default function ContactSolutionForm(
             </Badge>
           )}
 
-          <h1 className="text-foreground text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl">
+          <h1 className="text-foreground text-3xl leading-tight font-extrabold tracking-tight sm:text-4xl md:text-5xl">
             {headline}{" "}
             <span className="text-primary block">{headlineAccent}</span>
           </h1>
@@ -171,7 +171,7 @@ export default function ContactSolutionForm(
         </div>
 
         <Card className="bg-muted rounded-4xl shadow-sm ring-0">
-          <CardContent className="flex flex-col gap-5 p-8">
+          <CardContent className="flex flex-col gap-5 p-5 sm:p-8">
             {success ? (
               <div className="flex flex-col items-center justify-center text-center py-12 space-y-6">
                 <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">

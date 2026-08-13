@@ -161,7 +161,7 @@ export function CustomersTable({ initialCustomers }: { initialCustomers: AdminCu
         </table>
       </div>
 
-      <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
           Showing {paginatedCustomers.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
           {"–"}

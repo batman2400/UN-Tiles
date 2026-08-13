@@ -11,7 +11,7 @@ export default function PublicError({
   reset: () => void;
 }) {
   return (
-    <section className="min-h-[calc(100vh-6rem)] flex items-center justify-center bg-surface px-6 pt-32 pb-16">
+    <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
       <div className="text-center max-w-md motion-fade-up">
         <div className="w-20 h-20 mx-auto mb-6 bg-[#9f403d]/10 text-[#9f403d] rounded-full flex items-center justify-center border border-[#9f403d]/20">
           <svg className="w-9 h-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

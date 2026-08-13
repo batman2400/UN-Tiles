@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import type { Product, CategoryCard } from "@/data/products";
-import { Search, X, SlidersHorizontal } from "lucide-react";
+import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 
 interface CollectionsClientProps {
   allProducts: Product[];
@@ -29,6 +29,7 @@ export function CollectionsClient({
   );
   const [sortBy, setSortBy] = useState<"featured" | "price-asc" | "price-desc">("featured");
   const [visibleCount, setVisibleCount] = useState(12);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Reset pagination when filters change — setState in effect is intentional here
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -131,7 +132,7 @@ export function CollectionsClient({
   return (
     <div className="flex flex-col min-h-screen">
       {/* ══════ HERO HEADER ══════ */}
-      <section className="relative h-[50vh] min-h-[350px] flex items-end bg-background overflow-hidden">
+      <section className="relative h-[38vh] min-h-[260px] sm:h-[50vh] sm:min-h-[350px] flex items-end bg-background overflow-hidden">
         <Image
           src="/images/contact_hero_v6.jpg"
           alt="Tile showroom"
@@ -143,7 +144,7 @@ export function CollectionsClient({
           quality={95}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 via-60% to-background/90" />
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pb-10 w-full motion-fade-up">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-10 w-full motion-fade-up">
           <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-2">
             {searchQuery
               ? `Search Results for "${searchQuery}"`
@@ -151,7 +152,7 @@ export function CollectionsClient({
               ? activeCategoryObj.name
               : "All Collections"}
           </p>
-          <h1 className="text-3xl md:text-5xl font-display font-bold tracking-tight text-white mb-3">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-white mb-3">
             {searchQuery ? "Search Results" : "The Collections"}
           </h1>
           <p className="text-white/70 text-sm max-w-2xl">
@@ -165,7 +166,7 @@ export function CollectionsClient({
       </section>
 
       {/* ══════ MAIN CONTENT ══════ */}
-      <div className="max-w-7xl mx-auto px-6 w-full py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 w-full py-6 sm:py-10">
         
         {/* Instant Search Bar & Active Filter Badges */}
         <div className="mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/80">
@@ -173,7 +174,7 @@ export function CollectionsClient({
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by tile name, category, finish, dimension..."
+              placeholder="Search tiles, finish, size..."
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
@@ -217,10 +218,27 @@ export function CollectionsClient({
           )}
         </div>
 
-        <div className="flex flex-col md:flex-row gap-10">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10">
           {/* Filters Sidebar */}
           <aside className="w-full md:w-64 flex-shrink-0">
-            <div className="sticky top-28 space-y-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((open) => !open)}
+              className="md:hidden w-full mb-3 flex items-center justify-between gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 min-h-12"
+              aria-expanded={filtersOpen}
+            >
+              <span className="flex items-center gap-2 text-xs font-bold tracking-widest uppercase text-zinc-900">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="bg-accent/10 text-accent px-2 py-0.5 rounded-md text-[10px] font-bold">
+                    Active
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+            </button>
+            <div className={`${filtersOpen ? "block" : "hidden"} md:block sticky top-24 md:top-28 space-y-8 bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100`}>
               {/* Category Filter */}
               <div>
                 <h3 className="text-xs font-bold tracking-widest uppercase text-zinc-900 mb-4 flex items-center justify-between">
@@ -295,19 +313,19 @@ export function CollectionsClient({
           </aside>
 
           {/* Product Grid Area */}
-          <div className="flex-1">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Showing <strong className="text-zinc-900 font-bold">{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "Specification" : "Specifications"}
               </span>
 
               {/* Sorting */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 font-medium">Sort By:</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs text-gray-400 font-medium shrink-0">Sort By:</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "featured" | "price-asc" | "price-desc")}
-                  className="bg-surface border border-outline-variant rounded-lg text-xs font-bold text-on-surface px-3 py-2 outline-none cursor-pointer focus:border-accent transition-all"
+                  className="flex-1 sm:flex-none bg-surface border border-outline-variant rounded-lg text-xs font-bold text-on-surface px-3 py-2.5 outline-none cursor-pointer focus:border-accent transition-all min-h-11"
                 >
                   <option value="featured">Featured First</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -345,7 +363,7 @@ export function CollectionsClient({
                   <div className="mt-12 flex justify-center motion-fade-up">
                     <button
                       onClick={() => setVisibleCount((prev) => prev + 12)}
-                      className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-on-surface border border-outline-variant px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-surface-container hover:border-accent transition-colors shadow-sm rounded-lg"
+                      className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-on-surface border border-outline-variant w-full sm:w-auto px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-surface-container hover:border-accent transition-colors shadow-sm rounded-lg"
                     >
                       <span>Load More Products</span>
                     </button>

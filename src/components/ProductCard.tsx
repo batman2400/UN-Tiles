@@ -113,9 +113,9 @@ export function ProductCard({
         </div>
 
         {/* Price + Quick Add row */}
-        <div className="flex items-center justify-between pt-1 gap-2">
-          <div className="flex flex-col">
-            <span className="font-bold text-sm text-on-surface">
+        <div className="flex items-center justify-between pt-1 gap-2 min-w-0">
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-sm text-on-surface truncate">
               {new Intl.NumberFormat("en-LK", {
                 style: "currency",
                 currency: "LKR",
@@ -124,7 +124,7 @@ export function ProductCard({
               }).format(product.pricePerSqft * qty)}
             </span>
           </div>
-          <div className="flex flex-1 justify-end items-center gap-2">
+          <div className="flex flex-shrink-0 justify-end items-center gap-2">
             {!isOutOfStock && (
               <input
                 type="number"
@@ -132,14 +132,14 @@ export function ProductCard({
                 max={product.stockSqft}
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-14 px-2 py-1.5 text-xs border border-outline bg-transparent rounded outline-none focus:border-primary text-center"
+                className="w-14 min-h-10 px-2 py-1.5 text-xs border border-outline bg-transparent rounded outline-none focus:border-primary text-center"
                 disabled={justAdded}
               />
             )}
             <button
               onClick={handleQuickAdd}
               disabled={isOutOfStock || justAdded}
-              className={`flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 whitespace-nowrap rounded ${
+              className={`flex items-center justify-center gap-2 min-h-10 px-3 sm:px-4 py-2 text-[11px] font-semibold uppercase tracking-widest transition-all duration-300 whitespace-nowrap rounded ${
                 isOutOfStock
                   ? "bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed w-full"
                   : justAdded

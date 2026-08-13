@@ -65,7 +65,7 @@ export function StatsCounter({
 
   return (
     <div ref={ref} className="text-center transition-all duration-700">
-      <div className={`text-4xl md:text-5xl font-display font-bold tracking-tight mb-2 transition-transform duration-500 ${
+      <div className={`text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight mb-2 transition-transform duration-500 ${
         hasStarted ? "scale-100 opacity-100" : "scale-90 opacity-0"
       } ${dark ? "text-white" : "text-zinc-900"}`}>
         {prefix}{count}{suffix}

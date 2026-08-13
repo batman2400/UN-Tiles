@@ -20,8 +20,8 @@ export default function Home() {
       <Hero10 />
 
       {/* ══════ TRUST BAR ══════ */}
-      <section className="py-6 border-b ghost-border">
-        <div className="max-w-7xl mx-auto px-6 flex flex-wrap items-center justify-center gap-8 md:gap-16 text-on-surface-variant">
+      <section className="py-5 sm:py-6 border-b ghost-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-16 text-on-surface-variant">
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-accent" />
             <span className="text-sm font-medium tracking-wide">Premium Quality</span>
@@ -45,9 +45,9 @@ export default function Home() {
       </section>
 
       {/* ══════ ABOUT US (EDITORIAL) ══════ */}
-      <section className="py-24 px-6 border-b ghost-border overflow-hidden">
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-b ghost-border overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
             <ScrollReveal className="order-2 lg:order-1 relative">
               <div className="aspect-[4/5] md:aspect-square lg:aspect-[4/5] relative rounded-xl overflow-hidden premium-shadow-lg">
                 <Image 
@@ -66,16 +66,16 @@ export default function Home() {
             
             <ScrollReveal className="order-1 lg:order-2">
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Our Heritage</p>
-              <h2 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-8 leading-tight">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-6 md:mb-8 leading-tight">
                 Crafting Spaces Since <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">2004</span>
               </h2>
-              <p className="text-lg leading-relaxed text-on-surface-variant mb-6">
+              <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant mb-6">
                 UN Tiles (Unicorn Enterprises) has been a trusted importer and distributor of premium ceramic tiles in Sri Lanka. Sourcing from leading manufacturers across the globe, we bring world-class quality to your doorstep.
               </p>
-              <p className="text-lg leading-relaxed text-on-surface-variant mb-10">
+              <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant mb-8 md:mb-10">
                 With over two decades of experience, we remain committed to delivering unparalleled reliability, competitive pricing, and exceptional service for homes and large-scale projects alike.
               </p>
-              <Link href="/about" className="kinetic-button inline-flex items-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
+              <Link href="/about" className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white w-full sm:w-auto px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
                 <span>Discover Our Story</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -97,14 +97,14 @@ async function HomeBelowFold() {
   return (
     <>
       {/* ══════ CATEGORY GRID ══════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 md:py-24 w-full">
         <ScrollReveal>
-          <div className="flex justify-between items-end mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 md:mb-12">
             <div>
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Browse by Space</p>
               <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Curated Collections</h2>
             </div>
-            <Link href="/collections" className="group flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-on-surface hover:text-accent transition-colors">
+            <Link href="/collections" className="group flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-on-surface hover:text-accent transition-colors self-start sm:self-auto">
               <span className="border-b border-transparent group-hover:border-accent pb-0.5 transition-all">View All</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -129,9 +129,9 @@ async function HomeBelowFold() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 
                 {/* Content block sliding up */}
-                <div className="absolute bottom-0 left-0 p-6 w-full transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <div className="absolute bottom-0 left-0 p-5 sm:p-6 w-full transform translate-y-0 sm:translate-y-4 sm:group-hover:translate-y-0 transition-transform duration-500">
                   <h3 className="text-2xl font-display font-semibold text-white mb-2">{cat.name}</h3>
-                  <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                  <div className="flex items-center justify-between opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-500 delay-100">
                     <p className="text-sm text-white/80 font-medium tracking-wide uppercase">{cat.items} Styles</p>
                     <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
                       <ArrowRight className="w-4 h-4 text-white -rotate-45 group-hover:rotate-0 transition-transform duration-500" />
@@ -145,13 +145,13 @@ async function HomeBelowFold() {
       </section>
 
       {/* ══════ WHY CHOOSE US ══════ */}
-      <section className="py-24 border-y ghost-border relative overflow-hidden">
+      <section className="py-14 sm:py-20 md:py-24 border-y ghost-border relative overflow-hidden">
         {/* Background glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-accent/5 rounded-full blur-[100px] -z-10" />
         
-        <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">The UN Tiles Difference</p>
               <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Why Choose Us</h2>
             </div>
@@ -164,7 +164,7 @@ async function HomeBelowFold() {
               { icon: Award, title: "Expert Guidance", desc: "Our design consultants help you choose the perfect tile for every space." },
             ].map((item, idx) => (
               <ScrollReveal key={item.title} delay={idx * 100}>
-                <div className="group relative bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 p-8 rounded-2xl hover:bg-white/60 dark:hover:bg-black/60 transition-all duration-500 hover:-translate-y-2 hover:premium-shadow-lg overflow-hidden">
+                <div className="group relative bg-white/40 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10 p-6 sm:p-8 rounded-2xl hover:bg-white/60 dark:hover:bg-black/60 transition-all duration-500 hover:-translate-y-2 hover:premium-shadow-lg overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/0 dark:from-white/5 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                   
                   <div className="relative z-10 w-14 h-14 mb-6 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center group-hover:scale-110 group-hover:from-accent group-hover:to-accent transition-all duration-500">
@@ -180,9 +180,9 @@ async function HomeBelowFold() {
       </section>
 
       {/* ══════ FEATURED PRODUCTS ══════ */}
-      <section className="max-w-7xl mx-auto px-6 py-24 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 md:py-24 w-full">
         <ScrollReveal>
-          <div className="mb-16">
+          <div className="mb-10 md:mb-16">
             <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Best Sellers</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface mb-4">Featured Collection</h2>
             <p className="text-on-surface-variant max-w-2xl">
@@ -201,10 +201,10 @@ async function HomeBelowFold() {
       </section>
 
       {/* ══════ STATS BAR ══════ */}
-      <section className="relative py-24 overflow-hidden border-t ghost-border">
-        <div className="relative z-10 max-w-7xl mx-auto px-6">
+      <section className="relative py-14 sm:py-20 md:py-24 overflow-hidden border-t ghost-border">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-10 md:mb-16">
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Our Impact</p>
               <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">By the Numbers</h2>
             </div>
@@ -218,7 +218,7 @@ async function HomeBelowFold() {
               { end: 1000, suffix: "+", label: "Satisfied Customers" },
             ].map((stat, idx) => (
               <ScrollReveal key={stat.label} delay={idx * 100}>
-                <div className="flex flex-col items-center justify-center text-center group bg-white/50 backdrop-blur-md border border-white/40 p-8 rounded-3xl hover:bg-white/70 transition-all duration-500 hover:-translate-y-2 premium-shadow hover:premium-shadow-lg">
+                <div className="flex flex-col items-center justify-center text-center group bg-white/50 backdrop-blur-md border border-white/40 p-4 sm:p-8 rounded-2xl sm:rounded-3xl hover:bg-white/70 transition-all duration-500 hover:-translate-y-2 premium-shadow hover:premium-shadow-lg">
                   <StatsCounter end={stat.end} suffix={stat.suffix} label={stat.label} />
                 </div>
               </ScrollReveal>
@@ -228,7 +228,7 @@ async function HomeBelowFold() {
       </section>
 
       {/* ══════ CTA SECTION ══════ */}
-      <section className="relative py-32 overflow-hidden">
+      <section className="relative py-16 sm:py-24 md:py-32 overflow-hidden">
         <ParallaxLayer
           speed={0.1}
           maxOffset={30}
@@ -244,25 +244,25 @@ async function HomeBelowFold() {
           />
         </ParallaxLayer>
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm" />
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <ScrollReveal>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-slate-900 mb-6">
               Ready to Transform Your Space?
             </h2>
-            <p className="text-lg text-slate-700 mb-10 max-w-xl mx-auto">
+            <p className="text-base sm:text-lg text-slate-700 mb-8 md:mb-10 max-w-xl mx-auto">
               Visit our showroom or speak with a design consultant to find the perfect tile for your project.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center space-x-3 bg-zinc-900 hover:bg-black text-white font-semibold px-6 py-3 rounded-lg transition-all"
+                className="inline-flex items-center justify-center space-x-3 bg-zinc-900 hover:bg-black text-white font-semibold w-full sm:w-auto px-8 py-4 rounded-lg transition-all uppercase tracking-widest text-sm"
               >
                 <span>GET IN TOUCH</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/collections"
-                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-slate-900 border border-slate-300 px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors shadow-sm"
+                className="kinetic-button inline-flex items-center justify-center space-x-3 bg-white text-slate-900 border border-slate-300 w-full sm:w-auto px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-slate-50 hover:border-slate-400 transition-colors shadow-sm"
               >
                 <span>Browse Collections</span>
               </Link>

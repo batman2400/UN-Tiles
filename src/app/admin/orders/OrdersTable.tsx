@@ -465,7 +465,7 @@ export function OrdersTable({
         </table>
       </div>
       
-      <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
           Showing {paginatedOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
           {"–"}
@@ -499,7 +499,7 @@ export function OrdersTable({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in duration-200"
             onClick={() => setViewOrder(null)}
           />
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto">
+          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0">
               <div>
                 <h3 className="font-bold text-gray-900">Order Details</h3>

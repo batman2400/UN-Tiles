@@ -109,7 +109,7 @@ export function CommandPalette() {
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[300] animate-in fade-in duration-150"
         onClick={() => setIsOpen(false)}
       />
-      <div className="fixed left-1/2 top-[20%] -translate-x-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[301] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div className="fixed left-1/2 top-[12%] sm:top-[20%] -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[301] overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100">
           <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
           <input
@@ -142,7 +142,7 @@ export function CommandPalette() {
               >
                 <Icon className="w-4 h-4 flex-shrink-0" />
                 <span className="flex-1 text-sm font-semibold">{cmd.label}</span>
-                <span className="text-xs text-gray-400">{cmd.hint}</span>
+                <span className="text-xs text-gray-400 hidden sm:inline">{cmd.hint}</span>
                 {isActive && <CornerDownLeft className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />}
               </button>
             );

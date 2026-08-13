@@ -86,7 +86,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-2xl bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-gray-900">Add New Product</h3>
           <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors">
@@ -101,7 +101,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Product Name</label>
               <input
@@ -128,7 +128,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Category</label>
               <select
@@ -158,7 +158,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Price / SqFt (LKR)</label>
               <input
@@ -187,7 +187,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Finish</label>
               <input
