@@ -88,6 +88,12 @@ function checkoutErrorResponse(message: string): NextResponse {
       { status: 503 }
     );
   }
+  if (lower.includes("duplicate key") || lower.includes("unique constraint")) {
+    return NextResponse.json(
+      { error: "Checkout could not complete. Please try again." },
+      { status: 409 }
+    );
+  }
   if (lower.includes("invalid") || lower.includes("cart is empty")) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
