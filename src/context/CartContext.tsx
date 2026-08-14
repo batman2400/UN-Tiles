@@ -7,10 +7,10 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
   ReactNode,
 } from "react";
-
-// ── Types ──────────────────────────────────────────────
+import { useAuth } from "@/context/AuthContext";
 
 export interface CartItem {
   id: string;
@@ -32,13 +32,10 @@ interface CartContextType {
   clearCart: () => void;
 }
 
-// ── Constants ──────────────────────────────────────────
-
 const BASE_STORAGE_KEY = "un-tiles-cart";
+const GUEST_STORAGE_KEY = `${BASE_STORAGE_KEY}-guest`;
 
 const CartContext = createContext<CartContextType | null>(null);
-
-// ── Helpers ────────────────────────────────────────────
 
 function readStorage(key: string): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -47,7 +44,6 @@ function readStorage(key: string): CartItem[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    // Basic shape check
     return parsed.filter(
       (item): item is CartItem =>
         typeof item === "object" &&
@@ -69,36 +65,59 @@ function writeStorage(key: string, items: CartItem[]): void {
   }
 }
 
-// ── Provider ───────────────────────────────────────────
-
-import { useAuth } from "@/context/AuthContext";
+function mergeCarts(primary: CartItem[], incoming: CartItem[]): CartItem[] {
+  const byId = new Map(primary.map((item) => [item.id, { ...item }]));
+  for (const item of incoming) {
+    const existing = byId.get(item.id);
+    if (!existing) {
+      byId.set(item.id, { ...item });
+      continue;
+    }
+    const maxStock = existing.stockSqft ?? item.stockSqft ?? Infinity;
+    existing.cartQuantitySqft = Math.min(
+      existing.cartQuantitySqft + item.cartQuantitySqft,
+      maxStock
+    );
+  }
+  return [...byId.values()];
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const storageKey = `${BASE_STORAGE_KEY}-${user?.id || 'guest'}`;
+  const storageKey = `${BASE_STORAGE_KEY}-${user?.id || "guest"}`;
+  const loadedKeyRef = useRef<string | null>(null);
 
-  // Initialize with empty, then load on mount/key change to avoid hydration mismatch
   const [items, setItems] = useState<CartItem[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setItems(readStorage(storageKey));
-    setIsLoaded(true);
-  }, [storageKey]);
+    let nextItems = readStorage(storageKey);
 
-  // Sync to localStorage on every change
-  useEffect(() => {
-    if (isLoaded) {
-      writeStorage(storageKey, items);
+    if (user?.id) {
+      const guestItems = readStorage(GUEST_STORAGE_KEY);
+      if (guestItems.length > 0) {
+        nextItems = mergeCarts(nextItems, guestItems);
+        writeStorage(storageKey, nextItems);
+        try {
+          window.localStorage.removeItem(GUEST_STORAGE_KEY);
+        } catch {
+          // Ignore cleanup errors.
+        }
+      }
     }
-  }, [items, storageKey, isLoaded]);
+
+    setItems(nextItems);
+    loadedKeyRef.current = storageKey;
+  }, [storageKey, user?.id]);
+
+  useEffect(() => {
+    if (loadedKeyRef.current !== storageKey) return;
+    writeStorage(storageKey, items);
+  }, [items, storageKey]);
 
   const addToCart = useCallback(
     (product: Omit<CartItem, "cartQuantitySqft">, sqft: number): boolean => {
       if (sqft <= 0) return false;
 
-      // Validate against available stock
       const maxStock = product.stockSqft ?? Infinity;
       if (sqft > maxStock) return false;
 
@@ -107,7 +126,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const existing = prev.find((item) => item.id === product.id);
         if (existing) {
           const newTotal = existing.cartQuantitySqft + sqft;
-          // Cap at available stock
           if (newTotal > maxStock) return prev;
           added = true;
           return prev.map((item) =>
@@ -170,8 +188,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
-
-// ── Hook ───────────────────────────────────────────────
 
 export function useCart(): CartContextType {
   const ctx = useContext(CartContext);

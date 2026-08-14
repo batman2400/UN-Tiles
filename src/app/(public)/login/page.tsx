@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/context/AuthContext";
+import { getSafeNextPath } from "@/lib/safeNextPath";
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = getSafeNextPath(searchParams.get("next"));
   const { login, loginWithGoogle, user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,12 +28,11 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace("/profile");
+      router.replace(next);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, next]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -31,7 +41,7 @@ export default function LoginPage() {
 
     const result = await login(email, password);
     if (result.success) {
-      router.replace("/profile");
+      router.replace(next);
     } else {
       setError(result.error || "Login failed.");
       setIsSubmitting(false);
@@ -39,6 +49,9 @@ export default function LoginPage() {
   };
 
   if (isLoading) return null;
+
+  const registerHref =
+    next === "/profile" ? "/register" : `/register?next=${encodeURIComponent(next)}`;
 
   return (
     <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
@@ -74,7 +87,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={async () => {
-                const result = await loginWithGoogle();
+                const result = await loginWithGoogle(next);
                 if (!result.success) {
                   setError(result.error || "Google login failed.");
                 }
@@ -164,7 +177,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-on-surface-variant mt-10">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="kinetic-link text-primary font-semibold hover:text-primary-dim transition-colors">
+            <Link href={registerHref} className="kinetic-link text-primary font-semibold hover:text-primary-dim transition-colors">
               Sign up
             </Link>
           </p>

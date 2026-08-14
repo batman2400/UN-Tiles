@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { useAuth } from "@/context/AuthContext";
+import { getSafeNextPath, loginUrlWithNext } from "@/lib/safeNextPath";
 
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = getSafeNextPath(searchParams.get("next"));
   const { register, loginWithGoogle, user, isLoading } = useAuth();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -24,9 +35,9 @@ export default function RegisterPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (!isLoading && user) {
-      router.push("/profile");
+      router.push(next);
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, next]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,7 +64,7 @@ export default function RegisterPage() {
 
     if (result.success) {
       setSuccess(true);
-      setTimeout(() => router.push("/login"), 5000);
+      setTimeout(() => router.push(loginUrlWithNext(next)), 5000);
     } else {
       setError(result.error || "Registration failed.");
       setIsSubmitting(false);
@@ -103,7 +114,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={async () => {
-                  const result = await loginWithGoogle();
+                  const result = await loginWithGoogle(next);
                   if (!result.success) {
                     setError(result.error || "Google login failed.");
                   }
@@ -178,7 +189,7 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-on-surface-variant mt-10">
             Already have an account?{" "}
-            <Link href="/login" className="kinetic-link text-primary font-semibold hover:text-primary-dim transition-colors">Log in</Link>
+            <Link href={loginUrlWithNext(next)} className="kinetic-link text-primary font-semibold hover:text-primary-dim transition-colors">Log in</Link>
           </p>
         </div>
       </div>

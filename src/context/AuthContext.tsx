@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/client";
+import { getSafeNextPath } from "@/lib/safeNextPath";
 
 export interface UserData {
   id?: string;
@@ -29,7 +30,7 @@ interface AuthContextType {
   register: (data: UserData & { password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateProfile: (data: UserData) => Promise<{ success: boolean; error?: string }>;
-  loginWithGoogle: () => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (nextPath?: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -285,12 +286,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (nextPath?: string) => {
     try {
+      const next = getSafeNextPath(nextPath, "/");
+      const nextQuery = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
       const { error } = await getSupabase().auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback${nextQuery}`,
         },
       });
       if (error) return { success: false, error: error.message };

@@ -29,7 +29,7 @@ export default function CartPage() {
     setCheckoutError(null);
 
     if (!user) {
-      router.push("/login");
+      router.push("/login?next=/cart");
       return;
     }
 
@@ -51,7 +51,7 @@ export default function CartPage() {
       });
 
       if (res.status === 401) {
-        router.push("/login");
+        router.push("/login?next=/cart");
         return;
       }
 
