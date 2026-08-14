@@ -13,6 +13,7 @@ interface CheckoutItem {
 interface CheckoutRequestBody {
   items: CheckoutItem[];
   deliveryMethod: string;
+  addressId?: string | null;
 }
 
 interface ProcessCheckoutResult {
@@ -24,6 +25,8 @@ interface ProcessCheckoutResult {
 
 const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store"];
 const MAX_CHECKOUT_LINES = 50;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // ── Validation ─────────────────────────────────────────
 
@@ -38,6 +41,12 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
     !VALID_DELIVERY_METHODS.includes(candidate.deliveryMethod)
   ) {
     return false;
+  }
+
+  if (candidate.deliveryMethod === "Cash on Delivery") {
+    if (typeof candidate.addressId !== "string" || !UUID_RE.test(candidate.addressId)) {
+      return false;
+    }
   }
 
   return candidate.items.every((item: unknown) => {
@@ -94,6 +103,9 @@ function checkoutErrorResponse(message: string): NextResponse {
       { status: 409 }
     );
   }
+  if (lower.includes("delivery address")) {
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
   if (lower.includes("invalid") || lower.includes("cart is empty")) {
     return NextResponse.json({ error: message }, { status: 400 });
   }
@@ -131,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidCheckoutBody(body)) {
       return NextResponse.json(
-        { error: "Invalid cart data. Each item must have a product_id (string) and quantity_sqft (positive number). A valid delivery method is required." },
+        { error: "Invalid cart data. Cash on Delivery requires a saved delivery address." },
         { status: 400 }
       );
     }
@@ -148,6 +160,7 @@ export async function POST(request: NextRequest) {
       p_user_id: user.id,
       p_items: mappedItems,
       p_delivery_method: body.deliveryMethod,
+      p_address_id: body.deliveryMethod === "Cash on Delivery" ? body.addressId : null,
     });
 
     if (error) {

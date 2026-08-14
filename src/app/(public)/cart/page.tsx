@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store, Check, Loader2 } from "lucide-react";
+import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store, Check, Loader2, MapPin } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { createClient } from "@/utils/supabase/client";
+
+interface SavedAddress {
+  id: string;
+  label: string | null;
+  line1: string;
+  line2: string | null;
+  country: string | null;
+}
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-LK", {
@@ -21,9 +30,92 @@ export default function CartPage() {
   const router = useRouter();
   const { items, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
+  const supabase = createClient();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"cod" | "pickup">("pickup");
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [newLabel, setNewLabel] = useState("Home");
+  const [newLine1, setNewLine1] = useState("");
+  const [newLine2, setNewLine2] = useState("");
+
+  useEffect(() => {
+    if (!user?.id) {
+      setAddresses([]);
+      setSelectedAddressId(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadAddresses = async () => {
+      const { data } = await supabase
+        .from("addresses")
+        .select("id, label, line1, line2, country")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (cancelled) return;
+
+      const rows = (data ?? []) as SavedAddress[];
+      setAddresses(rows);
+      setSelectedAddressId((current) => {
+        if (current && rows.some((row) => row.id === current)) return current;
+        return rows[0]?.id ?? null;
+      });
+      if (rows.length === 0) setShowAddressForm(true);
+    };
+
+    void loadAddresses();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user?.id]);
+
+  const handleSaveAddress = async () => {
+    if (!user) {
+      router.push("/login?next=/cart");
+      return;
+    }
+
+    const line1 = newLine1.trim();
+    if (!line1) {
+      setCheckoutError("Enter a street address for delivery.");
+      return;
+    }
+
+    setSavingAddress(true);
+    setCheckoutError(null);
+
+    const { data, error } = await supabase
+      .from("addresses")
+      .insert({
+        user_id: user.id,
+        label: newLabel.trim() || "Home",
+        line1,
+        line2: newLine2.trim() || null,
+        country: "Sri Lanka",
+      })
+      .select("id, label, line1, line2, country")
+      .single();
+
+    setSavingAddress(false);
+
+    if (error || !data) {
+      setCheckoutError(error?.message || "Could not save the delivery address.");
+      return;
+    }
+
+    const saved = data as SavedAddress;
+    setAddresses((current) => [saved, ...current]);
+    setSelectedAddressId(saved.id);
+    setShowAddressForm(false);
+    setNewLine1("");
+    setNewLine2("");
+  };
 
   const handleCheckout = async () => {
     setCheckoutError(null);
@@ -35,6 +127,12 @@ export default function CartPage() {
 
     if (items.length === 0) return;
 
+    if (deliveryMethod === "cod" && !selectedAddressId) {
+      setCheckoutError("Add a delivery address to use Cash on Delivery.");
+      setShowAddressForm(true);
+      return;
+    }
+
     setIsCheckingOut(true);
 
     try {
@@ -43,6 +141,7 @@ export default function CartPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           deliveryMethod: deliveryMethod === "cod" ? "Cash on Delivery" : "Pickup from Store",
+          addressId: deliveryMethod === "cod" ? selectedAddressId : null,
           items: items.map((item) => ({
             product_id: item.id,
             quantity_sqft: item.cartQuantitySqft,
@@ -355,6 +454,101 @@ export default function CartPage() {
                     </div>
                   </label>
                 </div>
+
+                {deliveryMethod === "cod" && (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                      Delivery Address
+                    </p>
+
+                    {addresses.length === 0 && !showAddressForm && (
+                      <p className="text-xs text-gray-500">
+                        Add a delivery address before placing a Cash on Delivery order.
+                      </p>
+                    )}
+
+                    {addresses.map((addr) => (
+                      <label
+                        key={addr.id}
+                        className={`flex items-start gap-3 p-3 cursor-pointer transition-all rounded-xl ${
+                          selectedAddressId === addr.id
+                            ? "border-2 border-yellow-500 bg-yellow-50/30"
+                            : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="deliveryAddress"
+                          value={addr.id}
+                          checked={selectedAddressId === addr.id}
+                          onChange={() => setSelectedAddressId(addr.id)}
+                          className="sr-only"
+                        />
+                        <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                          selectedAddressId === addr.id ? "text-yellow-600" : "text-gray-400"
+                        }`} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-zinc-900">{addr.label || "Address"}</p>
+                          <p className="text-xs text-gray-600">{addr.line1}</p>
+                          {addr.line2 && <p className="text-xs text-gray-500">{addr.line2}</p>}
+                          <p className="text-[10px] uppercase tracking-wider text-gray-400 mt-1">
+                            {addr.country || "Sri Lanka"}
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+
+                    {showAddressForm ? (
+                      <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-white">
+                        <input
+                          value={newLabel}
+                          onChange={(e) => setNewLabel(e.target.value)}
+                          placeholder="Label (Home, Studio)"
+                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
+                        />
+                        <input
+                          value={newLine1}
+                          onChange={(e) => setNewLine1(e.target.value)}
+                          placeholder="Street address"
+                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
+                        />
+                        <input
+                          value={newLine2}
+                          onChange={(e) => setNewLine2(e.target.value)}
+                          placeholder="Apartment, landmark (optional)"
+                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveAddress()}
+                            disabled={savingAddress}
+                            className="flex-1 bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest rounded-lg py-2.5 disabled:opacity-60"
+                          >
+                            {savingAddress ? "Saving..." : "Save Address"}
+                          </button>
+                          {addresses.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setShowAddressForm(false)}
+                              className="px-3 text-xs font-bold uppercase tracking-widest text-gray-500"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressForm(true)}
+                        className="text-xs font-bold uppercase tracking-widest text-zinc-900 hover:text-yellow-600"
+                      >
+                        + Add a new address
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Price Breakdown */}
@@ -394,7 +588,7 @@ export default function CartPage() {
               {/* Massive Primary PROCEED TO CHECKOUT Button */}
               <button
                 onClick={handleCheckout}
-                disabled={isCheckingOut}
+                disabled={isCheckingOut || (deliveryMethod === "cod" && !selectedAddressId)}
                 className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-4 w-full shadow-lg transition-all duration-300 text-center uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
                 {isCheckingOut ? (

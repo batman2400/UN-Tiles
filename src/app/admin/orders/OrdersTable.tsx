@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered, MapPin } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
+import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
 import { updateOrderStatus, bulkUpdateOrderStatus } from "@/app/actions/admin";
 
 export interface AdminOrder {
@@ -12,6 +13,7 @@ export interface AdminOrder {
   items: string;
   total: string;
   delivery_method: string;
+  delivery_address: AddressSnapshot | null;
   date: string;
   profiles: {
     first_name: string;
@@ -186,7 +188,7 @@ export function OrdersTable({
   const handleExportCsv = () => {
     downloadCsv(
       `orders-export-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Items", "Total", "Status"],
+      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Delivery Address", "Items", "Total", "Status"],
       filteredOrders.map((o) => [
         o.id,
         new Date(o.date).toLocaleString(),
@@ -194,6 +196,7 @@ export function OrdersTable({
         o.profiles?.email || "",
         o.profiles?.phone || "",
         o.delivery_method,
+        formatAddressSnapshot(o.delivery_address),
         o.items,
         o.total,
         o.status,
@@ -393,6 +396,11 @@ export function OrdersTable({
                         {order.delivery_method || "Pickup"}
                       </span>
                     </div>
+                    {order.delivery_method === "Cash on Delivery" && order.delivery_address && (
+                      <p className="text-[11px] text-gray-500 mt-1 max-w-[180px] truncate" title={formatAddressSnapshot(order.delivery_address)}>
+                        {formatAddressSnapshot(order.delivery_address)}
+                      </p>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-left">
                     <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>
@@ -532,6 +540,29 @@ export function OrdersTable({
                   </p>
                 </div>
               </div>
+
+              {viewOrder.delivery_method === "Cash on Delivery" && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Delivery Address</p>
+                  <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700">
+                    {viewOrder.delivery_address?.line1 ? (
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <div>
+                          {viewOrder.delivery_address.label && (
+                            <p className="font-semibold text-gray-900">{viewOrder.delivery_address.label}</p>
+                          )}
+                          <p>{viewOrder.delivery_address.line1}</p>
+                          {viewOrder.delivery_address.line2 && <p>{viewOrder.delivery_address.line2}</p>}
+                          {viewOrder.delivery_address.country && <p>{viewOrder.delivery_address.country}</p>}
+                        </div>
+                      </div>
+                    ) : (
+                      <p>No delivery address on this order.</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">

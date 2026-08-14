@@ -20,7 +20,7 @@ export default async function AdminOrdersPage() {
     supabase
       .from("orders")
       .select(`
-        id, status, items, total, delivery_method, date,
+        id, status, items, total, delivery_method, delivery_address, date,
         profiles (
           first_name, last_name, email, phone
         )
@@ -46,6 +46,7 @@ export default async function AdminOrdersPage() {
     items: row.items,
     total: row.total,
     delivery_method: row.delivery_method,
+    delivery_address: row.delivery_address ?? null,
     date: row.date,
     profiles: Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
   }));

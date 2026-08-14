@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
+import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
 
 type SidebarSection = "account" | "orders" | "addresses";
 type ProfileFormState = {
@@ -42,6 +43,7 @@ interface OrderRecord {
   date: string;
   total: string;
   delivery_method: string | null;
+  delivery_address: AddressSnapshot | null;
 }
 
 interface AddressRecord {
@@ -119,6 +121,12 @@ function ProfileContent() {
   const [viewOrder, setViewOrder] = useState<OrderRecord | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [newLabel, setNewLabel] = useState("Home");
+  const [newLine1, setNewLine1] = useState("");
+  const [newLine2, setNewLine2] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -134,7 +142,7 @@ function ProfileContent() {
       const [ordersRes, addressesRes] = await Promise.all([
         supabase
           .from("orders")
-          .select("id, status, items, date, total, delivery_method")
+          .select("id, status, items, date, total, delivery_method, delivery_address")
           .eq("user_id", user.id)
           .order("date", { ascending: false }),
         supabase
@@ -210,6 +218,53 @@ function ProfileContent() {
   const handleLogout = async () => {
     await logout();
     router.replace("/login");
+  };
+
+  const handleSaveAddress = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    const line1 = newLine1.trim();
+    if (!line1) {
+      setAddressError("Enter a street address.");
+      return;
+    }
+
+    setSavingAddress(true);
+    setAddressError(null);
+
+    const { data, error } = await supabase
+      .from("addresses")
+      .insert({
+        user_id: user.id,
+        label: newLabel.trim() || "Home",
+        line1,
+        line2: newLine2.trim() || null,
+        country: "Sri Lanka",
+      })
+      .select("id, label, line1, line2, country")
+      .single();
+
+    setSavingAddress(false);
+
+    if (error || !data) {
+      setAddressError(error?.message || "Could not save the address.");
+      return;
+    }
+
+    setAddresses((current) => [data as AddressRecord, ...current]);
+    setShowAddressForm(false);
+    setNewLabel("Home");
+    setNewLine1("");
+    setNewLine2("");
+  };
+
+  const handleDeleteAddress = async (id: string) => {
+    const { error } = await supabase.from("addresses").delete().eq("id", id);
+    if (error) {
+      setAddressError(error.message);
+      return;
+    }
+    setAddresses((current) => current.filter((addr) => addr.id !== id));
   };
 
   if (isLoading) {
@@ -594,9 +649,9 @@ function ProfileContent() {
                                   <span className="text-xs font-bold uppercase tracking-widest block mb-1">
                                     {order.delivery_method}
                                   </span>
-                                  <p className="text-xs font-medium opacity-80 max-w-[200px]">
-                                    {isCOD 
-                                      ? "Please prepare exact change for collection upon delivery." 
+                                  <p className="text-xs font-medium opacity-80 max-w-[220px]">
+                                    {isCOD
+                                      ? (formatAddressSnapshot(order.delivery_address) || "Please prepare exact change for collection upon delivery.")
                                       : "Please visit our flagship showroom with your Order ID for collection."}
                                   </p>
                                 </div>
@@ -635,12 +690,63 @@ function ProfileContent() {
                     <h2 className="text-2xl font-display font-bold text-zinc-900 tracking-tight">Saved Addresses</h2>
                     <p className="text-xs text-gray-500 mt-1">Manage delivery locations for faster studio checkout.</p>
                   </div>
-                  <button className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-5 text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto w-full sm:w-auto justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddressForm(true)}
+                    className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-5 text-xs uppercase tracking-widest transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto w-full sm:w-auto justify-center"
+                  >
                     <Plus className="w-4 h-4" />
                     <span>Add New Address</span>
                   </button>
                 </div>
                 
+                {addressError && (
+                  <p className="mb-4 text-xs font-semibold text-red-700">{addressError}</p>
+                )}
+
+                {showAddressForm && (
+                  <form onSubmit={handleSaveAddress} className="mb-8 bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-3">
+                    <input
+                      value={newLabel}
+                      onChange={(e) => setNewLabel(e.target.value)}
+                      placeholder="Label (Home, Studio)"
+                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
+                    />
+                    <input
+                      value={newLine1}
+                      onChange={(e) => setNewLine1(e.target.value)}
+                      placeholder="Street address"
+                      required
+                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
+                    />
+                    <input
+                      value={newLine2}
+                      onChange={(e) => setNewLine2(e.target.value)}
+                      placeholder="Apartment, landmark (optional)"
+                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={savingAddress}
+                        className="bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest rounded-lg py-2.5 px-4 disabled:opacity-60"
+                      >
+                        {savingAddress ? "Saving..." : "Save Address"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowAddressForm(false);
+                          setAddressError(null);
+                        }}
+                        className="text-xs font-bold uppercase tracking-widest text-gray-500 px-3"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+
                 {addresses.length === 0 ? (
                   /* Minimalist Empty State */
                   <div className="bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center text-gray-500">
@@ -651,7 +757,11 @@ function ProfileContent() {
                     <p className="text-xs text-gray-500 max-w-sm mx-auto mb-6">
                       Add your studio or job site addresses to speed up tile delivery checkout.
                     </p>
-                    <button className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest shadow-md transition-all inline-flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressForm(true)}
+                      className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest shadow-md transition-all inline-flex items-center gap-2"
+                    >
                       <Plus className="w-4 h-4" />
                       Add Address Now
                     </button>
@@ -687,7 +797,11 @@ function ProfileContent() {
                           <button className="p-2 text-gray-400 hover:text-zinc-900 hover:bg-gray-100 rounded-lg transition-colors">
                             <Edit3 className="w-4 h-4" />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteAddress(addr.id)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -695,7 +809,11 @@ function ProfileContent() {
                     ))}
 
                     {/* Dashed Add New Address Card Trigger */}
-                    <button className="bg-gray-50/50 hover:bg-white border-2 border-dashed border-gray-200 hover:border-yellow-500/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center group transition-all min-h-[180px]">
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressForm(true)}
+                      className="bg-gray-50/50 hover:bg-white border-2 border-dashed border-gray-200 hover:border-yellow-500/50 rounded-2xl p-6 flex flex-col items-center justify-center text-center group transition-all min-h-[180px]"
+                    >
                       <div className="w-10 h-10 bg-white group-hover:bg-yellow-500 group-hover:text-black text-gray-400 rounded-full flex items-center justify-center shadow-sm border border-gray-200 transition-all mb-3">
                         <Plus className="w-5 h-5" />
                       </div>
@@ -760,6 +878,14 @@ function ProfileContent() {
                     {viewOrder.delivery_method || "Pickup at Showroom"}
                   </p>
                 </div>
+                {viewOrder.delivery_method === "Cash on Delivery" && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Delivery Address</span>
+                    <p className="text-sm font-medium text-gray-700">
+                      {formatAddressSnapshot(viewOrder.delivery_address) || "No delivery address on this order."}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="pt-6 border-t border-gray-100">
