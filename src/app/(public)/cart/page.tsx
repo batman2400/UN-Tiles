@@ -7,15 +7,9 @@ import { useRouter } from "next/navigation";
 import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store, Check, Loader2, MapPin } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
-import { createClient } from "@/utils/supabase/client";
-
-interface SavedAddress {
-  id: string;
-  label: string | null;
-  line1: string;
-  line2: string | null;
-  country: string | null;
-}
+import { listAddresses } from "@/app/actions/addresses";
+import { AddAddressModal } from "@/components/AddAddressModal";
+import type { SavedAddress } from "@/lib/address";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-LK", {
@@ -30,17 +24,12 @@ export default function CartPage() {
   const router = useRouter();
   const { items, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
-  const supabase = createClient();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<"cod" | "pickup">("pickup");
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
-  const [newLabel, setNewLabel] = useState("Home");
-  const [newLine1, setNewLine1] = useState("");
-  const [newLine2, setNewLine2] = useState("");
 
   useEffect(() => {
     if (!user?.id) {
@@ -52,70 +41,26 @@ export default function CartPage() {
     let cancelled = false;
 
     const loadAddresses = async () => {
-      const { data } = await supabase
-        .from("addresses")
-        .select("id, label, line1, line2, country")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
+      const result = await listAddresses();
       if (cancelled) return;
 
-      const rows = (data ?? []) as SavedAddress[];
-      setAddresses(rows);
+      if (!result.success) {
+        setCheckoutError(result.error || "Could not load delivery addresses.");
+        return;
+      }
+
+      setAddresses(result.addresses);
       setSelectedAddressId((current) => {
-        if (current && rows.some((row) => row.id === current)) return current;
-        return rows[0]?.id ?? null;
+        if (current && result.addresses.some((row) => row.id === current)) return current;
+        return result.addresses[0]?.id ?? null;
       });
-      if (rows.length === 0) setShowAddressForm(true);
     };
 
     void loadAddresses();
     return () => {
       cancelled = true;
     };
-  }, [supabase, user?.id]);
-
-  const handleSaveAddress = async () => {
-    if (!user) {
-      router.push("/login?next=/cart");
-      return;
-    }
-
-    const line1 = newLine1.trim();
-    if (!line1) {
-      setCheckoutError("Enter a street address for delivery.");
-      return;
-    }
-
-    setSavingAddress(true);
-    setCheckoutError(null);
-
-    const { data, error } = await supabase
-      .from("addresses")
-      .insert({
-        user_id: user.id,
-        label: newLabel.trim() || "Home",
-        line1,
-        line2: newLine2.trim() || null,
-        country: "Sri Lanka",
-      })
-      .select("id, label, line1, line2, country")
-      .single();
-
-    setSavingAddress(false);
-
-    if (error || !data) {
-      setCheckoutError(error?.message || "Could not save the delivery address.");
-      return;
-    }
-
-    const saved = data as SavedAddress;
-    setAddresses((current) => [saved, ...current]);
-    setSelectedAddressId(saved.id);
-    setShowAddressForm(false);
-    setNewLine1("");
-    setNewLine2("");
-  };
+  }, [user?.id]);
 
   const handleCheckout = async () => {
     setCheckoutError(null);
@@ -461,7 +406,7 @@ export default function CartPage() {
                       Delivery Address
                     </p>
 
-                    {addresses.length === 0 && !showAddressForm && (
+                    {addresses.length === 0 && (
                       <p className="text-xs text-gray-500">
                         Add a delivery address before placing a Cash on Delivery order.
                       </p>
@@ -498,55 +443,13 @@ export default function CartPage() {
                       </label>
                     ))}
 
-                    {showAddressForm ? (
-                      <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-white">
-                        <input
-                          value={newLabel}
-                          onChange={(e) => setNewLabel(e.target.value)}
-                          placeholder="Label (Home, Studio)"
-                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
-                        />
-                        <input
-                          value={newLine1}
-                          onChange={(e) => setNewLine1(e.target.value)}
-                          placeholder="Street address"
-                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
-                        />
-                        <input
-                          value={newLine2}
-                          onChange={(e) => setNewLine2(e.target.value)}
-                          placeholder="Apartment, landmark (optional)"
-                          className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleSaveAddress()}
-                            disabled={savingAddress}
-                            className="flex-1 bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest rounded-lg py-2.5 disabled:opacity-60"
-                          >
-                            {savingAddress ? "Saving..." : "Save Address"}
-                          </button>
-                          {addresses.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setShowAddressForm(false)}
-                              className="px-3 text-xs font-bold uppercase tracking-widest text-gray-500"
-                            >
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setShowAddressForm(true)}
-                        className="text-xs font-bold uppercase tracking-widest text-zinc-900 hover:text-yellow-600"
-                      >
-                        + Add a new address
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowAddressForm(true)}
+                      className="w-full text-xs font-bold uppercase tracking-widest text-white bg-zinc-900 hover:bg-yellow-500 hover:text-black rounded-xl py-3 transition-all"
+                    >
+                      + Add a new address
+                    </button>
                   </div>
                 )}
               </div>
@@ -613,6 +516,15 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+      <AddAddressModal
+        open={showAddressForm}
+        onClose={() => setShowAddressForm(false)}
+        onSaved={(address) => {
+          setAddresses((current) => [address, ...current.filter((row) => row.id !== address.id)]);
+          setSelectedAddressId(address.id);
+          setCheckoutError(null);
+        }}
+      />
     </section>
   );
 }

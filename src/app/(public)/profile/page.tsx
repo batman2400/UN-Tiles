@@ -27,6 +27,8 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
 import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
+import { deleteAddress, listAddresses } from "@/app/actions/addresses";
+import { AddAddressModal } from "@/components/AddAddressModal";
 
 type SidebarSection = "account" | "orders" | "addresses";
 type ProfileFormState = {
@@ -48,11 +50,10 @@ interface OrderRecord {
 
 interface AddressRecord {
   id: string;
-  label: string;
+  label: string | null;
   line1: string;
   line2: string | null;
-  country: string;
-  is_default?: boolean;
+  country: string | null;
 }
 
 const sidebarLinks: { key: SidebarSection; label: string; icon: typeof User }[] = [
@@ -122,11 +123,7 @@ function ProfileContent() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [savingAddress, setSavingAddress] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [newLabel, setNewLabel] = useState("Home");
-  const [newLine1, setNewLine1] = useState("");
-  const [newLine2, setNewLine2] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -145,18 +142,16 @@ function ProfileContent() {
           .select("id, status, items, date, total, delivery_method, delivery_address")
           .eq("user_id", user.id)
           .order("date", { ascending: false }),
-        supabase
-          .from("addresses")
-          .select("id, label, line1, line2, country")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
+        listAddresses(),
       ]);
 
       if (ordersRes.data) {
         setOrders(ordersRes.data as OrderRecord[]);
       }
-      if (addressesRes.data) {
-        setAddresses(addressesRes.data as AddressRecord[]);
+      if (addressesRes.success) {
+        setAddresses(addressesRes.addresses);
+      } else if (addressesRes.error) {
+        setAddressError(addressesRes.error);
       }
     };
 
@@ -220,48 +215,10 @@ function ProfileContent() {
     router.replace("/login");
   };
 
-  const handleSaveAddress = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-    const line1 = newLine1.trim();
-    if (!line1) {
-      setAddressError("Enter a street address.");
-      return;
-    }
-
-    setSavingAddress(true);
-    setAddressError(null);
-
-    const { data, error } = await supabase
-      .from("addresses")
-      .insert({
-        user_id: user.id,
-        label: newLabel.trim() || "Home",
-        line1,
-        line2: newLine2.trim() || null,
-        country: "Sri Lanka",
-      })
-      .select("id, label, line1, line2, country")
-      .single();
-
-    setSavingAddress(false);
-
-    if (error || !data) {
-      setAddressError(error?.message || "Could not save the address.");
-      return;
-    }
-
-    setAddresses((current) => [data as AddressRecord, ...current]);
-    setShowAddressForm(false);
-    setNewLabel("Home");
-    setNewLine1("");
-    setNewLine2("");
-  };
-
   const handleDeleteAddress = async (id: string) => {
-    const { error } = await supabase.from("addresses").delete().eq("id", id);
-    if (error) {
-      setAddressError(error.message);
+    const result = await deleteAddress(id);
+    if (!result.success) {
+      setAddressError(result.error || "Could not delete the address.");
       return;
     }
     setAddresses((current) => current.filter((addr) => addr.id !== id));
@@ -704,49 +661,6 @@ function ProfileContent() {
                   <p className="mb-4 text-xs font-semibold text-red-700">{addressError}</p>
                 )}
 
-                {showAddressForm && (
-                  <form onSubmit={handleSaveAddress} className="mb-8 bg-gray-50 border border-gray-100 rounded-2xl p-5 space-y-3">
-                    <input
-                      value={newLabel}
-                      onChange={(e) => setNewLabel(e.target.value)}
-                      placeholder="Label (Home, Studio)"
-                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
-                    />
-                    <input
-                      value={newLine1}
-                      onChange={(e) => setNewLine1(e.target.value)}
-                      placeholder="Street address"
-                      required
-                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
-                    />
-                    <input
-                      value={newLine2}
-                      onChange={(e) => setNewLine2(e.target.value)}
-                      placeholder="Apartment, landmark (optional)"
-                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-yellow-500 bg-white"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="submit"
-                        disabled={savingAddress}
-                        className="bg-zinc-900 text-white text-xs font-bold uppercase tracking-widest rounded-lg py-2.5 px-4 disabled:opacity-60"
-                      >
-                        {savingAddress ? "Saving..." : "Save Address"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddressForm(false);
-                          setAddressError(null);
-                        }}
-                        className="text-xs font-bold uppercase tracking-widest text-gray-500 px-3"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-
                 {addresses.length === 0 ? (
                   /* Minimalist Empty State */
                   <div className="bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center text-gray-500">
@@ -907,6 +821,14 @@ function ProfileContent() {
           </div>
         </>
       )}
+      <AddAddressModal
+        open={showAddressForm}
+        onClose={() => setShowAddressForm(false)}
+        onSaved={(address) => {
+          setAddresses((current) => [address, ...current.filter((row) => row.id !== address.id)]);
+          setAddressError(null);
+        }}
+      />
     </section>
   );
 }
