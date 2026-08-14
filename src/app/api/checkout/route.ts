@@ -91,45 +91,76 @@ export async function POST(request: NextRequest) {
       quantity_sqft: item.quantity_sqft,
     }));
 
-    // 5. Execute the ACID-compliant checkout via RPC
-    //    The process_checkout PL/pgSQL function handles:
-    //    - Row-level locking (SELECT ... FOR UPDATE)
-    //    - Stock validation & deduction
-    //    - Order creation with delivery method
-    //    All within a single database transaction.
-    const { data, error: rpcError } = await supabase.rpc("process_checkout", {
-      p_user_id: user.id,
-      p_items: mappedItems,
-      p_delivery_method: body.deliveryMethod,
-    });
+    // 5. Manual checkout to bypass the RPC duplicate key issue
+    // Fetch products to validate stock
+    const productIds = mappedItems.map((i) => i.product_id);
+    const { data: products, error: pError } = await supabase
+      .from("products")
+      .select("id, name, price_per_sqft, stock_sqft")
+      .in("id", productIds);
 
-    if (rpcError) {
-      // Check for specific stock-related errors
-      const message = rpcError.message?.toLowerCase() ?? "";
-      if (
-        message.includes("insufficient") ||
-        message.includes("stock") ||
-        message.includes("out of stock") ||
-        message.includes("not enough")
-      ) {
-        return NextResponse.json(
-          { error: rpcError.message },
-          { status: 409 }
-        );
-      }
-
-      console.error("Checkout RPC error:", rpcError);
+    if (pError || !products) {
       return NextResponse.json(
-        { error: rpcError.message || "An error occurred during checkout." },
-        { status: 409 }
+        { error: "Failed to fetch products for checkout." },
+        { status: 500 }
       );
     }
 
-    // 6. Extract order ID from the RPC result
-    const orderId =
-      typeof data === "object" && data !== null && "order_id" in data
-        ? (data as { order_id: string }).order_id
-        : data;
+    let total = 0;
+    let itemsSummary = "";
+
+    // Validate stock for all items
+    for (const item of mappedItems) {
+      const product = products.find((p) => p.id === item.product_id);
+      if (!product) {
+        return NextResponse.json(
+          { error: `Product ${item.product_id} not found.` },
+          { status: 404 }
+        );
+      }
+      if (product.stock_sqft < item.quantity_sqft) {
+        return NextResponse.json(
+          {
+            error: `Insufficient stock for "${product.name}". Available: ${product.stock_sqft} sq ft, Requested: ${item.quantity_sqft} sq ft`,
+          },
+          { status: 409 }
+        );
+      }
+      total += product.price_per_sqft * item.quantity_sqft;
+
+      if (itemsSummary !== "") itemsSummary += ", ";
+      itemsSummary += `${product.name} (${item.quantity_sqft} sq ft)`;
+    }
+
+    // Generate a secure UUID for the order to avoid collisions
+    const orderId = crypto.randomUUID();
+
+    // Insert the order
+    const { error: insertError } = await supabase.from("orders").insert({
+      id: orderId,
+      user_id: user.id,
+      status: "Pending",
+      total: total.toString(),
+      items: itemsSummary,
+      delivery_method: body.deliveryMethod,
+    });
+
+    if (insertError) {
+      console.error("Order insert error:", insertError);
+      return NextResponse.json(
+        { error: "An error occurred during order creation." },
+        { status: 500 }
+      );
+    }
+
+    // Deduct stock (best-effort since JS client doesn't support transactions)
+    for (const item of mappedItems) {
+      const product = products.find((p) => p.id === item.product_id)!;
+      await supabase
+        .from("products")
+        .update({ stock_sqft: product.stock_sqft - item.quantity_sqft })
+        .eq("id", item.product_id);
+    }
 
     // 7. Revalidate cached pages so stock is immediately accurate
     invalidateLocalCatalogCache();

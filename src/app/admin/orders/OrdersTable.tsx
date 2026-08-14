@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
-import { logAdminAction } from "@/lib/auditLog";
+import { updateOrderStatus, bulkUpdateOrderStatus } from "@/app/actions/admin";
 
 export interface AdminOrder {
   id: string;
@@ -31,12 +31,8 @@ const PAGE_SIZE = 10;
 
 export function OrdersTable({
   initialOrders,
-  adminId,
-  adminEmail,
 }: {
   initialOrders: AdminOrder[];
-  adminId: string;
-  adminEmail: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
 
@@ -115,15 +111,12 @@ export function OrdersTable({
     const previousStatus = orders.find((o) => o.id === orderId)?.status;
     updateRowState(orderId, { isUpdating: true, feedback: null });
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: newStatus })
-      .eq("id", orderId);
+    const result = await updateOrderStatus({ orderId, newStatus });
 
-    if (error) {
+    if (!result.success) {
       updateRowState(orderId, {
         isUpdating: false,
-        feedback: { type: "error", message: error.message },
+        feedback: { type: "error", message: result.error },
       });
       return;
     }
@@ -132,23 +125,18 @@ export function OrdersTable({
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
 
+    const restored = previousStatus !== "Cancelled" && newStatus === "Cancelled";
     updateRowState(orderId, {
       isUpdating: false,
-      feedback: { type: "success", message: "Status updated!" },
+      feedback: {
+        type: "success",
+        message: restored ? "Cancelled — stock restored." : "Status updated!",
+      },
     });
 
     setTimeout(() => {
       updateRowState(orderId, { feedback: null });
     }, 3000);
-
-    logAdminAction(supabase, {
-      adminId,
-      adminEmail,
-      action: "order.status_updated",
-      entityType: "order",
-      entityId: orderId,
-      details: { from: previousStatus, to: newStatus },
-    });
   };
 
   const toggleSelected = (id: string) => {
@@ -179,25 +167,18 @@ export function OrdersTable({
     setIsBulkUpdating(true);
 
     const ids = Array.from(selectedIds);
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: bulkStatus })
-      .in("id", ids);
+    const result = await bulkUpdateOrderStatus({ orderIds: ids, newStatus: bulkStatus });
 
-    if (!error) {
-      setOrders((prev) =>
-        prev.map((o) => (selectedIds.has(o.id) ? { ...o, status: bulkStatus } : o))
-      );
-      logAdminAction(supabase, {
-        adminId,
-        adminEmail,
-        action: "order.bulk_status_updated",
-        entityType: "order",
-        entityId: ids.join(","),
-        details: { count: ids.length, to: bulkStatus, orderIds: ids },
-      });
-      setSelectedIds(new Set());
+    if (!result.success) {
+      setIsBulkUpdating(false);
+      return;
     }
+
+    const succeeded = new Set(result.succeededIds);
+    setOrders((prev) =>
+      prev.map((o) => (succeeded.has(o.id) ? { ...o, status: bulkStatus } : o))
+    );
+    setSelectedIds(new Set(result.failed.map((f) => f.id)));
 
     setIsBulkUpdating(false);
   };
@@ -249,7 +230,7 @@ export function OrdersTable({
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Order Fulfillment</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage and track customer orders.</p>
+          <p className="text-sm text-gray-500 mt-1">Cancelling an order returns its deducted stock to inventory.</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <select 
@@ -309,7 +290,9 @@ export function OrdersTable({
               className="bg-white/10 border border-white/20 text-white text-sm rounded-lg px-3 py-1.5 outline-none cursor-pointer"
             >
               {ORDER_STATUSES.map((s) => (
-                <option key={s} value={s} className="bg-zinc-900">{s}</option>
+                <option key={s} value={s} className="bg-zinc-900">
+                  {s === "Cancelled" ? "Cancelled (restore stock)" : s}
+                </option>
               ))}
             </select>
             <button

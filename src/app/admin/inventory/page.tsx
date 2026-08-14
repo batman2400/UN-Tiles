@@ -55,8 +55,6 @@ export default async function AdminInventoryPage() {
       <InventoryTable
         initialProducts={adminProducts}
         categories={categories}
-        adminId={user.id}
-        adminEmail={user.email ?? null}
       />
     </div>
   );

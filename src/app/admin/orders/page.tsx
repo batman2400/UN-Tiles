@@ -52,7 +52,7 @@ export default async function AdminOrdersPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <OrdersTable initialOrders={adminOrders} adminId={user.id} adminEmail={user.email ?? null} />
+      <OrdersTable initialOrders={adminOrders} />
     </div>
   );
 }

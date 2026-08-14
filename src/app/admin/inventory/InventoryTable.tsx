@@ -7,7 +7,7 @@ import Image from "next/image";
 import { AddCategoryModal } from "@/components/admin/AddCategoryModal";
 import { AddProductModal } from "@/components/admin/AddProductModal";
 import { downloadCsv } from "@/lib/csv";
-import { logAdminAction } from "@/lib/auditLog";
+import { adjustProductStock, bulkAdjustProductStock, deleteProduct } from "@/app/actions/admin";
 
 const PAGE_SIZE = 10;
 type SortKey = "name" | "sku" | "category_slug" | "price_per_sqft" | "stock_sqft";
@@ -31,13 +31,9 @@ interface RowState {
 export function InventoryTable({
   initialProducts,
   categories,
-  adminId,
-  adminEmail,
 }: {
   initialProducts: AdminProduct[];
   categories: { name: string, slug: string }[];
-  adminId: string;
-  adminEmail: string | null;
 }) {
   const supabase = useMemo(() => createClient(), []);
 
@@ -135,60 +131,52 @@ export function InventoryTable({
   };
 
   const updateRowState = (id: string, patch: Partial<RowState>) => {
-    setRowStates((prev) => ({
-      ...prev,
-      [id]: { ...getRowState(id), ...patch },
-    }));
+    setRowStates((prev) => {
+      const current = prev[id] ?? {
+        editValue: "",
+        isUpdating: false,
+        feedback: null,
+      };
+      return { ...prev, [id]: { ...current, ...patch } };
+    });
   };
 
   const handleUpdate = async (product: AdminProduct) => {
     const row = getRowState(product.id);
-    const newStock = parseFloat(row.editValue);
+    const amount = parseFloat(row.editValue);
 
-    if (isNaN(newStock) || newStock < 0) {
+    if (isNaN(amount) || amount === 0) {
       updateRowState(product.id, {
-        feedback: { type: "error", message: "Invalid positive number." },
+        feedback: { type: "error", message: "Enter a non-zero amount to add." },
       });
       return;
     }
 
     updateRowState(product.id, { isUpdating: true, feedback: null });
 
-    const { error } = await supabase
-      .from("products")
-      .update({ stock_sqft: newStock })
-      .eq("id", product.id);
+    const result = await adjustProductStock({ productId: product.id, amount });
 
-    if (error) {
+    if (!result.success) {
       updateRowState(product.id, {
         isUpdating: false,
-        feedback: { type: "error", message: error.message },
+        feedback: { type: "error", message: result.error },
       });
       return;
     }
 
     setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, stock_sqft: newStock } : p))
+      prev.map((p) => (p.id === product.id ? { ...p, stock_sqft: result.newStock } : p))
     );
 
     updateRowState(product.id, {
       isUpdating: false,
       editValue: "",
-      feedback: { type: "success", message: "Stock updated!" },
+      feedback: { type: "success", message: `Added ${amount > 0 ? "+" : ""}${amount} → ${result.newStock.toLocaleString()} sq ft` },
     });
 
     setTimeout(() => {
       updateRowState(product.id, { feedback: null });
     }, 3000);
-
-    logAdminAction(supabase, {
-      adminId,
-      adminEmail,
-      action: "product.stock_updated",
-      entityType: "product",
-      entityId: product.id,
-      details: { sku: product.sku, from: product.stock_sqft, to: newStock },
-    });
   };
 
   const handleDelete = async (productId: string, productName: string) => {
@@ -196,34 +184,22 @@ export function InventoryTable({
 
     updateRowState(productId, { isUpdating: true, feedback: null });
 
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", productId);
+    const result = await deleteProduct({ productId });
 
-    if (error) {
+    if (!result.success) {
       updateRowState(productId, {
         isUpdating: false,
-        feedback: { type: "error", message: error.message },
+        feedback: { type: "error", message: result.error },
       });
       return;
     }
 
     setProducts((prev) => prev.filter((p) => p.id !== productId));
-    
+
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(productId);
       return next;
-    });
-
-    logAdminAction(supabase, {
-      adminId,
-      adminEmail,
-      action: "product.deleted",
-      entityType: "product",
-      entityId: productId,
-      details: { name: productName },
     });
   };
 
@@ -255,37 +231,24 @@ export function InventoryTable({
     if (selectedIds.size === 0 || isNaN(amount) || amount === 0) return;
     setIsBulkRestocking(true);
 
-    const targets = products.filter((p) => selectedIds.has(p.id));
-    const results = await Promise.all(
-      targets.map((p) =>
-        supabase
-          .from("products")
-          .update({ stock_sqft: Math.max(0, p.stock_sqft + amount) })
-          .eq("id", p.id)
-      )
-    );
+    const result = await bulkAdjustProductStock({
+      productIds: Array.from(selectedIds),
+      amount,
+    });
 
-    const failedIds = new Set(targets.filter((_, i) => results[i].error).map((p) => p.id));
+    if (!result.success) {
+      setIsBulkRestocking(false);
+      return;
+    }
+
+    const newStockById = new Map(result.updates.map((u) => [u.id, u.newStock]));
+    const failedIds = new Set(result.failed.map((f) => f.id));
 
     setProducts((prev) =>
       prev.map((p) =>
-        selectedIds.has(p.id) && !failedIds.has(p.id)
-          ? { ...p, stock_sqft: Math.max(0, p.stock_sqft + amount) }
-          : p
+        newStockById.has(p.id) ? { ...p, stock_sqft: newStockById.get(p.id)! } : p
       )
     );
-
-    const succeededIds = targets.filter((p) => !failedIds.has(p.id)).map((p) => p.id);
-    if (succeededIds.length > 0) {
-      logAdminAction(supabase, {
-        adminId,
-        adminEmail,
-        action: "product.bulk_restock",
-        entityType: "product",
-        entityId: succeededIds.join(","),
-        details: { count: succeededIds.length, amount, productIds: succeededIds },
-      });
-    }
 
     setSelectedIds(failedIds);
     setBulkRestockAmount("");
@@ -305,7 +268,7 @@ export function InventoryTable({
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Inventory Management</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage stock levels for all products.</p>
+          <p className="text-sm text-gray-500 mt-1">Restock adds to the current quantity on the same product.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full md:w-auto">
           <button
@@ -484,8 +447,7 @@ export function InventoryTable({
                       <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl border border-gray-200 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition-all shadow-sm">
                         <input
                           type="number"
-                          min={0}
-                          placeholder="New Stock"
+                          placeholder="+/- sq ft"
                           value={row.editValue}
                           onChange={(e) => updateRowState(product.id, { editValue: e.target.value })}
                           className="w-20 text-center px-2 py-1 text-xs font-mono font-bold bg-transparent outline-none text-gray-900 placeholder:text-gray-400 placeholder:font-sans"
@@ -495,7 +457,7 @@ export function InventoryTable({
                           disabled={row.isUpdating || !row.editValue.trim()}
                           className="px-3 py-1 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-yellow-500 hover:text-black disabled:opacity-30 disabled:hover:bg-zinc-900 disabled:hover:text-white transition-all active:scale-95 flex items-center justify-center min-w-[40px]"
                         >
-                          {row.isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Save"}
+                          {row.isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Add"}
                         </button>
                       </div>
                       
@@ -506,8 +468,9 @@ export function InventoryTable({
                             <button
                               key={inc}
                               onClick={() => {
-                                const currentStock = product.stock_sqft || 0;
-                                updateRowState(product.id, { editValue: String(currentStock + inc) });
+                                const typed = parseFloat(getRowState(product.id).editValue);
+                                const next = (isNaN(typed) ? 0 : typed) + inc;
+                                updateRowState(product.id, { editValue: String(next) });
                               }}
                               className="text-[9px] font-mono font-bold text-gray-500 hover:text-zinc-900 bg-gray-100 hover:bg-gray-200 px-2 py-0.5 rounded transition-colors"
                             >
