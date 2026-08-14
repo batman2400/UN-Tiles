@@ -15,9 +15,15 @@ interface CheckoutRequestBody {
   deliveryMethod: string;
 }
 
+interface ProcessCheckoutResult {
+  order_id: string;
+  total: number;
+}
+
 // ── Constants ──────────────────────────────────────────
 
 const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store"];
+const MAX_CHECKOUT_LINES = 50;
 
 // ── Validation ─────────────────────────────────────────
 
@@ -47,14 +53,54 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
   });
 }
 
+function mergeCheckoutItems(items: CheckoutItem[]): CheckoutItem[] {
+  const merged = new Map<string, number>();
+  for (const item of items) {
+    merged.set(item.product_id, (merged.get(item.product_id) ?? 0) + item.quantity_sqft);
+  }
+  return [...merged.entries()].map(([product_id, quantity_sqft]) => ({
+    product_id,
+    quantity_sqft,
+  }));
+}
+
+function isProcessCheckoutResult(value: unknown): value is ProcessCheckoutResult {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.order_id === "string" && candidate.order_id.length > 0;
+}
+
+function checkoutErrorResponse(message: string): NextResponse {
+  const lower = message.toLowerCase();
+
+  if (lower.includes("authentication required")) {
+    return NextResponse.json({ error: message }, { status: 401 });
+  }
+  if (lower.includes("insufficient stock")) {
+    return NextResponse.json({ error: message }, { status: 409 });
+  }
+  if (lower.includes("not found")) {
+    return NextResponse.json({ error: message }, { status: 404 });
+  }
+  if (lower.includes("could not find the function") || lower.includes("schema cache")) {
+    return NextResponse.json(
+      { error: "Checkout is temporarily unavailable. Please try again shortly." },
+      { status: 503 }
+    );
+  }
+  if (lower.includes("invalid") || lower.includes("cart is empty")) {
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  return NextResponse.json({ error: message }, { status: 500 });
+}
+
 // ── Route Handler ──────────────────────────────────────
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Initialize authenticated Supabase client
     const supabase = await createClient();
 
-    // 2. Verify user session via cookie
     const {
       data: { user },
       error: authError,
@@ -67,7 +113,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Parse and validate request body
     let body: unknown;
     try {
       body = await request.json();
@@ -85,93 +130,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Map to the format expected by the process_checkout RPC
-    const mappedItems = body.items.map((item) => ({
-      product_id: item.product_id,
-      quantity_sqft: item.quantity_sqft,
-    }));
-
-    // 5. Manual checkout to bypass the RPC duplicate key issue
-    // Fetch products to validate stock
-    const productIds = mappedItems.map((i) => i.product_id);
-    const { data: products, error: pError } = await supabase
-      .from("products")
-      .select("id, name, price_per_sqft, stock_sqft")
-      .in("id", productIds);
-
-    if (pError || !products) {
+    const mappedItems = mergeCheckoutItems(body.items);
+    if (mappedItems.length === 0 || mappedItems.length > MAX_CHECKOUT_LINES) {
       return NextResponse.json(
-        { error: "Failed to fetch products for checkout." },
-        { status: 500 }
+        { error: "Invalid cart data." },
+        { status: 400 }
       );
     }
 
-    let total = 0;
-    let itemsSummary = "";
-
-    // Validate stock for all items
-    for (const item of mappedItems) {
-      const product = products.find((p) => p.id === item.product_id);
-      if (!product) {
-        return NextResponse.json(
-          { error: `Product ${item.product_id} not found.` },
-          { status: 404 }
-        );
-      }
-      if (product.stock_sqft < item.quantity_sqft) {
-        return NextResponse.json(
-          {
-            error: `Insufficient stock for "${product.name}". Available: ${product.stock_sqft} sq ft, Requested: ${item.quantity_sqft} sq ft`,
-          },
-          { status: 409 }
-        );
-      }
-      total += product.price_per_sqft * item.quantity_sqft;
-
-      if (itemsSummary !== "") itemsSummary += ", ";
-      itemsSummary += `${product.name} (${item.quantity_sqft} sq ft)`;
-    }
-
-    // Generate a secure UUID for the order to avoid collisions
-    const orderId = crypto.randomUUID();
-
-    // Insert the order
-    const { error: insertError } = await supabase.from("orders").insert({
-      id: orderId,
-      user_id: user.id,
-      status: "Pending",
-      total: total.toString(),
-      items: itemsSummary,
-      delivery_method: body.deliveryMethod,
+    const { data, error } = await supabase.rpc("process_checkout", {
+      p_user_id: user.id,
+      p_items: mappedItems,
+      p_delivery_method: body.deliveryMethod,
     });
 
-    if (insertError) {
-      console.error("Order insert error:", insertError);
+    if (error) {
+      console.error("Checkout RPC error:", error);
+      return checkoutErrorResponse(error.message || "Checkout failed.");
+    }
+
+    if (!isProcessCheckoutResult(data)) {
+      console.error("Checkout RPC returned unexpected payload:", data);
       return NextResponse.json(
         { error: "An error occurred during order creation." },
         { status: 500 }
       );
     }
 
-    // Deduct stock (best-effort since JS client doesn't support transactions)
-    for (const item of mappedItems) {
-      const product = products.find((p) => p.id === item.product_id)!;
-      await supabase
-        .from("products")
-        .update({ stock_sqft: product.stock_sqft - item.quantity_sqft })
-        .eq("id", item.product_id);
-    }
-
-    // 7. Revalidate cached pages so stock is immediately accurate
     invalidateLocalCatalogCache();
     revalidateTag(CATALOG_CACHE_TAG, "max");
     revalidatePath("/");
     revalidatePath("/collections");
 
-    // 8. Return success with order ID
     return NextResponse.json({
       success: true,
-      order_id: orderId,
+      order_id: data.order_id,
     });
   } catch (error) {
     console.error("Unexpected checkout error:", error);

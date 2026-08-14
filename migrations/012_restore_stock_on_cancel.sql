@@ -1,11 +1,20 @@
 -- ============================================================
--- Migration 012: Restore stock when an order is cancelled
+-- Migration 012: Atomic checkout + restore stock on cancel
 --
--- Checkout already deducts stock. Cancelling only flipped the
--- status, so inventory stayed reduced. This migration:
---   1. Stores structured line items on each new order
---   2. Restores that quantity when status becomes Cancelled
---   3. Re-deducts if a cancelled order is reopened
+-- Checkout must create the order, persist structured line_items,
+-- and deduct stock in one transaction. Cancelling previously only
+-- flipped status, so inventory stayed reduced.
+--
+-- This migration:
+--   1. Adds orders.line_items
+--   2. Restores stock when status becomes Cancelled (and re-deducts
+--      if a cancelled order is reopened)
+--   3. Replaces process_checkout with a race-safe version:
+--        - auth.uid() must match p_user_id
+--        - product rows locked FOR UPDATE in id order
+--        - duplicate cart lines merged
+--        - order IDs from a sequence (fixes the UN-YYYY-NNNN collision)
+--   4. Drops the open INSERT policy on orders (only the RPC inserts)
 --
 -- Run this in the Supabase SQL Editor.
 -- ============================================================
@@ -14,6 +23,30 @@ BEGIN;
 
 ALTER TABLE public.orders
   ADD COLUMN IF NOT EXISTS line_items jsonb NOT NULL DEFAULT '[]'::jsonb;
+
+-- Race-safe order numbers. nextval() is not transactional (skipped
+-- numbers on rollback are OK); MAX()+1 is not safe under concurrency.
+CREATE SEQUENCE IF NOT EXISTS public.order_id_seq;
+
+DO $$
+DECLARE
+  v_max int;
+BEGIN
+  SELECT COALESCE(MAX(
+    CASE WHEN id ~ '^UN-[0-9]{4}-[0-9]+$'
+      THEN split_part(id, '-', 3)::int
+      ELSE 0
+    END
+  ), 0) INTO v_max FROM public.orders;
+
+  IF v_max > 0 THEN
+    PERFORM setval('public.order_id_seq', v_max, true);
+  ELSE
+    PERFORM setval('public.order_id_seq', 1, false);
+  END IF;
+END $$;
+
+REVOKE ALL ON SEQUENCE public.order_id_seq FROM PUBLIC;
 
 -- ── Resolve product lines for an order ───────────────────
 -- Prefers structured line_items. Falls back to parsing the
@@ -26,7 +59,9 @@ STABLE
 SET search_path = public
 AS $$
 BEGIN
-  IF p_order.line_items IS NOT NULL AND jsonb_array_length(p_order.line_items) > 0 THEN
+  IF p_order.line_items IS NOT NULL
+     AND jsonb_typeof(p_order.line_items) = 'array'
+     AND jsonb_array_length(p_order.line_items) > 0 THEN
     RETURN QUERY
     SELECT
       elem->>'product_id',
@@ -122,7 +157,7 @@ CREATE TRIGGER order_status_stock_trigger
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_order_status_stock();
 
--- ── Checkout: persist structured line items ──────────────
+-- ── Checkout: one transaction for order + stock + line_items ─
 
 CREATE OR REPLACE FUNCTION public.process_checkout(
   p_user_id uuid,
@@ -135,83 +170,88 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_item jsonb;
-  v_product_id text;
-  v_quantity numeric;
+  v_user_id uuid;
+  v_item record;
   v_current_stock numeric;
   v_price numeric;
   v_total numeric := 0;
   v_order_id text;
   v_items_summary text := '';
-  v_item_count int := 0;
   v_product_name text;
   v_line_items jsonb := '[]'::jsonb;
 BEGIN
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL OR v_user_id IS DISTINCT FROM p_user_id THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
   IF p_delivery_method NOT IN ('Cash on Delivery', 'Pickup from Store') THEN
     RAISE EXCEPTION 'Invalid delivery method: %', p_delivery_method;
   END IF;
 
-  IF jsonb_array_length(p_items) = 0 THEN
+  IF p_items IS NULL OR jsonb_typeof(p_items) IS DISTINCT FROM 'array' OR jsonb_array_length(p_items) = 0 THEN
     RAISE EXCEPTION 'Cart is empty. Please add items before checkout.';
   END IF;
 
-  FOR v_item IN SELECT * FROM jsonb_array_elements(p_items) LOOP
-    v_product_id := v_item ->> 'product_id';
-    v_quantity := (v_item ->> 'quantity_sqft')::numeric;
+  -- Merge duplicate product lines and lock rows in a stable order
+  -- so two concurrent checkouts cannot oversell or deadlock.
+  FOR v_item IN
+    SELECT
+      elem->>'product_id' AS product_id,
+      SUM((elem->>'quantity_sqft')::numeric) AS quantity_sqft
+    FROM jsonb_array_elements(p_items) AS elem
+    GROUP BY elem->>'product_id'
+    ORDER BY elem->>'product_id'
+  LOOP
+    IF v_item.product_id IS NULL OR btrim(v_item.product_id) = '' THEN
+      RAISE EXCEPTION 'Invalid product in cart';
+    END IF;
 
-    IF v_quantity IS NULL OR v_quantity <= 0 THEN
-      RAISE EXCEPTION 'Invalid quantity for product %', v_product_id;
+    IF v_item.quantity_sqft IS NULL OR v_item.quantity_sqft <= 0 THEN
+      RAISE EXCEPTION 'Invalid quantity for product %', v_item.product_id;
     END IF;
 
     SELECT stock_sqft, price_per_sqft, name
     INTO v_current_stock, v_price, v_product_name
     FROM public.products
-    WHERE id = v_product_id
+    WHERE id = v_item.product_id
     FOR UPDATE;
 
     IF NOT FOUND THEN
-      RAISE EXCEPTION 'Product % not found.', v_product_id;
+      RAISE EXCEPTION 'Product % not found.', v_item.product_id;
     END IF;
 
-    IF v_current_stock < v_quantity THEN
+    IF v_current_stock < v_item.quantity_sqft THEN
       RAISE EXCEPTION 'Insufficient stock for "%". Available: % sq ft, Requested: % sq ft',
-        v_product_name, v_current_stock, v_quantity;
+        v_product_name, v_current_stock, v_item.quantity_sqft;
     END IF;
 
     UPDATE public.products
-    SET stock_sqft = stock_sqft - v_quantity
-    WHERE id = v_product_id;
+    SET stock_sqft = stock_sqft - v_item.quantity_sqft
+    WHERE id = v_item.product_id;
 
-    v_total := v_total + (v_price * v_quantity);
+    v_total := v_total + (v_price * v_item.quantity_sqft);
 
-    v_item_count := v_item_count + 1;
     IF v_items_summary <> '' THEN
       v_items_summary := v_items_summary || ', ';
     END IF;
-    v_items_summary := v_items_summary || v_product_name || ' (' || v_quantity || ' sq ft)';
+    v_items_summary := v_items_summary || v_product_name || ' (' || v_item.quantity_sqft || ' sq ft)';
 
     v_line_items := v_line_items || jsonb_build_array(
       jsonb_build_object(
-        'product_id', v_product_id,
-        'quantity_sqft', v_quantity,
+        'product_id', v_item.product_id,
+        'quantity_sqft', v_item.quantity_sqft,
         'name', v_product_name
       )
     );
   END LOOP;
 
-  v_order_id := 'UN-' || to_char(now(), 'YYYY') || '-' || lpad(
-    (SELECT COALESCE(MAX(
-      CASE WHEN id ~ '^UN-[0-9]{4}-[0-9]+$'
-        THEN split_part(id, '-', 3)::int
-        ELSE 0
-      END
-    ), 0) + 1 FROM public.orders)::text, 4, '0'
-  );
+  v_order_id := 'UN-' || to_char(now(), 'YYYY') || '-' || lpad(nextval('public.order_id_seq')::text, 4, '0');
 
   INSERT INTO public.orders (id, user_id, status, total, items, line_items, delivery_method, date)
   VALUES (
     v_order_id,
-    p_user_id,
+    v_user_id,
     'Pending',
     v_total::text,
     v_items_summary,
@@ -224,6 +264,11 @@ BEGIN
 END;
 $$;
 
+-- Clients must not insert orders directly. process_checkout is
+-- SECURITY DEFINER and writes the row as the function owner.
+DROP POLICY IF EXISTS "RPC can insert orders." ON public.orders;
+
+REVOKE ALL ON FUNCTION public.process_checkout(uuid, jsonb, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.process_checkout(uuid, jsonb, text) TO authenticated;
 
 COMMIT;
