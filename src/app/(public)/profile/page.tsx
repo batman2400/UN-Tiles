@@ -32,6 +32,7 @@ import { createClient } from "@/utils/supabase/client";
 import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
 import { deleteAddress, listAddresses } from "@/app/actions/addresses";
 import { AddAddressModal } from "@/components/AddAddressModal";
+import { CancelOrderModal } from "@/components/CancelOrderModal";
 
 type SidebarSection = "account" | "orders" | "addresses";
 type ProfileFormState = {
@@ -111,6 +112,12 @@ function getStatusBadgeStyle(status: string) {
   }
 }
 
+function isCancellable(status: string | undefined | null): boolean {
+  if (!status) return false;
+  const s = status.toLowerCase();
+  return s === "pending" || s === "processing";
+}
+
 function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -133,6 +140,8 @@ function ProfileContent() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [addresses, setAddresses] = useState<AddressRecord[]>([]);
   const [viewOrder, setViewOrder] = useState<OrderRecord | null>(null);
+  const [orderToCancel, setOrderToCancel] = useState<OrderRecord | null>(null);
+  const [cancelFeedback, setCancelFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -520,6 +529,25 @@ function ProfileContent() {
                   </span>
                 </div>
 
+                {cancelFeedback && (
+                  <div
+                    className={`mb-6 p-4 rounded-xl text-xs font-medium flex items-center justify-between gap-3 animate-in fade-in duration-200 ${
+                      cancelFeedback.type === "success"
+                        ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                        : "bg-red-50 border border-red-200 text-red-800"
+                    }`}
+                  >
+                    <span>{cancelFeedback.message}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCancelFeedback(null)}
+                      className="text-gray-400 hover:text-zinc-900 text-sm font-bold px-1"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
+
                 <div className="space-y-6">
                   {orders.length === 0 ? (
                     <div className="bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center text-gray-500">
@@ -683,19 +711,30 @@ function ProfileContent() {
                           </div>
 
                           {/* Action Items Footer */}
-                          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                          <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
                               <FileText className="w-3.5 h-3.5 text-gray-400" />
                               <span>Invoice Generated</span>
                             </div>
                             
-                            <button 
-                              onClick={() => setViewOrder(order)}
-                              className="flex items-center gap-1 text-xs font-semibold text-zinc-900 hover:text-yellow-600 transition-colors"
-                            >
-                              <span>View Order Details</span>
-                              <ArrowUpRight className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center gap-3 self-end sm:self-auto">
+                              {isCancellable(order.status) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setOrderToCancel(order)}
+                                  className="text-xs font-semibold text-red-600 hover:text-red-700 hover:underline transition-colors px-1"
+                                >
+                                  Cancel Order
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => setViewOrder(order)}
+                                className="flex items-center gap-1 text-xs font-semibold text-zinc-900 hover:text-yellow-600 transition-colors"
+                              >
+                                <span>View Order Details</span>
+                                <ArrowUpRight className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       );
@@ -859,6 +898,27 @@ function ProfileContent() {
                 )}
               </div>
 
+              {/* Order Cancellation Callout (when eligible) */}
+              {isCancellable(viewOrder.status) && (
+                <div className="p-4 bg-red-50/70 border border-red-200/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-700 block mb-0.5">
+                      Need to Cancel?
+                    </span>
+                    <p className="text-xs text-red-900 font-medium leading-relaxed">
+                      You can cancel while status is <strong>{viewOrder.status}</strong>. Deducted stock is restored.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOrderToCancel(viewOrder)}
+                    className="shrink-0 px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm text-center"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+              )}
+
               {/* Status History Timeline */}
               {viewOrder.status_history && viewOrder.status_history.length > 0 && (
                 <div>
@@ -934,10 +994,21 @@ function ProfileContent() {
               </div>
             </div>
             
-            <div className="mt-auto p-6 border-t border-gray-100 bg-gray-50/50">
+            <div className="mt-auto p-6 border-t border-gray-100 bg-gray-50/50 flex items-center gap-3">
+              {isCancellable(viewOrder.status) && (
+                <button
+                  type="button"
+                  onClick={() => setOrderToCancel(viewOrder)}
+                  className="w-1/2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors text-center"
+                >
+                  Cancel Order
+                </button>
+              )}
               <button
                 onClick={() => setViewOrder(null)}
-                className="w-full bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors"
+                className={`bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors ${
+                  isCancellable(viewOrder.status) ? "w-1/2" : "w-full"
+                }`}
               >
                 Close Details
               </button>
@@ -951,6 +1022,56 @@ function ProfileContent() {
         onSaved={(address) => {
           setAddresses((current) => [address, ...current.filter((row) => row.id !== address.id)]);
           setAddressError(null);
+        }}
+      />
+      <CancelOrderModal
+        open={!!orderToCancel}
+        order={orderToCancel}
+        onClose={() => setOrderToCancel(null)}
+        onCancelled={(orderId, statusDescription, statusHistory, statusUpdatedAt) => {
+          const now = statusUpdatedAt || new Date().toISOString();
+          const cleanDesc = statusDescription || "Order cancelled by customer.";
+          const newHistoryItem: StatusHistoryItem = {
+            status: "Cancelled",
+            description: cleanDesc,
+            timestamp: now,
+            updated_by: "Customer",
+          };
+
+          setOrders((current) =>
+            current.map((o) =>
+              o.id === orderId
+                ? {
+                    ...o,
+                    status: "Cancelled",
+                    status_description: cleanDesc,
+                    status_history: statusHistory || [...(o.status_history || []), newHistoryItem],
+                    status_updated_at: now,
+                  }
+                : o
+            )
+          );
+
+          setViewOrder((prev) =>
+            prev && prev.id === orderId
+              ? {
+                  ...prev,
+                  status: "Cancelled",
+                  status_description: cleanDesc,
+                  status_history: statusHistory || [...(prev.status_history || []), newHistoryItem],
+                  status_updated_at: now,
+                }
+              : prev
+          );
+
+          const formattedId = orderId.startsWith("UN-")
+            ? orderId.toUpperCase()
+            : `UN-2026-${orderId.substring(0, 8).toUpperCase()}`;
+
+          setCancelFeedback({
+            type: "success",
+            message: `Order #${formattedId} was successfully cancelled. Reserved stock has been restored to inventory.`,
+          });
         }}
       />
     </section>
