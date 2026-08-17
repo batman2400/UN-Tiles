@@ -14,6 +14,7 @@ import { usePathname, useRouter } from "next/navigation";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/collections", label: "Collections" },
+  { href: "/planner", label: "Planner" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
 ];
@@ -106,7 +107,7 @@ export function TopNavBar() {
 
             {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
             <nav
-              className={`pointer-events-auto hidden md:flex items-center gap-8 rounded-full px-8 py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
+              className={`pointer-events-auto hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 rounded-full px-5 lg:px-8 py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);

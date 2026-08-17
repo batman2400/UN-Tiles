@@ -2,9 +2,11 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ShoppingCart, Check, AlertTriangle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
+import { productHasParsableSize } from "@/lib/tile-planner";
 
 // ── Component ──────────────────────────────────────────
 
@@ -127,6 +129,14 @@ export function ProductCard({
           <span className="w-1 h-1 shrink-0 rounded-full bg-outline-variant" />
           <span className="truncate">{product.finish}</span>
         </div>
+        {productHasParsableSize(product.dimensions) && (
+          <Link
+            href={`/planner?product=${encodeURIComponent(product.id)}`}
+            className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-accent hover:underline w-fit"
+          >
+            Plan this room
+          </Link>
+        )}
 
         {/* Price + Quick Add row */}
         <div className="mt-auto flex min-w-0 flex-col gap-2 pt-2 xl:flex-row xl:items-center xl:justify-between">
