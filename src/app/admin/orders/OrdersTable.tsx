@@ -1,15 +1,30 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered, MapPin } from "lucide-react";
+import { 
+  CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, 
+  Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered, MapPin, 
+  MessageSquare, MessageSquareQuote, Clock, Sparkles, Send, History, Check, AlertCircle,
+  ArrowRight, ShieldAlert, FileText
+} from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
 import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
 import { updateOrderStatus, bulkUpdateOrderStatus } from "@/app/actions/admin";
 
+export interface StatusHistoryItem {
+  status: string;
+  description?: string | null;
+  timestamp: string;
+  updated_by?: string | null;
+}
+
 export interface AdminOrder {
   id: string;
   status: string;
+  status_description: string | null;
+  status_history: StatusHistoryItem[];
+  status_updated_at: string | null;
   items: string;
   total: string;
   delivery_method: string;
@@ -28,8 +43,50 @@ interface RowState {
   feedback: { type: "success" | "error"; message: string } | null;
 }
 
+interface StatusModalState {
+  orderId: string;
+  currentStatus: string;
+  targetStatus: string;
+  description: string;
+  customerName: string;
+  orderDisplayId: string;
+}
+
+interface BulkModalState {
+  targetStatus: string;
+  description: string;
+  orderIds: string[];
+}
+
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 const PAGE_SIZE = 10;
+
+const STATUS_PRESETS: Record<string, string[]> = {
+  Processing: [
+    "Order confirmed and queued for tile precision cutting.",
+    "Tile batch retrieved from warehouse inventory and undergoing quality check.",
+    "Order is being prepared and palletized for collection/dispatch.",
+  ],
+  Shipped: [
+    "Dispatched via freight courier logistics. Tracking details attached.",
+    "Out for direct delivery to specified job site/address today.",
+    "Shipment handed over to regional carrier; estimated arrival in 1–2 business days.",
+  ],
+  Delivered: [
+    "Order safely delivered to recipient and signed on site.",
+    "Order collected in person from UN Tiles flagship showroom.",
+    "Delivery completed successfully.",
+  ],
+  Cancelled: [
+    "Order cancelled per customer request. Deducted stock restored to inventory.",
+    "Order cancelled due to duplicate submission. Stock restored.",
+    "Order cancelled. Please contact customer support for further assistance.",
+  ],
+  Pending: [
+    "Order placed and awaiting verification by UN Tiles fulfillment team.",
+    "Awaiting confirmation of custom cutting specifications.",
+  ],
+};
 
 export function OrdersTable({
   initialOrders,
@@ -49,6 +106,13 @@ export function OrdersTable({
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [viewOrder, setViewOrder] = useState<AdminOrder | null>(null);
 
+  // Status Update Modal State (single order)
+  const [statusModal, setStatusModal] = useState<StatusModalState | null>(null);
+  const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
+
+  // Bulk Status Update Modal State
+  const [bulkModal, setBulkModal] = useState<BulkModalState | null>(null);
+
   // Subscribe to real-time order changes across the store
   useEffect(() => {
     const channel = supabase
@@ -64,8 +128,12 @@ export function OrdersTable({
             setOrders((prev) =>
               prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
             );
+            setViewOrder((prev) =>
+              prev && prev.id === payload.new.id ? { ...prev, ...payload.new } : prev
+            );
           } else if (payload.eventType === "DELETE") {
             setOrders((prev) => prev.filter((o) => o.id !== payload.old.id));
+            setViewOrder((prev) => (prev && prev.id === payload.old.id ? null : prev));
           }
         }
       )
@@ -87,7 +155,8 @@ export function OrdersTable({
       return (
         o.id.toLowerCase().includes(q) ||
         customerName.includes(q) ||
-        (o.profiles?.email || "").toLowerCase().includes(q)
+        (o.profiles?.email || "").toLowerCase().includes(q) ||
+        (o.status_description || "").toLowerCase().includes(q)
       );
     });
   }, [orders, searchQuery, statusFilter, deliveryMethodFilter]);
@@ -109,11 +178,35 @@ export function OrdersTable({
     }));
   };
 
-  const handleStatusChange = async (orderId: string, newStatus: string) => {
-    const previousStatus = orders.find((o) => o.id === orderId)?.status;
+  const openStatusModal = (order: AdminOrder, targetStatus: string) => {
+    const customerName = `${order.profiles?.first_name || ""} ${order.profiles?.last_name || ""}`.trim() || order.profiles?.email || "Customer";
+    const orderDisplayId = order.id.startsWith("UN-") 
+      ? `#${order.id.substring(0, 18).toUpperCase()}` 
+      : `#UN-2026-${order.id.substring(0, 8).toUpperCase()}`;
+
+    setStatusModal({
+      orderId: order.id,
+      currentStatus: order.status,
+      targetStatus,
+      description: order.status === targetStatus ? (order.status_description || "") : "",
+      customerName,
+      orderDisplayId,
+    });
+  };
+
+  const handleConfirmStatusUpdate = async () => {
+    if (!statusModal) return;
+    const { orderId, targetStatus, description, currentStatus } = statusModal;
+    setIsSubmittingStatus(true);
     updateRowState(orderId, { isUpdating: true, feedback: null });
 
-    const result = await updateOrderStatus({ orderId, newStatus });
+    const result = await updateOrderStatus({
+      orderId,
+      newStatus: targetStatus,
+      statusDescription: description.trim() || null,
+    });
+
+    setIsSubmittingStatus(false);
 
     if (!result.success) {
       updateRowState(orderId, {
@@ -123,11 +216,36 @@ export function OrdersTable({
       return;
     }
 
-    setOrders((prev) =>
-      prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
-    );
+    const updatedOrders = orders.map((o) => {
+      if (o.id === orderId) {
+        return {
+          ...o,
+          status: targetStatus,
+          status_description: result.statusDescription ?? null,
+          status_history: result.statusHistory ?? o.status_history,
+          status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
+        };
+      }
+      return o;
+    });
 
-    const restored = previousStatus !== "Cancelled" && newStatus === "Cancelled";
+    setOrders(updatedOrders);
+
+    if (viewOrder && viewOrder.id === orderId) {
+      setViewOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: targetStatus,
+              status_description: result.statusDescription ?? null,
+              status_history: result.statusHistory ?? prev.status_history,
+              status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
+            }
+          : null
+      );
+    }
+
+    const restored = currentStatus !== "Cancelled" && targetStatus === "Cancelled";
     updateRowState(orderId, {
       isUpdating: false,
       feedback: {
@@ -135,6 +253,8 @@ export function OrdersTable({
         message: restored ? "Cancelled — stock restored." : "Status updated!",
       },
     });
+
+    setStatusModal(null);
 
     setTimeout(() => {
       updateRowState(orderId, { feedback: null });
@@ -164,31 +284,53 @@ export function OrdersTable({
     });
   };
 
-  const handleBulkStatusUpdate = async () => {
+  const openBulkModal = () => {
     if (selectedIds.size === 0) return;
+    setBulkModal({
+      targetStatus: bulkStatus,
+      description: "",
+      orderIds: Array.from(selectedIds),
+    });
+  };
+
+  const handleConfirmBulkUpdate = async () => {
+    if (!bulkModal) return;
     setIsBulkUpdating(true);
 
-    const ids = Array.from(selectedIds);
-    const result = await bulkUpdateOrderStatus({ orderIds: ids, newStatus: bulkStatus });
+    const { orderIds, targetStatus, description } = bulkModal;
+    const result = await bulkUpdateOrderStatus({
+      orderIds,
+      newStatus: targetStatus,
+      statusDescription: description.trim() || null,
+    });
+
+    setIsBulkUpdating(false);
 
     if (!result.success) {
-      setIsBulkUpdating(false);
       return;
     }
 
     const succeeded = new Set(result.succeededIds);
     setOrders((prev) =>
-      prev.map((o) => (succeeded.has(o.id) ? { ...o, status: bulkStatus } : o))
+      prev.map((o) =>
+        succeeded.has(o.id)
+          ? {
+              ...o,
+              status: targetStatus,
+              status_description: description.trim() || null,
+              status_updated_at: new Date().toISOString(),
+            }
+          : o
+      )
     );
     setSelectedIds(new Set(result.failed.map((f) => f.id)));
-
-    setIsBulkUpdating(false);
+    setBulkModal(null);
   };
 
   const handleExportCsv = () => {
     downloadCsv(
       `orders-export-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Delivery Address", "Items", "Total", "Status"],
+      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Delivery Address", "Items", "Total", "Status", "Status Description"],
       filteredOrders.map((o) => [
         o.id,
         new Date(o.date).toLocaleString(),
@@ -200,6 +342,7 @@ export function OrdersTable({
         o.items,
         o.total,
         o.status,
+        o.status_description || "",
       ])
     );
   };
@@ -233,7 +376,7 @@ export function OrdersTable({
       <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">Order Fulfillment</h2>
-          <p className="text-sm text-gray-500 mt-1">Cancelling an order returns its deducted stock to inventory.</p>
+          <p className="text-sm text-gray-500 mt-1">Update order progress and attach status notes visible to customers.</p>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
           <select 
@@ -263,7 +406,7 @@ export function OrdersTable({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search ID, name, email..."
+              placeholder="Search ID, name, note..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
@@ -299,11 +442,11 @@ export function OrdersTable({
               ))}
             </select>
             <button
-              onClick={handleBulkStatusUpdate}
+              onClick={openBulkModal}
               disabled={isBulkUpdating}
               className="px-3 py-1.5 bg-accent text-black text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
             >
-              {isBulkUpdating ? "Updating..." : "Apply Status"}
+              Apply Status & Note
             </button>
           </div>
           <button
@@ -331,9 +474,9 @@ export function OrdersTable({
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[16%] text-left">Order ID & Date</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[20%] text-left">Customer</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[14%] text-left">Delivery Method</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[18%] text-left">Items</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[16%] text-left">Items & Note</th>
               <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[11%] text-right">Total Price</th>
-              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[13%] text-right">Status Action</th>
+              <th className="px-6 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest w-[15%] text-right">Status Action</th>
               <th className="px-4 py-3 w-[5%] text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">View</th>
             </tr>
           </thead>
@@ -406,6 +549,24 @@ export function OrdersTable({
                     <div className="text-[13px] font-medium text-gray-600 max-w-[200px] truncate" title={order.items}>
                       {order.items}
                     </div>
+                    {order.status_description ? (
+                      <button
+                        onClick={() => openStatusModal(order, order.status)}
+                        title={order.status_description}
+                        className="mt-1 flex items-center gap-1.5 text-[11px] text-amber-700 bg-amber-50 hover:bg-amber-100/80 px-2 py-0.5 rounded-md border border-amber-200/60 max-w-[200px] transition-colors text-left"
+                      >
+                        <MessageSquare className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                        <span className="truncate font-medium">{order.status_description}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openStatusModal(order, order.status)}
+                        className="mt-1 text-[10px] text-gray-400 hover:text-gray-700 flex items-center gap-1 transition-colors"
+                      >
+                        <MessageSquare className="w-2.5 h-2.5" />
+                        <span>+ Add note</span>
+                      </button>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-right">
                     <span className="font-mono text-sm font-bold text-gray-900">
@@ -418,7 +579,7 @@ export function OrdersTable({
                         <select
                           value={order.status}
                           disabled={row.isUpdating}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                          onChange={(e) => openStatusModal(order, e.target.value)}
                           className={`w-full appearance-none px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md border outline-none cursor-pointer disabled:opacity-50 transition-all ${getStatusBadgeColor(order.status)}`}
                         >
                           {ORDER_STATUSES.map((s) => (
@@ -486,6 +647,224 @@ export function OrdersTable({
         </div>
       </div>
 
+      {/* ── Status Update Confirmation Modal ──────────────────────── */}
+      {statusModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220] animate-in fade-in duration-200"
+            onClick={() => { if (!isSubmittingStatus) setStatusModal(null); }}
+          />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
+                  Update Order Status
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Order <span className="font-mono font-semibold text-gray-800">{statusModal.orderDisplayId}</span> • {statusModal.customerName}
+                </p>
+              </div>
+              <button
+                disabled={isSubmittingStatus}
+                onClick={() => setStatusModal(null)}
+                className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Transition Badge Pill */}
+            <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current</span>
+                <span className={`inline-flex px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-widest ${getStatusBadgeColor(statusModal.currentStatus)}`}>
+                  {statusModal.currentStatus}
+                </span>
+              </div>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+              <div className="flex flex-col gap-1 items-end">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">New Target</span>
+                <div className="relative">
+                  <select
+                    value={statusModal.targetStatus}
+                    onChange={(e) => setStatusModal((prev) => prev ? { ...prev, targetStatus: e.target.value } : null)}
+                    className={`appearance-none px-3 py-1 pr-7 rounded-md border text-[10px] font-bold uppercase tracking-widest outline-none cursor-pointer ${getStatusBadgeColor(statusModal.targetStatus)}`}
+                  >
+                    {ORDER_STATUSES.map((s) => (
+                      <option key={s} value={s} className="bg-white text-gray-900">{s}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none opacity-60" />
+                </div>
+              </div>
+            </div>
+
+            {/* Cancellation Warning */}
+            {statusModal.targetStatus === "Cancelled" && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-800">
+                <ShieldAlert className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Inventory Stock Restoration</p>
+                  <p className="text-[11px] text-red-700/90 mt-0.5">Cancelling this order will automatically restore all reserved tile stock back into warehouse inventory.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Preset Buttons */}
+            {STATUS_PRESETS[statusModal.targetStatus] && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Quick Templates</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {STATUS_PRESETS[statusModal.targetStatus].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setStatusModal((prev) => prev ? { ...prev, description: preset } : null)}
+                      className="text-[11px] bg-gray-100 hover:bg-yellow-100 hover:text-yellow-900 text-gray-700 px-2.5 py-1 rounded-lg border border-gray-200/80 transition-colors text-left"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Note Textarea */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <MessageSquareQuote className="w-3.5 h-3.5 text-yellow-600" />
+                  Status Description / Note
+                </label>
+                <span className="text-[11px] text-gray-400">{statusModal.description.length}/500</span>
+              </div>
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={statusModal.description}
+                onChange={(e) => setStatusModal((prev) => prev ? { ...prev, description: e.target.value } : null)}
+                placeholder="Enter details for the customer (e.g. tracking number, dispatch update, or reasons)..."
+                className="w-full text-sm text-gray-900 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 transition-all resize-none"
+              />
+              <p className="text-[11px] text-gray-400">This description will be immediately visible to the customer on their order history page.</p>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                disabled={isSubmittingStatus}
+                onClick={() => setStatusModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSubmittingStatus}
+                onClick={handleConfirmStatusUpdate}
+                className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-yellow-500 hover:text-black text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {isSubmittingStatus ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Confirm & Update
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Bulk Status Update Modal ───────────────────────────────── */}
+      {bulkModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220] animate-in fade-in duration-200"
+            onClick={() => { if (!isBulkUpdating) setBulkModal(null); }}
+          />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-yellow-600" />
+                  Bulk Update ({bulkModal.orderIds.length} Orders)
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  Applying new status: <span className="font-bold text-gray-900">{bulkModal.targetStatus}</span>
+                </p>
+              </div>
+              <button
+                disabled={isBulkUpdating}
+                onClick={() => setBulkModal(null)}
+                className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {bulkModal.targetStatus === "Cancelled" && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-800">
+                <ShieldAlert className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px]">Cancelling these orders will return all their deducted stock back to inventory.</p>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1.5">
+                <MessageSquareQuote className="w-3.5 h-3.5 text-yellow-600" />
+                Status Note for Selected Orders (Optional)
+              </label>
+              <textarea
+                rows={3}
+                maxLength={500}
+                value={bulkModal.description}
+                onChange={(e) => setBulkModal((prev) => prev ? { ...prev, description: e.target.value } : null)}
+                placeholder="Attach a note for all selected customers..."
+                className="w-full text-sm text-gray-900 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 transition-all resize-none"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
+              <button
+                type="button"
+                disabled={isBulkUpdating}
+                onClick={() => setBulkModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isBulkUpdating}
+                onClick={handleConfirmBulkUpdate}
+                className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-yellow-500 hover:text-black text-white text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              >
+                {isBulkUpdating ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 animate-spin" />
+                    Updating {bulkModal.orderIds.length} Orders...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    Apply to {bulkModal.orderIds.length} Orders
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Order Details Side Drawer ──────────────────────────────── */}
       {viewOrder && (
         <>
           <div
@@ -493,7 +872,7 @@ export function OrdersTable({
             onClick={() => setViewOrder(null)}
           />
           <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10">
               <div>
                 <h3 className="font-bold text-gray-900">Order Details</h3>
                 <p className="font-mono text-xs text-gray-500 mt-0.5">
@@ -508,9 +887,71 @@ export function OrdersTable({
             </div>
 
             <div className="p-6 flex flex-col gap-6">
-              <span className={`inline-flex self-start px-3 py-1.5 rounded-md border text-xs font-bold uppercase tracking-widest ${getStatusBadgeColor(viewOrder.status)}`}>
-                {viewOrder.status}
-              </span>
+              {/* Status Header & Action Button */}
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Current Status</span>
+                  <span className={`inline-flex px-3 py-1 rounded-md border text-[10px] font-bold uppercase tracking-widest ${getStatusBadgeColor(viewOrder.status)}`}>
+                    {viewOrder.status}
+                  </span>
+                </div>
+
+                {viewOrder.status_description && (
+                  <div className="p-3 bg-amber-50/80 border border-amber-200/70 rounded-xl text-xs text-amber-900">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-amber-700 block mb-1">
+                      Latest Status Note
+                    </span>
+                    <p className="leading-relaxed font-medium">{viewOrder.status_description}</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => openStatusModal(viewOrder, viewOrder.status)}
+                  className="w-full mt-1 py-2 px-3 bg-white hover:bg-yellow-50 text-gray-900 hover:text-yellow-900 border border-gray-200 hover:border-yellow-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-600" />
+                  Update Status / Add Note
+                </button>
+              </div>
+
+              {/* Status History Timeline */}
+              {viewOrder.status_history && viewOrder.status_history.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5" /> Status Timeline History
+                  </p>
+                  <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    {viewOrder.status_history.slice().reverse().map((entry, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-2 border-yellow-500 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                        </div>
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${getStatusBadgeColor(entry.status)}`}>
+                              {entry.status}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {new Date(entry.timestamp).toLocaleString("en-US", {
+                                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                              })}
+                            </span>
+                          </div>
+                          {entry.description && (
+                            <p className="text-xs text-gray-700 mt-2 font-medium leading-relaxed">
+                              {entry.description}
+                            </p>
+                          )}
+                          {entry.updated_by && (
+                            <span className="text-[9px] text-gray-400 mt-1 block">by {entry.updated_by}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Customer</p>

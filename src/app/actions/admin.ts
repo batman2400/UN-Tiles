@@ -45,11 +45,13 @@ const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancel
 const orderStatusSchema = z.object({
   orderId: z.string().min(1, "Order is required"),
   newStatus: z.enum(ORDER_STATUSES),
+  statusDescription: z.string().max(500, "Description cannot exceed 500 characters").optional().nullable(),
 });
 
 const bulkOrderStatusSchema = z.object({
   orderIds: z.array(z.string().min(1)).min(1, "Select at least one order"),
   newStatus: z.enum(ORDER_STATUSES),
+  statusDescription: z.string().max(500, "Description cannot exceed 500 characters").optional().nullable(),
 });
 
 const deleteProductSchema = z.object({
@@ -91,7 +93,6 @@ function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections"
 // ── Server Actions ─────────────────────────────────────
 
 export async function createCategory(rawData: { name: string; slug: string; image: string }) {
-  // Validate untrusted input with Zod
   const parsed = categorySchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
@@ -137,7 +138,6 @@ export async function createProduct(rawData: {
   application: string;
   stock_sqft: number;
 }) {
-  // Validate untrusted input with Zod
   const parsed = productSchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
@@ -161,8 +161,6 @@ export async function createProduct(rawData: {
     };
   }
 
-  // Generate a sequential ID like "tile-123"
-  // Using UUID for robust identification instead to avoid sequence issues
   const id = "tile-" + crypto.randomUUID().split("-")[0];
 
   const { error } = await supabase
@@ -348,19 +346,24 @@ export async function deleteProduct(rawData: { productId: string }) {
   return { success: true as const };
 }
 
-export async function updateOrderStatus(rawData: { orderId: string; newStatus: string }) {
+export async function updateOrderStatus(rawData: {
+  orderId: string;
+  newStatus: string;
+  statusDescription?: string | null;
+}) {
   const parsed = orderStatusSchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.issues[0]?.message || "Validation failed" };
   }
-  const { orderId, newStatus } = parsed.data;
+  const { orderId, newStatus, statusDescription } = parsed.data;
+  const cleanDescription = statusDescription?.trim() || null;
 
   const supabase = await createClient();
   const admin = await requireAdmin(supabase);
 
   const { data: order, error: readError } = await supabase
     .from("orders")
-    .select("id, status")
+    .select("id, status, status_history")
     .eq("id", orderId)
     .single();
 
@@ -369,13 +372,26 @@ export async function updateOrderStatus(rawData: { orderId: string; newStatus: s
   }
 
   const previousStatus = order.status;
-  if (previousStatus === newStatus) {
-    return { success: true as const };
-  }
+  const now = new Date().toISOString();
+
+  // Format existing history and append new transition entry
+  const existingHistory = Array.isArray(order.status_history) ? order.status_history : [];
+  const historyEntry = {
+    status: newStatus,
+    description: cleanDescription,
+    timestamp: now,
+    updated_by: admin.email || "Admin",
+  };
+  const updatedHistory = [...existingHistory, historyEntry];
 
   const { error: updateError } = await supabase
     .from("orders")
-    .update({ status: newStatus })
+    .update({
+      status: newStatus,
+      status_description: cleanDescription,
+      status_history: updatedHistory,
+      status_updated_at: now,
+    })
     .eq("id", orderId);
 
   if (updateError) {
@@ -388,29 +404,43 @@ export async function updateOrderStatus(rawData: { orderId: string; newStatus: s
     action: "order.status_updated",
     entityType: "order",
     entityId: orderId,
-    details: { from: previousStatus, to: newStatus },
+    details: {
+      from: previousStatus,
+      to: newStatus,
+      description: cleanDescription,
+    },
   });
 
   if (previousStatus === "Cancelled" || newStatus === "Cancelled") {
     revalidateCatalog();
   }
 
-  return { success: true as const };
+  return {
+    success: true as const,
+    statusDescription: cleanDescription,
+    statusHistory: updatedHistory,
+    statusUpdatedAt: now,
+  };
 }
 
-export async function bulkUpdateOrderStatus(rawData: { orderIds: string[]; newStatus: string }) {
+export async function bulkUpdateOrderStatus(rawData: {
+  orderIds: string[];
+  newStatus: string;
+  statusDescription?: string | null;
+}) {
   const parsed = bulkOrderStatusSchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false as const, error: parsed.error.issues[0]?.message || "Validation failed" };
   }
-  const { orderIds, newStatus } = parsed.data;
+  const { orderIds, newStatus, statusDescription } = parsed.data;
+  const cleanDescription = statusDescription?.trim() || null;
 
   const supabase = await createClient();
   const admin = await requireAdmin(supabase);
 
   const { data: orders, error: readError } = await supabase
     .from("orders")
-    .select("id, status")
+    .select("id, status, status_history")
     .in("id", orderIds);
 
   if (readError) {
@@ -420,16 +450,26 @@ export async function bulkUpdateOrderStatus(rawData: { orderIds: string[]; newSt
   const succeededIds: string[] = [];
   const failed: { id: string; error: string }[] = [];
   let touchedStock = false;
+  const now = new Date().toISOString();
 
   for (const order of orders ?? []) {
-    if (order.status === newStatus) {
-      succeededIds.push(order.id);
-      continue;
-    }
+    const existingHistory = Array.isArray(order.status_history) ? order.status_history : [];
+    const historyEntry = {
+      status: newStatus,
+      description: cleanDescription,
+      timestamp: now,
+      updated_by: admin.email || "Admin",
+    };
+    const updatedHistory = [...existingHistory, historyEntry];
 
     const { error: updateError } = await supabase
       .from("orders")
-      .update({ status: newStatus })
+      .update({
+        status: newStatus,
+        status_description: cleanDescription,
+        status_history: updatedHistory,
+        status_updated_at: now,
+      })
       .eq("id", order.id);
 
     if (updateError) {
@@ -450,7 +490,12 @@ export async function bulkUpdateOrderStatus(rawData: { orderIds: string[]; newSt
       action: "order.bulk_status_updated",
       entityType: "order",
       entityId: succeededIds.join(","),
-      details: { count: succeededIds.length, to: newStatus, orderIds: succeededIds },
+      details: {
+        count: succeededIds.length,
+        to: newStatus,
+        description: cleanDescription,
+        orderIds: succeededIds,
+      },
     });
   }
 

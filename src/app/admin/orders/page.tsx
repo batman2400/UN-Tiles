@@ -20,7 +20,7 @@ export default async function AdminOrdersPage() {
     supabase
       .from("orders")
       .select(`
-        id, status, items, total, delivery_method, delivery_address, date,
+        id, status, status_description, status_history, status_updated_at, items, total, delivery_method, delivery_address, date,
         profiles (
           first_name, last_name, email, phone
         )
@@ -43,6 +43,9 @@ export default async function AdminOrdersPage() {
   const adminOrders: AdminOrder[] = (ordersRes.data ?? []).map((row: any) => ({
     id: row.id,
     status: row.status,
+    status_description: row.status_description ?? null,
+    status_history: row.status_history ?? [],
+    status_updated_at: row.status_updated_at ?? null,
     items: row.items,
     total: row.total,
     delivery_method: row.delivery_method,

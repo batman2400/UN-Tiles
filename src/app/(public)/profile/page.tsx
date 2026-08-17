@@ -22,7 +22,10 @@ import {
   Truck,
   Store,
   Clock,
-  XCircle
+  XCircle,
+  MessageSquareQuote,
+  Sparkles,
+  History
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
@@ -38,9 +41,19 @@ type ProfileFormState = {
   phone: string;
 };
 
+export interface StatusHistoryItem {
+  status: string;
+  description?: string | null;
+  timestamp: string;
+  updated_by?: string | null;
+}
+
 interface OrderRecord {
   id: string;
   status: string;
+  status_description?: string | null;
+  status_history?: StatusHistoryItem[] | null;
+  status_updated_at?: string | null;
   items: string;
   date: string;
   total: string;
@@ -139,7 +152,7 @@ function ProfileContent() {
       const [ordersRes, addressesRes] = await Promise.all([
         supabase
           .from("orders")
-          .select("id, status, items, date, total, delivery_method, delivery_address")
+          .select("id, status, status_description, status_history, status_updated_at, items, date, total, delivery_method, delivery_address")
           .eq("user_id", user.id)
           .order("date", { ascending: false }),
         listAddresses(),
@@ -168,9 +181,28 @@ function ProfileContent() {
           setOrders((current) =>
             current.map((o) =>
               o.id === payload.new.id
-                ? { ...o, status: payload.new.status, delivery_method: payload.new.delivery_method }
+                ? {
+                    ...o,
+                    status: payload.new.status,
+                    status_description: payload.new.status_description,
+                    status_history: payload.new.status_history,
+                    status_updated_at: payload.new.status_updated_at,
+                    delivery_method: payload.new.delivery_method,
+                  }
                 : o
             )
+          );
+          setViewOrder((prev) =>
+            prev && prev.id === payload.new.id
+              ? {
+                  ...prev,
+                  status: payload.new.status,
+                  status_description: payload.new.status_description,
+                  status_history: payload.new.status_history,
+                  status_updated_at: payload.new.status_updated_at,
+                  delivery_method: payload.new.delivery_method,
+                }
+              : prev
           );
         }
       )
@@ -542,10 +574,17 @@ function ProfileContent() {
 
                           {/* Order Tracking Visual Stepper */}
                           <div className="py-6 border-b border-gray-100">
-                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Fulfillment Status</h4>
+                            <div className="flex items-center justify-between mb-4">
+                              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Fulfillment Status</h4>
+                              {order.status_updated_at && (
+                                <span className="text-[10px] font-mono text-gray-400">
+                                  Updated {new Date(order.status_updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                </span>
+                              )}
+                            </div>
                             {isCancelled ? (
                               <div className="flex items-center gap-3 text-red-600 bg-red-50 p-4 rounded-xl border border-red-100">
-                                <XCircle className="w-5 h-5" />
+                                <XCircle className="w-5 h-5 flex-shrink-0" />
                                 <span className="text-sm font-semibold">Order Cancelled</span>
                                 <p className="text-xs text-red-500/80 ml-auto hidden sm:block">Please contact support for more details.</p>
                               </div>
@@ -579,6 +618,33 @@ function ProfileContent() {
                                   );
                                 })}
                               </div>
+                            )}
+
+                            {/* Status Note Capsule (Interactive) */}
+                            {order.status_description && (
+                              <button
+                                type="button"
+                                onClick={() => setViewOrder(order)}
+                                className="w-full mt-2 p-3.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/25 hover:border-amber-500/40 rounded-xl flex items-start gap-3 text-left transition-all group/note cursor-pointer"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 group-hover/note:scale-105 transition-transform">
+                                  <MessageSquareQuote className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5">
+                                      <Sparkles className="w-3 h-3 text-amber-600" />
+                                      Latest Status Note
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-amber-700 group-hover/note:translate-x-0.5 transition-transform flex items-center gap-1">
+                                      Press to view details &rarr;
+                                    </span>
+                                  </div>
+                                  <p className="text-xs font-medium text-zinc-800 mt-1 line-clamp-2 leading-relaxed">
+                                    {order.status_description}
+                                  </p>
+                                </div>
+                              </button>
                             )}
                           </div>
 
@@ -766,9 +832,67 @@ function ProfileContent() {
             </div>
             
             <div className="p-6 flex flex-col gap-6">
-              <span className={`inline-flex self-start px-3 py-1.5 rounded-md border text-[10px] font-bold uppercase tracking-widest ${getStatusBadgeStyle(viewOrder.status)}`}>
-                {viewOrder.status}
-              </span>
+              {/* Status Header & Status Description Callout */}
+              <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Order Status</span>
+                  <span className={`inline-flex px-3 py-1.5 rounded-md border text-[10px] font-bold uppercase tracking-widest ${getStatusBadgeStyle(viewOrder.status)}`}>
+                    {viewOrder.status}
+                  </span>
+                </div>
+
+                {viewOrder.status_description && (
+                  <div className="p-3.5 bg-gradient-to-r from-amber-500/15 to-amber-500/5 border border-amber-500/30 rounded-xl text-xs text-amber-950">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-amber-800 flex items-center gap-1.5 mb-1">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      Status Update Note
+                    </span>
+                    <p className="leading-relaxed font-medium">{viewOrder.status_description}</p>
+                    {viewOrder.status_updated_at && (
+                      <span className="text-[10px] text-amber-800/70 mt-1 block font-mono">
+                        Updated {new Date(viewOrder.status_updated_at).toLocaleString("en-US", {
+                          month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                        })}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Status History Timeline */}
+              {viewOrder.status_history && viewOrder.status_history.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5" /> Progress & Updates Timeline
+                  </p>
+                  <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-200">
+                    {viewOrder.status_history.slice().reverse().map((entry, idx) => (
+                      <div key={idx} className="relative">
+                        <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-white border-2 border-yellow-500 flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                        </div>
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${getStatusBadgeStyle(entry.status)}`}>
+                              {entry.status}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {new Date(entry.timestamp).toLocaleString("en-US", {
+                                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+                              })}
+                            </span>
+                          </div>
+                          {entry.description && (
+                            <p className="text-xs text-gray-700 mt-2 font-medium leading-relaxed">
+                              {entry.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div className="flex flex-col gap-1">
