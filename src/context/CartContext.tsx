@@ -105,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(nextItems);
     loadedKeyRef.current = storageKey;
   }, [storageKey, user?.id]);
