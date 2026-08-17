@@ -92,7 +92,7 @@ function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections"
 
 // ── Server Actions ─────────────────────────────────────
 
-export async function createCategory(rawData: { name: string; slug: string; image: string }) {
+export async function createCategory(rawData: { name: string; slug: string; image?: string }) {
   const parsed = categorySchema.safeParse(rawData);
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
@@ -107,7 +107,7 @@ export async function createCategory(rawData: { name: string; slug: string; imag
     .insert({
       name: data.name,
       slug: data.slug,
-      image: data.image,
+      image: data.image?.trim() || "/images/tiles/floor_porcelain.png",
     });
 
   if (error) {

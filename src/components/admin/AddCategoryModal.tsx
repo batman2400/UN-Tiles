@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, X, Loader2 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Plus, X, Loader2, Image as ImageIcon, Upload } from "lucide-react";
 import { createCategory } from "@/app/actions/admin";
+import { createClient } from "@/utils/supabase/client";
 
 export function AddCategoryModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,6 +13,10 @@ export function AddCategoryModal() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [image, setImage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-generate slug from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -20,12 +25,65 @@ export function AddCategoryModal() {
     setSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    setError(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    const res = await createCategory({ name, slug, image });
+    let finalImageUrl = image.trim();
+
+    if (imageFile) {
+      const supabase = createClient();
+      const fileExt = imageFile.name.split(".").pop() || "jpg";
+      const fileName = `category-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("products")
+        .upload(filePath, imageFile);
+
+      if (uploadError) {
+        setError(`Image upload failed: ${uploadError.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(filePath);
+
+      finalImageUrl = publicUrlData.publicUrl;
+    }
+
+    const res = await createCategory({
+      name,
+      slug,
+      image: finalImageUrl || undefined,
+    });
 
     if (!res.success) {
       setError(res.error || "Failed to create category");
@@ -35,6 +93,7 @@ export function AddCategoryModal() {
       setName("");
       setSlug("");
       setImage("");
+      handleRemoveImage();
       setIsSubmitting(false);
     }
   };
@@ -54,16 +113,19 @@ export function AddCategoryModal() {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-[fade-in_0.2s_ease-out]"
-        onClick={() => setIsOpen(false)}
+        onClick={handleClose}
       />
 
       {/* Modal */}
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-gray-900">Add New Category</h3>
-          <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors">
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -76,7 +138,9 @@ export function AddCategoryModal() {
           )}
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Category Name</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              Category Name
+            </label>
             <input
               type="text"
               required
@@ -88,7 +152,9 @@ export function AddCategoryModal() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Category Slug</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              Category Slug
+            </label>
             <input
               type="text"
               required
@@ -100,17 +166,62 @@ export function AddCategoryModal() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Image URL</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              Category Image
+            </label>
             <input
-              type="text"
-              required
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="/images/tiles/..."
-              className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 font-mono focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-all"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:border-accent outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-900 file:text-white hover:file:bg-accent hover:file:text-black cursor-pointer"
             />
-            <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Absolute path (e.g., /images/tiles/cat.png)</p>
+
+            {imagePreview && (
+              <div className="mt-3 relative flex items-center gap-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreview}
+                  alt="Category preview"
+                  className="w-14 h-14 object-cover rounded-md border border-gray-200"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-800 truncate">
+                    {imageFile?.name}
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    {imageFile ? `${(imageFile.size / 1024).toFixed(1)} KB` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                  title="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
+
+          {!imageFile && (
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+                Or Image URL <span className="text-gray-400 font-normal lowercase">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                placeholder="/images/tiles/... or https://..."
+                className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 font-mono focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-all"
+              />
+              <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">
+                Leave blank for default placeholder image
+              </p>
+            </div>
+          )}
 
           <button
             type="submit"

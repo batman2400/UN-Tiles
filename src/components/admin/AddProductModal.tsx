@@ -9,6 +9,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     sku: "",
@@ -28,7 +29,17 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview);
+      setImagePreview(null);
     }
   };
 
@@ -93,7 +104,7 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
         application: "Interior",
         stock_sqft: "1000",
       });
-      setImageFile(null);
+      handleRemoveImage();
       setIsSubmitting(false);
     }
   };
@@ -253,10 +264,31 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
               onChange={handleImageChange}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:border-accent outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-900 file:text-white hover:file:bg-accent hover:file:text-black cursor-pointer"
             />
-            {imageFile && (
-              <p className="mt-2 text-xs text-gray-500 font-medium">
-                Selected: {imageFile.name}
-              </p>
+            {imagePreview && (
+              <div className="mt-3 relative flex items-center gap-3 p-2 bg-gray-50 border border-gray-200 rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="w-14 h-14 object-cover rounded-md border border-gray-200"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-gray-800 truncate">
+                    {imageFile?.name}
+                  </p>
+                  <p className="text-[11px] text-gray-500">
+                    {imageFile ? `${(imageFile.size / 1024).toFixed(1)} KB` : ""}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                  title="Remove image"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </div>
 
