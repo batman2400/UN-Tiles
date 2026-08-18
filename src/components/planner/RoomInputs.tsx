@@ -1,6 +1,7 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { useRef, useState } from "react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import type { LengthUnit, NotchCorner, Pattern, RoomShape } from "@/lib/tile-planner";
 import { polygonToPath, roomPolygon } from "@/lib/tile-planner";
 
@@ -193,8 +194,12 @@ export function RoomInputs({
   const maxX = Math.max(0, Math.round(pitchXMm) - 1);
   const maxY = Math.max(0, Math.round(pitchYMm) - 1);
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const advancedRef = useRef<HTMLDivElement>(null);
+
   return (
     <div className="space-y-6">
+      {/* ── Quick Estimate (always visible) ── */}
       <section className="space-y-3">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Room</p>
         <Segmented
@@ -284,8 +289,9 @@ export function RoomInputs({
         </div>
       </section>
 
+      {/* ── Pattern (always visible) ── */}
       <section className="space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Layout</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">Pattern</p>
         <Segmented
           value={pattern}
           onChange={onPattern}
@@ -294,76 +300,13 @@ export function RoomInputs({
             { id: "brick", label: "Brick" },
           ]}
         />
-        <label className="flex items-center justify-between gap-3 min-h-11 px-3 rounded-xl border border-gray-200 bg-white">
-          <span className="text-sm font-medium text-zinc-800">Rotate tile 90°</span>
-          <input
-            type="checkbox"
-            checked={rotate}
-            disabled={!canRotate}
-            onChange={(e) => onRotate(e.target.checked)}
-            className="h-4 w-4 accent-[var(--accent,#b45309)]"
-          />
-        </label>
-        {!canRotate && (
-          <p className="text-[11px] text-gray-400">Square tiles look the same when rotated.</p>
-        )}
-
-        <NumberField
-          id="grout"
-          label="Grout joint"
-          value={groutMm}
-          min={0}
-          step={0.5}
-          suffix="mm"
-          onChange={onGrout}
-        />
-
-        <div className="space-y-2">
-          <label className="block">
-            <span className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-              <span>Start offset X</span>
-              <span className="normal-case tracking-normal text-gray-400">{Math.round(offsetXMm)} mm</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={maxX}
-              value={Math.min(offsetXMm, maxX)}
-              onChange={(e) => onOffsetX(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-          <label className="block">
-            <span className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-              <span>Start offset Y</span>
-              <span className="normal-case tracking-normal text-gray-400">{Math.round(offsetYMm)} mm</span>
-            </span>
-            <input
-              type="range"
-              min={0}
-              max={maxY}
-              value={Math.min(offsetYMm, maxY)}
-              onChange={(e) => onOffsetY(Number(e.target.value))}
-              className="w-full"
-            />
-          </label>
-        </div>
-
-        <button
-          type="button"
-          onClick={onMinimizeWaste}
-          disabled={!canMinimize}
-          className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-accent/10 text-accent text-xs font-semibold uppercase tracking-widest hover:bg-accent hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-accent/10 disabled:hover:text-accent"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          Minimize waste
-        </button>
       </section>
 
+      {/* ── Safety / Extra Spare Tiles (always visible) ── */}
       <section className="space-y-2">
         <label className="block">
           <span className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
-            <span>Breakage buffer</span>
+            <span>Safety / Extra Spare Tiles</span>
             <span className="normal-case tracking-normal text-gray-400">{Math.round(breakageBuffer * 100)}%</span>
           </span>
           <input
@@ -377,8 +320,108 @@ export function RoomInputs({
           />
         </label>
         <p className="text-[11px] text-gray-400 leading-relaxed">
-          Extra buy quantity for on-site breakage. Cut waste is already included in the layout.
+          Add extra tiles for any on-site breakage. Cut waste is already included.
         </p>
+      </section>
+
+      {/* ── Advanced / Contractor Settings (collapsible accordion) ── */}
+      <section>
+        <button
+          type="button"
+          onClick={() => setShowAdvanced((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 min-h-11 px-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+            Advanced / Contractor Settings
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 ${
+              showAdvanced ? "rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        <div
+          ref={advancedRef}
+          className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
+          style={{
+            maxHeight: showAdvanced
+              ? `${advancedRef.current?.scrollHeight ?? 600}px`
+              : "0px",
+            opacity: showAdvanced ? 1 : 0,
+          }}
+        >
+          <div className="pt-4 space-y-4">
+            {/* Grout joint */}
+            <NumberField
+              id="grout"
+              label="Grout joint"
+              value={groutMm}
+              min={0}
+              step={0.5}
+              suffix="mm"
+              onChange={onGrout}
+            />
+
+            {/* Rotate tile */}
+            <label className="flex items-center justify-between gap-3 min-h-11 px-3 rounded-xl border border-gray-200 bg-white">
+              <span className="text-sm font-medium text-zinc-800">Rotate tile 90°</span>
+              <input
+                type="checkbox"
+                checked={rotate}
+                disabled={!canRotate}
+                onChange={(e) => onRotate(e.target.checked)}
+                className="h-4 w-4 accent-[var(--accent,#b45309)]"
+              />
+            </label>
+            {!canRotate && (
+              <p className="text-[11px] text-gray-400">Square tiles look the same when rotated.</p>
+            )}
+
+            {/* Shift Layout sliders */}
+            <div className="space-y-2">
+              <label className="block">
+                <span className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+                  <span>Shift Layout X</span>
+                  <span className="normal-case tracking-normal text-gray-400">{Math.round(offsetXMm)} mm</span>
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxX}
+                  value={Math.min(offsetXMm, maxX)}
+                  onChange={(e) => onOffsetX(Number(e.target.value))}
+                  className="w-full"
+                />
+              </label>
+              <label className="block">
+                <span className="flex justify-between text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5">
+                  <span>Shift Layout Y</span>
+                  <span className="normal-case tracking-normal text-gray-400">{Math.round(offsetYMm)} mm</span>
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={maxY}
+                  value={Math.min(offsetYMm, maxY)}
+                  onChange={(e) => onOffsetY(Number(e.target.value))}
+                  className="w-full"
+                />
+              </label>
+            </div>
+
+            {/* Minimize waste */}
+            <button
+              type="button"
+              onClick={onMinimizeWaste}
+              disabled={!canMinimize}
+              className="w-full min-h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-accent/10 text-accent text-xs font-semibold uppercase tracking-widest hover:bg-accent hover:text-white transition-colors disabled:opacity-40 disabled:hover:bg-accent/10 disabled:hover:text-accent"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Minimize waste
+            </button>
+          </div>
+        </div>
       </section>
     </div>
   );

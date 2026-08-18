@@ -44,61 +44,72 @@ export function ResultsPanel({
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-4">
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent mb-1">
-          Estimate
-        </p>
-        <h2 className="font-display text-xl font-bold text-zinc-900">Layout results</h2>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <Stat label="Room area" value={`${roomSqft.toFixed(1)} sq ft`} />
-        <Stat label="Full tiles" value={String(result.fullCount)} />
-        <Stat label="Cut pieces" value={String(result.cutCount)} />
-        <Stat label="Physical tiles" value={String(result.physicalTiles)} />
-        <Stat label="Waste" value={`${wastePct}%`} />
-        <Stat label="Buy" value={`${result.recommendedSqft} sq ft`} />
-      </div>
-
-      <div className="flex items-end justify-between gap-3 pt-1">
+      {/* ── Hero summary ── */}
+      <div className="rounded-xl bg-accent/8 border border-accent/20 px-4 py-4 space-y-3">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-gray-400">Estimated total</p>
-          <p className="text-2xl font-display font-bold text-zinc-900">{formatPrice(total)}</p>
-        </div>
-        {overStock && (
-          <p className="text-xs text-[#9f403d] font-medium text-right">
-            Only {stockSqft} sq ft in stock
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-accent mb-1">
+            Recommended to buy
           </p>
+          <p className="text-2xl sm:text-3xl font-display font-bold text-zinc-900 tabular-nums">
+            {result.recommendedSqft} sq ft
+          </p>
+        </div>
+
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-wider text-gray-400">Estimated total</p>
+            <p className="text-xl font-display font-bold text-zinc-900">{formatPrice(total)}</p>
+          </div>
+          {overStock && (
+            <p className="text-xs text-[#9f403d] font-medium text-right">
+              Only {stockSqft} sq ft in stock
+            </p>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={onAddToCart}
+          disabled={Boolean(disabledReason) || justAdded}
+          className={`w-full min-h-12 inline-flex items-center justify-center gap-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors ${
+            justAdded
+              ? "bg-primary/10 text-primary"
+              : disabledReason
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-accent text-white hover:bg-accent/90"
+          }`}
+        >
+          {justAdded ? (
+            <>
+              <Check className="w-4 h-4" />
+              Added to cart
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4" />
+              Add {result.recommendedSqft} sq ft to cart
+            </>
+          )}
+        </button>
+        {disabledReason && !justAdded && (
+          <p className="text-xs text-[#9f403d]">{disabledReason}</p>
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={onAddToCart}
-        disabled={Boolean(disabledReason) || justAdded}
-        className={`w-full min-h-12 inline-flex items-center justify-center gap-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors ${
-          justAdded
-            ? "bg-primary/10 text-primary"
-            : disabledReason
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-accent text-white hover:bg-accent/90"
-        }`}
-      >
-        {justAdded ? (
-          <>
-            <Check className="w-4 h-4" />
-            Added to cart
-          </>
-        ) : (
-          <>
-            <ShoppingCart className="w-4 h-4" />
-            Add {result.recommendedSqft} sq ft
-          </>
-        )}
-      </button>
-      {disabledReason && !justAdded && (
-        <p className="text-xs text-[#9f403d]">{disabledReason}</p>
-      )}
+      {/* ── Detailed stats ── */}
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 mb-2">
+          Layout breakdown
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <Stat label="Room area" value={`${roomSqft.toFixed(1)} sq ft`} />
+          <Stat label="Uncut tiles" value={String(result.fullCount)} />
+          <Stat label="Cut pieces" value={String(result.cutCount)} />
+          <Stat label="Total tiles needed" value={String(result.physicalTiles)} />
+          <Stat label="Waste" value={`${wastePct}%`} />
+          <Stat label="Buy" value={`${result.recommendedSqft} sq ft`} />
+        </div>
+      </div>
 
       <p className="text-[11px] text-gray-400 leading-relaxed">
         Estimate only. Cut pairing reuses leftover strips from the same tile where they fit.
@@ -107,3 +118,4 @@ export function ResultsPanel({
     </div>
   );
 }
+

@@ -86,15 +86,15 @@ export function LayoutCanvas({ result }: { result: PlannerResult | null }) {
       <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-gray-100 text-[11px] uppercase tracking-wider text-gray-500">
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-sm bg-accent/30 border border-accent/60" />
-          Full tile
+          Uncut
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-3 rounded-sm border border-[#9f403d]/70 bg-[repeating-linear-gradient(45deg,#9f403d_0_2px,transparent_2px_4px)]" />
           Cut
         </span>
-        <span className="inline-flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5" title="Combines leftover pieces from other cuts to save tiles">
           <span className="h-3 w-3 rounded-sm border-2 border-teal-700 bg-[repeating-linear-gradient(45deg,#9f403d_0_2px,transparent_2px_4px)]" />
-          Paired cuts
+          Reused off-cuts
         </span>
       </div>
     </div>
