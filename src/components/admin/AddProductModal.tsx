@@ -1,10 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Plus, X, Loader2, RotateCw } from "lucide-react";
 import { createProduct } from "@/app/actions/admin";
 import { createClient } from "@/utils/supabase/client";
+
+function generateSku(categorySlug: string): string {
+  const prefixMap: Record<string, string> = {
+    floor: "FLO",
+    wall: "WAL",
+    mosaics: "MOS",
+    "pool-tiles": "POO",
+  };
+  const clean = categorySlug ? categorySlug.toLowerCase().trim() : "";
+  const code = prefixMap[clean] || (clean.replace(/[^a-z0-9]/gi, "").slice(0, 3).toUpperCase() || "TIL");
+  const randomNum = Math.floor(100 + Math.random() * 900);
+  return `UN-${code}-${randomNum}`;
+}
+
 export function AddProductModal({ categories }: { categories: { name: string, slug: string }[] }) {
+  const initialCategory = categories.length > 0 ? categories[0].slug : "";
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -12,19 +27,28 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    sku: "",
+    sku: initialCategory ? generateSku(initialCategory) : "",
     name: "",
-    category_slug: categories.length > 0 ? categories[0].slug : "",
+    category_slug: initialCategory,
     dimensions: "60x60 cm",
     price_per_sqft: "",
     image: "",
     finish: "Matte",
     application: "Interior",
-    stock_sqft: "1000",
+    stock_sqft: "0",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === "category_slug") {
+      setFormData(prev => ({
+        ...prev,
+        category_slug: value,
+        sku: generateSku(value),
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,27 +116,40 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
       setIsSubmitting(false);
     } else {
       setIsOpen(false);
-      // Reset form
+      // Reset form with a fresh generated SKU for the default category
+      const defaultCategory = categories.length > 0 ? categories[0].slug : "";
       setFormData({
-        sku: "",
+        sku: defaultCategory ? generateSku(defaultCategory) : "",
         name: "",
-        category_slug: categories.length > 0 ? categories[0].slug : "",
+        category_slug: defaultCategory,
         dimensions: "60x60 cm",
         price_per_sqft: "",
         image: "",
         finish: "Matte",
         application: "Interior",
-        stock_sqft: "1000",
+        stock_sqft: "0",
       });
       handleRemoveImage();
       setIsSubmitting(false);
     }
   };
 
+  const handleOpenModal = () => {
+    const currentCat = formData.category_slug || (categories.length > 0 ? categories[0].slug : "");
+    if (!formData.sku && currentCat) {
+      setFormData(prev => ({
+        ...prev,
+        category_slug: currentCat,
+        sku: generateSku(currentCat),
+      }));
+    }
+    setIsOpen(true);
+  };
+
   if (!isOpen) {
     return (
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenModal}
         className="flex items-center gap-2 px-4 py-2.5 bg-zinc-900 text-white rounded-lg text-sm font-bold tracking-wide hover:bg-accent hover:text-black transition-colors"
       >
         <Plus className="w-4 h-4" />
@@ -159,14 +196,25 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">SKU</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">SKU</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, sku: generateSku(prev.category_slug) }))}
+                  className="text-xs text-zinc-500 hover:text-black font-semibold flex items-center gap-1 transition-colors"
+                  title="Generate new unique SKU"
+                >
+                  <RotateCw className="w-3 h-3" />
+                  Auto-generate
+                </button>
+              </div>
               <input
                 type="text"
                 name="sku"
                 required
                 value={formData.sku}
                 onChange={handleChange}
-                placeholder="e.g. UN-XYZ-123"
+                placeholder="e.g. UN-FLO-100"
                 className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-gray-900 focus:bg-white focus:border-accent outline-none transition-all"
               />
             </div>
@@ -221,13 +269,13 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
               <input
                 type="number"
                 name="stock_sqft"
-                required
                 min={0}
                 value={formData.stock_sqft}
                 onChange={handleChange}
-                placeholder="e.g. 1000"
+                placeholder="0"
                 className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:border-accent outline-none transition-all"
               />
+              <p className="text-[11px] text-gray-400 mt-1">Default 0. You can restock later in inventory.</p>
             </div>
           </div>
 
