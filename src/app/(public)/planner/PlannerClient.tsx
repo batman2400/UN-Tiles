@@ -202,6 +202,8 @@ export function PlannerClient({
       pattern,
       breakageBuffer,
       currentProductId: selected.id,
+      currentTileWidthMm: plannerInput.tileWidthMm,
+      currentTileHeightMm: plannerInput.tileHeightMm,
       catalog: plannable.map((p) => ({
         id: p.id,
         name: p.name,

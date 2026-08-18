@@ -39,6 +39,8 @@ export type BestFitParams = {
   pattern: Pattern;
   breakageBuffer: number;
   currentProductId: string;
+  currentTileWidthMm: number;
+  currentTileHeightMm: number;
   catalog: CatalogEntry[];
   currentWastePct: number;
   currentCost: number;
@@ -46,8 +48,9 @@ export type BestFitParams = {
 
 /**
  * Scan every plannable tile in the catalog against the given room,
- * run the offset optimizer on each, and return the top alternatives
- * that meaningfully reduce waste compared to the currently selected tile.
+ * run the offset optimizer on each, and return the top alternatives of
+ * DIFFERENT tile dimensions that meaningfully reduce waste compared to
+ * the currently selected tile.
  */
 export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
   const {
@@ -56,12 +59,18 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
     pattern,
     breakageBuffer,
     currentProductId,
+    currentTileWidthMm,
+    currentTileHeightMm,
     catalog,
     currentWastePct,
     currentCost,
   } = params;
 
-  const candidates: BestFitCandidate[] = [];
+  const currentMin = Math.min(currentTileWidthMm, currentTileHeightMm);
+  const currentMax = Math.max(currentTileWidthMm, currentTileHeightMm);
+
+  // Group candidates by distinct physical size format (e.g., "600x600")
+  const bestPerSizeFormat = new Map<string, BestFitCandidate>();
 
   for (const entry of catalog) {
     // Skip the tile the user already has selected
@@ -69,6 +78,12 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
 
     const size = parseDimensions(entry.dimensions);
     if (!size) continue;
+
+    const candMin = Math.min(size.widthMm, size.heightMm);
+    const candMax = Math.max(size.widthMm, size.heightMm);
+
+    // Strictly skip tiles of the same physical dimensions (e.g. 60x60 vs 60x60)
+    if (candMin === currentMin && candMax === currentMax) continue;
 
     // Guard: skip tiles that would exceed the layout grid cap
     const minDim = Math.min(size.widthMm, size.heightMm);
@@ -96,7 +111,7 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
 
     const estimatedCost = best.recommendedSqft * entry.pricePerSqft;
 
-    candidates.push({
+    const candidate: BestFitCandidate = {
       productId: entry.id,
       productName: entry.name,
       dimensions: entry.dimensions,
@@ -111,8 +126,22 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
       estimatedCost,
       savingsVsCurrent: currentCost - estimatedCost,
       wasteReduction,
-    });
+    };
+
+    const sizeKey = `${candMin}x${candMax}`;
+    const existing = bestPerSizeFormat.get(sizeKey);
+
+    // Keep the best representative for each distinct size (lower cost or lower waste)
+    if (
+      !existing ||
+      candidate.wastePct < existing.wastePct ||
+      (candidate.wastePct === existing.wastePct && candidate.estimatedCost < existing.estimatedCost)
+    ) {
+      bestPerSizeFormat.set(sizeKey, candidate);
+    }
   }
+
+  const candidates = Array.from(bestPerSizeFormat.values());
 
   // Sort by lowest waste first, then by lowest cost as tiebreaker
   candidates.sort((a, b) => {
