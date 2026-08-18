@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import {
+  findBestFitTiles,
   minimizeWaste,
   parseDimensions,
   planRoom,
@@ -15,6 +16,7 @@ import {
   type Pattern,
   type RoomShape,
 } from "@/lib/tile-planner";
+import { BestFitSuggestion } from "@/components/planner/BestFitSuggestion";
 import { LayoutCanvas } from "@/components/planner/LayoutCanvas";
 import { ProductPicker } from "@/components/planner/ProductPicker";
 import { ResultsPanel } from "@/components/planner/ResultsPanel";
@@ -190,6 +192,29 @@ export function PlannerClient({
     window.setTimeout(() => setJustAdded(false), 1800);
   }, [addToCart, recommended, result, selected]);
 
+  const bestFitCandidates = useMemo(() => {
+    if (!result || !selected || !plannerInput) return [];
+    const room = roomFromInput(plannerInput);
+    if (!room) return [];
+    return findBestFitTiles({
+      room,
+      groutMm: plannerInput.groutMm,
+      pattern,
+      breakageBuffer,
+      currentProductId: selected.id,
+      catalog: plannable.map((p) => ({
+        id: p.id,
+        name: p.name,
+        dimensions: p.dimensions,
+        image: p.image,
+        category: p.category,
+        pricePerSqft: p.pricePerSqft,
+      })),
+      currentWastePct: result.wastePct,
+      currentCost: result.recommendedSqft * selected.pricePerSqft,
+    });
+  }, [result, selected, plannerInput, pattern, breakageBuffer, plannable]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <section className="relative h-[38vh] min-h-[260px] sm:h-[46vh] sm:min-h-[320px] flex items-end bg-background overflow-hidden">
@@ -286,6 +311,13 @@ export function PlannerClient({
                   onAddToCart={handleAddToCart}
                   justAdded={justAdded}
                   disabledReason={disabledReason}
+                />
+              )}
+              {result && bestFitCandidates.length > 0 && (
+                <BestFitSuggestion
+                  candidates={bestFitCandidates}
+                  currentWastePct={result.wastePct}
+                  onSwitchTile={handleSelect}
                 />
               )}
             </div>

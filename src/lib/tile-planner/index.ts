@@ -4,8 +4,12 @@ import type { PlanOutput, PlannerInput, RoomMm } from "./types";
 
 export { parseDimensions, productHasParsableSize } from "./parseDimensions";
 export { minimizeWaste } from "./optimize";
+export { findBestFitTiles } from "./bestFit";
 export { mm2ToSqft, tileAreaSqft, toMm } from "./units";
 export { polygonToPath, roomPolygon } from "./geometry";
+export type {
+  BestFitCandidate,
+} from "./bestFit";
 export type {
   LengthUnit,
   NotchCorner,
