@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "motion/react";
+import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa6";
 
 export interface Hero10NavItem {
@@ -38,17 +39,14 @@ export function Hero10({
   return (
     <section
       className="relative isolate min-h-[100svh] w-full overflow-hidden bg-background font-sans text-slate-900 antialiased"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
     >
-      <img
+      <Image
         src={backgroundImage}
         alt=""
-        fetchPriority="high"
-        decoding="async"
+        fill
+        priority
+        sizes="100vw"
+        unoptimized
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
 

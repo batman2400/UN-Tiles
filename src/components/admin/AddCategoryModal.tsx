@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Plus, X, Loader2, Image as ImageIcon, Upload } from "lucide-react";
+import { Plus, X, Loader2 } from "lucide-react";
 import { createCategory } from "@/app/actions/admin";
 import { createClient } from "@/utils/supabase/client";
 

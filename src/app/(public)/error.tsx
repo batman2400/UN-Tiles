@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function PublicError({
-  error: _error,
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("Application error boundary caught error:", error);
+  }, [error]);
   return (
     <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
       <div className="text-center max-w-md motion-fade-up">

@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { 
   CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, 
   Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered, MapPin, 
-  MessageSquare, MessageSquareQuote, Clock, Sparkles, Send, History, Check, AlertCircle,
-  ArrowRight, ShieldAlert, FileText
+  MessageSquare, MessageSquareQuote, Clock, Sparkles, History, Check,
+  ArrowRight, ShieldAlert
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";

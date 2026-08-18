@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent, useEffect, Suspense } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { 
   User, 
@@ -310,9 +311,9 @@ function ProfileContent() {
               {/* User Avatar with Gold Ring */}
               <div className="relative group">
                 <div className="w-14 h-14 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 p-0.5 rounded-full shadow-md">
-                  <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden relative">
                     {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                      <Image src={user.avatarUrl} alt="Profile" fill sizes="56px" unoptimized className="object-cover" />
                     ) : (
                       <span className="text-lg font-display font-bold text-yellow-400 tracking-wider">{initials}</span>
                     )}
@@ -366,9 +367,9 @@ function ProfileContent() {
               <div className="p-8 text-center border-b border-gray-100/80 bg-gradient-to-b from-gray-50/50 to-transparent">
                 <div className="relative inline-block mb-4 group cursor-pointer">
                   <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 p-0.5 rounded-full shadow-md group-hover:scale-105 transition-transform duration-300">
-                    <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden relative">
                       {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                        <Image src={user.avatarUrl} alt="Profile" fill sizes="80px" unoptimized className="object-cover" />
                       ) : (
                         <span className="text-2xl font-display font-bold text-yellow-400 tracking-wider">{initials}</span>
                       )}

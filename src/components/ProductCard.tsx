@@ -140,14 +140,24 @@ export function ProductCard({
 
         {/* Price + Quick Add row */}
         <div className="mt-auto flex min-w-0 flex-col gap-2 pt-2 xl:flex-row xl:items-center xl:justify-between">
-          <span className="font-bold text-sm text-on-surface truncate">
-            {new Intl.NumberFormat("en-LK", {
-              style: "currency",
-              currency: "LKR",
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            }).format(product.pricePerSqft * qty)}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-sm text-on-surface truncate">
+              {new Intl.NumberFormat("en-LK", {
+                style: "currency",
+                currency: "LKR",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(product.pricePerSqft * qty)}
+            </span>
+            <span className="text-[10px] text-on-surface-variant truncate">
+              {new Intl.NumberFormat("en-LK", {
+                style: "currency",
+                currency: "LKR",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(product.pricePerSqft)} / sq ft
+            </span>
+          </div>
           <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2 xl:w-auto xl:justify-end">
             {!isOutOfStock && (
               <input
