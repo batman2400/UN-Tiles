@@ -1,7 +1,9 @@
-const CACHE_NAME = "un-tiles-v1";
+const CACHE_NAME = "un-tiles-v2";
 const OFFLINE_URL = "/offline.html";
 const PRECACHE_URLS = [
   OFFLINE_URL,
+  "/favicon.ico",
+  "/icon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/apple-touch-icon.png",
