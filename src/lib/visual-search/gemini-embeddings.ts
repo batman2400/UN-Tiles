@@ -1,15 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { normalizeVector } from "./cosine";
-
-const EMBEDDING_MODEL = "gemini-embedding-2";
-const OUTPUT_DIMENSIONALITY = 768;
+import { EMBEDDING_MODEL, OUTPUT_DIMENSIONALITY } from "./constants";
 
 function getEmbedClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_EMBED_API_KEY || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error(
       "Missing GEMINI_EMBED_API_KEY environment variable. " +
-      "Please set GEMINI_EMBED_API_KEY in your .env.local or deployment environment."
+        "Please set GEMINI_EMBED_API_KEY in your .env.local or deployment environment."
     );
   }
   return new GoogleGenAI({ apiKey });
@@ -44,27 +42,22 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
   throw new Error("Failed after retries");
 }
 
-/**
- * Generates a 768-dimensional L2-normalized vector embedding for an image buffer.
- */
-export async function embedImage(
-  imageBuffer: Buffer,
-  mimeType: string = "image/jpeg"
-): Promise<number[]> {
+type EmbedPart =
+  | string
+  | {
+      inlineData: {
+        mimeType: string;
+        data: string;
+      };
+    };
+
+async function embedParts(contents: EmbedPart[]): Promise<number[]> {
   const ai = getEmbedClient();
-  const base64Data = imageBuffer.toString("base64");
 
   return withRetry(async () => {
     const response = await ai.models.embedContent({
       model: EMBEDDING_MODEL,
-      contents: [
-        {
-          inlineData: {
-            mimeType: mimeType as string,
-            data: base64Data,
-          },
-        },
-      ],
+      contents,
       config: {
         outputDimensionality: OUTPUT_DIMENSIONALITY,
       },
@@ -72,37 +65,57 @@ export async function embedImage(
 
     const values = response.embeddings?.[0]?.values;
     if (!values || values.length === 0) {
-      throw new Error("Gemini Embeddings API returned an empty embedding vector for image.");
+      throw new Error("Gemini Embeddings API returned an empty embedding vector.");
     }
 
     return normalizeVector(values);
   });
 }
 
+function imagePart(imageBuffer: Buffer, mimeType: string): EmbedPart {
+  return {
+    inlineData: {
+      mimeType,
+      data: imageBuffer.toString("base64"),
+    },
+  };
+}
+
 /**
- * Generates a 768-dimensional L2-normalized vector embedding for a text query.
+ * Catalog document: title/text prefix + product photo.
+ * Gemini Embedding 2 does not support taskType; prefixes go in the prompt.
  */
-export async function embedText(text: string): Promise<number[]> {
-  const ai = getEmbedClient();
+export async function embedCatalogDocument(
+  imageBuffer: Buffer,
+  mimeType: string,
+  title: string,
+  text: string
+): Promise<number[]> {
+  const safeTitle = title.trim() || "none";
+  const safeText = text.trim() || "ceramic tile";
+  return embedParts([`title: ${safeTitle} | text: ${safeText}`, imagePart(imageBuffer, mimeType)]);
+}
+
+/**
+ * Tile Matcher query: search-result prefix + user photo (same space as catalog documents).
+ */
+export async function embedQueryImage(
+  imageBuffer: Buffer,
+  mimeType: string = "image/jpeg"
+): Promise<number[]> {
+  return embedParts([
+    "task: search result | query: catalog tile that matches this photo",
+    imagePart(imageBuffer, mimeType),
+  ]);
+}
+
+/**
+ * Scene Advisor query: search-result prefix around the ideal-tile sentence.
+ */
+export async function embedQueryText(text: string): Promise<number[]> {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new Error("Cannot embed empty text string.");
   }
-
-  return withRetry(async () => {
-    const response = await ai.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: trimmed,
-      config: {
-        outputDimensionality: OUTPUT_DIMENSIONALITY,
-      },
-    });
-
-    const values = response.embeddings?.[0]?.values;
-    if (!values || values.length === 0) {
-      throw new Error("Gemini Embeddings API returned an empty embedding vector for text.");
-    }
-
-    return normalizeVector(values);
-  });
+  return embedParts([`task: search result | query: ${trimmed}`]);
 }

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/visual-search/rate-limit";
 import { processImageInput } from "@/lib/visual-search/image-input";
-import { embedImage } from "@/lib/visual-search/gemini-embeddings";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { getCatalogDataUncached } from "@/data/products";
+import { embedQueryImage } from "@/lib/visual-search/gemini-embeddings";
+import { computeColorHistogram } from "@/lib/visual-search/color-histogram";
+import { retrieveCatalogMatches } from "@/lib/visual-search/retrieve";
+import { MATCHER_COLOR_WEIGHT } from "@/lib/visual-search/constants";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
-import type { MatchedProduct } from "@/lib/visual-search/types";
 
 export const maxDuration = 30;
 export const runtime = "nodejs";
@@ -13,7 +13,6 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
 
-  // 1. IP Rate Limiting (~10 req/min)
   const rateLimit = checkRateLimit(req, 10, 60 * 1000);
   if (!rateLimit.allowed) {
     return NextResponse.json(
@@ -31,7 +30,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // 2. Extract image from request (multipart/form-data or JSON)
     let fileBuffer: Buffer | null = null;
 
     const contentType = req.headers.get("content-type") || "";
@@ -61,44 +59,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Normalize image format with Sharp
-    const processed = await processImageInput(fileBuffer);
+    const processed = await processImageInput(fileBuffer, { purpose: "match" });
+    const embedding = await embedQueryImage(processed.buffer, processed.mimeType);
 
-    // 4. Generate 768-d normalized vector with Gemini Embedding 2 (Key A)
-    const embedding = await embedImage(processed.buffer, processed.mimeType);
+    let queryHistogram: number[] | null = null;
+    try {
+      queryHistogram = await computeColorHistogram(processed.buffer);
+    } catch (err) {
+      console.warn("[Visual Match API] Query histogram failed; embedding rank only.", err);
+    }
 
-    // 5. Query Supabase vector similarity RPC
-    const supabase = createAdminClient();
-    const { data: rpcRows, error: rpcError } = await supabase.rpc("match_product_embeddings", {
-      query_embedding: JSON.stringify(embedding),
-      match_count: 8,
-      similarity_threshold: 0.0,
+    const matches = await retrieveCatalogMatches(embedding, {
+      queryHistogram,
+      colorWeight: MATCHER_COLOR_WEIGHT,
     });
-
-    if (rpcError) {
-      console.error("[Visual Match API] RPC Error:", rpcError);
-      return NextResponse.json(
-        { success: false, error: "Database matching query failed." },
-        { status: 500 }
-      );
-    }
-
-    // 6. Enrich with catalog product metadata
-    const { allProducts } = await getCatalogDataUncached();
-    const productMap = new Map(allProducts.map((p) => [p.id, p]));
-
-    const matches: MatchedProduct[] = [];
-    for (const row of rpcRows || []) {
-      const product = productMap.get(row.product_id);
-      if (product) {
-        const rawSim = Math.max(0, Math.min(1, Number(row.similarity)));
-        matches.push({
-          ...product,
-          similarity: rawSim,
-          similarityPercentage: Math.round(rawSim * 100),
-        });
-      }
-    }
 
     const queryTimeMs = Date.now() - startTime;
     return NextResponse.json({

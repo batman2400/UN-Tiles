@@ -1,5 +1,7 @@
 export const MAX_IMAGE_SIZE_BYTES = 4.5 * 1024 * 1024;
 export const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+const MAX_EDGE_PX = 1536;
+const JPEG_QUALITY = 90;
 
 export interface ProcessedImage {
   buffer: Buffer;
@@ -8,6 +10,8 @@ export interface ProcessedImage {
   width?: number;
   height?: number;
 }
+
+export type ImagePurpose = "match" | "scene";
 
 function isJpeg(buffer: Buffer): boolean {
   return buffer.length >= 2 && buffer[0] === 0xff && buffer[1] === 0xd8;
@@ -24,10 +28,15 @@ function jpegPassthrough(buffer: Buffer): ProcessedImage {
 /**
  * Validates and converts JPEG/PNG/WebP into a JPEG buffer for Gemini embeddings.
  * Sharp is loaded lazily so a native-module failure does not crash the route into an HTML 500.
+ *
+ * `match` centre-crops extreme aspect ratios so phone photos of a single tile
+ * line up with catalog product shots. `scene` keeps the full frame for Vision.
  */
 export async function processImageInput(
-  inputBuffer: Buffer | Uint8Array | ArrayBuffer
+  inputBuffer: Buffer | Uint8Array | ArrayBuffer,
+  options?: { purpose?: ImagePurpose }
 ): Promise<ProcessedImage> {
+  const purpose = options?.purpose ?? "match";
   const buffer = Buffer.isBuffer(inputBuffer)
     ? inputBuffer
     : Buffer.from(inputBuffer as ArrayBuffer);
@@ -40,18 +49,34 @@ export async function processImageInput(
 
   try {
     const sharp = (await import("sharp")).default;
-    const image = sharp(buffer);
-    const metadata = await image.metadata();
+    const rotated = sharp(buffer).rotate();
+    const metadata = await rotated.metadata();
 
     if (!metadata.format || !["jpeg", "jpg", "png", "webp"].includes(metadata.format.toLowerCase())) {
       throw new Error(`Unsupported image format "${metadata.format}". Please upload a JPEG, PNG, or WebP image.`);
     }
 
-    const pipeline = image.rotate();
-    if ((metadata.width && metadata.width > 1024) || (metadata.height && metadata.height > 1024)) {
-      pipeline.resize({
-        width: 1024,
-        height: 1024,
+    let pipeline = rotated;
+    const width = metadata.width ?? 0;
+    const height = metadata.height ?? 0;
+
+    if (purpose === "match" && width > 0 && height > 0) {
+      const aspect = width / height;
+      if (aspect > 1.45 || aspect < 1 / 1.45) {
+        const side = Math.min(width, height);
+        pipeline = pipeline.extract({
+          left: Math.round((width - side) / 2),
+          top: Math.round((height - side) / 2),
+          width: side,
+          height: side,
+        });
+      }
+    }
+
+    if (width > MAX_EDGE_PX || height > MAX_EDGE_PX) {
+      pipeline = pipeline.resize({
+        width: MAX_EDGE_PX,
+        height: MAX_EDGE_PX,
         fit: "inside",
         withoutEnlargement: true,
       });
@@ -59,7 +84,7 @@ export async function processImageInput(
 
     const outputBuffer = await pipeline
       .jpeg({
-        quality: 85,
+        quality: JPEG_QUALITY,
         progressive: true,
       })
       .toBuffer();

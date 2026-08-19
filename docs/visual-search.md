@@ -26,14 +26,14 @@ Homepage CTA, plus nav and footer links next to Planner. Results reuse existing 
 1. Two public features, one hub, no login.
 2. Feature 1: image embed → pgvector k-NN. No Vision.
 3. Feature 2: Flash Vision brief → embed `idealTileQuery` text → same k-NN. `generateContent` never returns product IDs.
-4. Embedding model: `gemini-embedding-2`, `output_dimensionality: 768`, same for seed, image query, and text query.
+4. Embedding model: `gemini-embedding-2`, `output_dimensionality: 768`, same for seed, image query, and text query. **v2 (19 Aug 2026):** Gemini Embedding 2 has no `taskType` param — put task prefixes in the prompt. Catalog rows are documents (`title: {name} | text: {finish/category}` + image). Matcher queries use `task: search result | query:` + image. Scene Advisor queries use `task: search result | query: {idealTileQuery}`. Stored `model` value is `gemini-embedding-2:v2` so incremental reindex rewrites v1 vectors.
 5. Vision model: `gemini-2.5-flash` (structured JSON). **Confirmed available** as a stable Gemini API model (image + text in, text out, structured outputs supported) as of 19 Aug 2026. Official shutdown is **16 Oct 2026**; replacement Google lists is `gemini-3.6-flash`. Fallback order if `2.5-flash` 404s: `gemini-3.5-flash`, then `gemini-3.6-flash`. Do not use image-generation models (`*-flash-image`). For JSON-only scene briefs, set thinking budget to 0 if the SDK exposes it, to avoid extra latency on free tier.
 6. Two keys from two legitimate Google AI Studio projects (e.g. two group members), not throwaway accounts:
    - `GEMINI_EMBED_API_KEY` (project A) — all embeddings, including catalog seed
    - `GEMINI_VISION_API_KEY` (project B) — scene `generateContent` only
 7. Host: Vercel. No ONNX, no `@xenova/transformers`, no Hugging Face, no VPS.
 8. Seed with Gemini embeddings only. Never CLIP for seeding.
-9. Reindex incrementally (one product per request). Skip if `image_url` is unchanged.
+9. Reindex incrementally (one product per request). Skip if `image_url` **and** `model` (`EMBEDDING_VERSION`) are unchanged.
 
 ---
 
@@ -75,10 +75,10 @@ flowchart TB
 
 Input: design / tile photo / texture (not a full room).
 
-1. Convert upload to JPEG if needed.
-2. `embedContent` with `gemini-embedding-2` (key A), 768-d.
-3. `match_product_embeddings` RPC in Supabase.
-4. Show top 8 `ProductCard`s with similarity %.
+1. Convert upload to JPEG (max 1536px, q90). Centre-crop extreme aspect ratios.
+2. `embedContent` with `gemini-embedding-2` (key A), 768-d, search-result query prefix + image.
+3. `match_product_embeddings` RPC pulls top 16 neighbours.
+4. Re-rank with HSV colour histogram (70% cosine + 30% colour). Show top 8 `ProductCard`s.
 
 No generative call on this path.
 
@@ -93,9 +93,9 @@ Input: kitchen, bathroom, living room, or other space.
    - `styleTags`
    - `surfaces` (floor / wall / both)
    - `idealTileQuery` (one short sentence, e.g. “warm beige matte marble-look floor tile with soft grey veining”)
-2. Embed `idealTileQuery` with `gemini-embedding-2` (key A), 768-d.
-3. Same RPC against catalog **image** vectors.
-4. UI shows palette + tags from step 1, and ProductCards from step 3.
+2. Embed `idealTileQuery` with `gemini-embedding-2` (key A), 768-d, search-result query prefix.
+3. Same RPC against catalog **document** vectors (caption + image).
+4. Re-rank neighbours against the scene palette histogram. UI shows palette + tags from step 1, and ProductCards from step 3.
 
 If generate fails: do not invent SKUs. If generate works and embed fails: still show the scene brief.
 
@@ -119,8 +119,8 @@ Feature 1 never touches key B. If Vision is rate-limited, Matcher still works.
 
 Seed and query must use the same checkpoint. CLIP-seeded rows + Gemini query vectors produce random ranking.
 
-- About 38 catalog images, once.
-- Re-embed only when a product `image` URL changes.
+- About 38 catalog images, once. Re-run `npm run reindex:visuals` after an embedding-version bump (`gemini-embedding-2:v2`).
+- Re-embed when a product `image` URL changes **or** `model` is not the current `EMBEDDING_VERSION`.
 - Admin reindex: **one product per request** with a 1–2s gap (Vercel timeout + free-tier RPM).
 - Do not embed all 38 tiles in a single serverless invocation.
 
@@ -150,8 +150,8 @@ Student scale can run at **$0** on Gemini Free tier + existing Vercel + Supabase
 |-------|-------------|
 | Pre-seeded vectors + cosine in Postgres | High. Same vectors, same formula, same ranking. |
 | Gemini embed / generate | Good, with retries. On 429/5xx show an error; do not invent tiles. |
-| Feature 1 quality | Good for tile / material photos. Weak on busy rooms (use Feature 2). |
-| Feature 2 quality | Good enough. Sentence vs product photo is less tight than image-to-image; brief + palette still carry the page. |
+| Feature 1 quality | Good for tile / material photos. Colour re-rank helps same-series shade splits. Weak on busy rooms (use Feature 2). |
+| Feature 2 quality | Better once catalog vectors include captions. Sentence vs product photo is still looser than image-to-image; brief + palette carry the page. |
 
 Backoff on 429. L2-normalize in app code before insert/query even though Embedding 2 auto-normalizes truncated 768-d vectors.
 
@@ -159,14 +159,15 @@ Backoff on 429. L2-normalize in app code before insert/query even though Embeddi
 
 ## Data layer
 
-Migration: `migrations/020_visual_search.sql`
+Migrations: `migrations/020_visual_search.sql`, `migrations/021_visual_search_color.sql`
 
 - `create extension if not exists vector with schema extensions;`
 - Table `product_embeddings`:
   - `product_id text` PK → `products.id` ON DELETE CASCADE
   - `embedding vector(768) NOT NULL`
-  - `model text NOT NULL` (store `gemini-embedding-2`)
+  - `model text NOT NULL` (store `gemini-embedding-2:v2`)
   - `image_url text NOT NULL`
+  - `color_histogram real[]` (optional; migration `021`. Matcher also computes HSV from catalog JPEGs if the column is absent.)
   - `updated_at timestamptz`
 - At 38 rows, exact `ORDER BY embedding <=> query LIMIT n` is enough (no HNSW required).
 - SECURITY DEFINER RPC `match_product_embeddings(query vector(768), match_count int)`
@@ -178,10 +179,12 @@ Enable the `vector` extension in the Supabase dashboard if the migration cannot.
 
 ## App files (to implement)
 
-- `src/lib/visual-search/gemini-embeddings.ts` — `embedImage`, `embedText`, dim 768, key A
-- `src/lib/visual-search/image-input.ts` — WebP/PNG/JPEG → JPEG bytes (`sharp`)
+- `src/lib/visual-search/gemini-embeddings.ts` — `embedCatalogDocument`, `embedQueryImage`, `embedQueryText`, dim 768, key A
+- `src/lib/visual-search/image-input.ts` — WebP/PNG/JPEG → JPEG bytes (`sharp`); match vs scene framing
+- `src/lib/visual-search/color-histogram.ts` — 32-bin HSV for re-rank
+- `src/lib/visual-search/retrieve.ts` — RPC + colour blend
 - `src/lib/visual-search/gemini-scene.ts` — structured Vision JSON, key B
-- `src/lib/visual-search/indexCatalog.ts`, `types.ts`, `cosine.ts`
+- `src/lib/visual-search/indexProduct.ts`, `types.ts`, `cosine.ts`
 - `src/app/api/visual-search/reindex/route.ts` — **admin-only, one product per request** (same pattern as `/api/seed`)
 - `src/scripts/reindex-visuals.ts` — local CLI to seed all ~38 tiles with a 1–2s gap (preferred for first seed; avoids Vercel timeout). Not `seed_embeddings.js` at the repo root.
 

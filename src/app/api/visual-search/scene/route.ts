@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/visual-search/rate-limit";
 import { processImageInput } from "@/lib/visual-search/image-input";
 import { analyzeScene, isVisionConfigured } from "@/lib/visual-search/gemini-scene";
-import { embedText } from "@/lib/visual-search/gemini-embeddings";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { getCatalogDataUncached } from "@/data/products";
+import { embedQueryText } from "@/lib/visual-search/gemini-embeddings";
+import { histogramFromPalette } from "@/lib/visual-search/color-histogram";
+import { retrieveCatalogMatches } from "@/lib/visual-search/retrieve";
+import { SCENE_PALETTE_WEIGHT } from "@/lib/visual-search/constants";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
 import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
 
@@ -71,8 +72,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Process & normalize image format
-    const processed = await processImageInput(fileBuffer);
+    // 3. Process & normalize image format (full frame for Vision)
+    const processed = await processImageInput(fileBuffer, { purpose: "scene" });
 
     // 4. Generate structured architectural brief with Gemini 2.5 Flash Vision (Key B)
     let scene: SceneBrief;
@@ -89,35 +90,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Embed idealTileQuery with Gemini Embedding 2 (Key A)
-    const matches: MatchedProduct[] = [];
+    // 5. Embed idealTileQuery with Gemini Embedding 2 (Key A) and re-rank by palette
+    let matches: MatchedProduct[] = [];
     try {
-      const textEmbedding = await embedText(scene.idealTileQuery);
-
-      // 6. Query catalog image vectors using the text embedding
-      const supabase = createAdminClient();
-      const { data: rpcRows, error: rpcError } = await supabase.rpc("match_product_embeddings", {
-        query_embedding: JSON.stringify(textEmbedding),
-        match_count: 8,
-        similarity_threshold: 0.0,
+      const textEmbedding = await embedQueryText(scene.idealTileQuery);
+      matches = await retrieveCatalogMatches(textEmbedding, {
+        queryHistogram: histogramFromPalette(scene.palette),
+        colorWeight: SCENE_PALETTE_WEIGHT,
       });
-
-      if (!rpcError && rpcRows) {
-        const { allProducts } = await getCatalogDataUncached();
-        const productMap = new Map(allProducts.map((p) => [p.id, p]));
-
-        for (const row of rpcRows) {
-          const product = productMap.get(row.product_id);
-          if (product) {
-            const rawSim = Math.max(0, Math.min(1, Number(row.similarity)));
-            matches.push({
-              ...product,
-              similarity: rawSim,
-              similarityPercentage: Math.round(rawSim * 100),
-            });
-          }
-        }
-      }
     } catch (embedErr: unknown) {
       // Graceful fallback: If text embed fails, we still return the Scene Brief!
       console.warn("[Scene Advisor API] Text embedding / DB retrieval failed, returning brief only:", embedErr);
