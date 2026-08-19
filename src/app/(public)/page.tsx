@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 import { getCatalogData } from "@/data/products";
-import { ArrowRight, Shield, Truck, Award, Gem } from "lucide-react";
+import { ArrowRight, Shield, Truck, Award, Gem, Sparkles, Camera, Layers } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -197,6 +197,72 @@ async function HomeBelowFold() {
               <ProductCard product={product} />
             </ScrollReveal>
           ))}
+        </div>
+      </section>
+
+      {/* ══════ AI VISUAL MATCH SPOTLIGHT ══════ */}
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 bg-surface-container-low/50 border-y ghost-border overflow-hidden relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <ScrollReveal className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>AI-Powered Design Hub</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface leading-tight">
+                Match Any Tile or Room in Seconds with <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">Visual AI</span>
+              </h2>
+              <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant">
+                Have an inspiration photo, a pattern swatch, or an existing room you want to upgrade? Our Gemini AI vector search instantly matches your image with our curated tile catalog.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="p-4 rounded-2xl bg-surface-container border border-outline/30">
+                  <div className="flex items-center gap-2.5 font-semibold text-sm text-on-surface mb-1">
+                    <Layers className="w-4 h-4 text-accent" />
+                    <span>Tile Matcher</span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant">Upload material textures or design crops to find exact catalog matches.</p>
+                </div>
+                <div className="p-4 rounded-2xl bg-surface-container border border-outline/30">
+                  <div className="flex items-center gap-2.5 font-semibold text-sm text-on-surface mb-1">
+                    <Camera className="w-4 h-4 text-accent" />
+                    <span>Scene Advisor</span>
+                  </div>
+                  <p className="text-xs text-on-surface-variant">Upload a room photo to get architectural briefs and palette-tailored tile pairings.</p>
+                </div>
+              </div>
+              <div className="pt-2">
+                <Link
+                  href="/visual-search"
+                  className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg shadow-md"
+                >
+                  <span>Try Visual Match</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={200} className="relative">
+              <div className="aspect-[4/3] sm:aspect-square relative rounded-3xl overflow-hidden premium-shadow-lg border border-outline/30 bg-surface-container">
+                <Image
+                  src="/images/light_luxury_tiles.jpg"
+                  alt="UN Tiles Visual Match AI"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 text-white">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-semibold w-fit mb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Instant Similarity Scoring</span>
+                  </div>
+                  <p className="text-sm font-medium text-white/90">
+                    Dual Gemini Embedding 2 & Flash Vision vector matching.
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
         </div>
       </section>
 

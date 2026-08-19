@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/collections", label: "Collections" },
   { href: "/planner", label: "Planner" },
+  { href: "/visual-search", label: "Visual Match", badge: "AI" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
 ];
@@ -109,7 +110,7 @@ export function TopNavBar() {
             <nav
               className={`pointer-events-auto hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8 rounded-full px-5 lg:px-8 py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
-              {NAV_LINKS.map(({ href, label }) => {
+              {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
                 let currentLinkColor;
                 if (isActive) {
@@ -122,9 +123,14 @@ export function TopNavBar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 ${currentLinkColor}`}
+                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 flex items-center gap-1.5 ${currentLinkColor}`}
                   >
-                    {label.toUpperCase()}
+                    <span>{label.toUpperCase()}</span>
+                    {badge && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
+                        {badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -254,7 +260,7 @@ export function TopNavBar() {
               </div>
             </form>
             <nav className="flex-1 p-4 sm:p-6 space-y-1 overflow-y-auto">
-              {NAV_LINKS.map(({ href, label }) => {
+              {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive =
                   href === "/" ? pathname === "/" : pathname.startsWith(href);
                 return (
@@ -262,13 +268,18 @@ export function TopNavBar() {
                     key={href}
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className={`block py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                    className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
                       isActive
                         ? "text-accent bg-accent-soft"
                         : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
                     }`}
                   >
-                    {label}
+                    <span>{label}</span>
+                    {badge && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
+                        {badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

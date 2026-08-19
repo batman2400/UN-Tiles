@@ -3,9 +3,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath, updateTag } from "next/cache";
+import { after } from "next/server";
 import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
 import { z } from "zod";
 import { logAdminAction } from "@/lib/auditLog";
+import { indexProduct } from "@/lib/visual-search/indexProduct";
 
 // ── Zod Schemas ────────────────────────────────────────
 
@@ -191,6 +193,21 @@ export async function createProduct(rawData: {
     entityId: id,
     details: { sku: data.sku, name: data.name, stock_sqft: data.stock_sqft },
   });
+
+  // Non-blocking background embedding index via after()
+  if (data.image) {
+    try {
+      after(async () => {
+        try {
+          await indexProduct(id, data.image);
+        } catch (embedErr) {
+          console.warn(`[Admin Action] Background indexProduct failed for ${id}:`, embedErr);
+        }
+      });
+    } catch (afterErr) {
+      console.warn("[Admin Action] after() hook unavailable:", afterErr);
+    }
+  }
 
   revalidateCatalog();
   return { success: true };

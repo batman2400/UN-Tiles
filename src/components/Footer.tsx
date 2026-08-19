@@ -15,6 +15,7 @@ export function Footer() {
     { href: "/", label: "Home" },
     { href: "/collections", label: "Collections" },
     { href: "/planner", label: "Planner" },
+    { href: "/visual-search", label: "Visual Match" },
     { href: "/about", label: "About Us" },
     { href: "/contact", label: "Contact" },
   ];
