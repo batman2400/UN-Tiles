@@ -313,3 +313,8 @@ export const getCatalogData = cache(
     tags: [CATALOG_CACHE_TAG],
   })
 );
+
+/** Same catalog as getCatalogData, without Next.js request cache (safe in CLI and route handlers). */
+export async function getCatalogDataUncached(): Promise<CatalogViewModel> {
+  return loadCatalogViewModel();
+}

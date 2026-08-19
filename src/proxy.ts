@@ -84,6 +84,6 @@ export const config = {
      * - images, svg, png, jpg (static assets)
      * - api routes that handle their own auth
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

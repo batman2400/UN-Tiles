@@ -3,11 +3,12 @@ import { checkRateLimit } from "@/lib/visual-search/rate-limit";
 import { processImageInput } from "@/lib/visual-search/image-input";
 import { embedImage } from "@/lib/visual-search/gemini-embeddings";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { getCatalogData } from "@/data/products";
+import { getCatalogDataUncached } from "@/data/products";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
 import type { MatchedProduct } from "@/lib/visual-search/types";
 
 export const maxDuration = 30;
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 6. Enrich with catalog product metadata
-    const { allProducts } = await getCatalogData();
+    const { allProducts } = await getCatalogDataUncached();
     const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
     const matches: MatchedProduct[] = [];

@@ -4,7 +4,7 @@ import { processImageInput } from "@/lib/visual-search/image-input";
 import { analyzeScene, isVisionConfigured } from "@/lib/visual-search/gemini-scene";
 import { embedText } from "@/lib/visual-search/gemini-embeddings";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { getCatalogData } from "@/data/products";
+import { getCatalogDataUncached } from "@/data/products";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
 import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
 
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (!rpcError && rpcRows) {
-        const { allProducts } = await getCatalogData();
+        const { allProducts } = await getCatalogDataUncached();
         const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
         for (const row of rpcRows) {

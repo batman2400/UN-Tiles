@@ -106,7 +106,23 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         body: formData,
       });
 
-      const data = await response.json();
+      const raw = await response.text();
+      let data: {
+        success?: boolean;
+        error?: string;
+        matches?: MatchedProduct[];
+        scene?: SceneBrief;
+        queryTimeMs?: number;
+      };
+      try {
+        data = JSON.parse(raw) as typeof data;
+      } catch {
+        throw new Error(
+          response.status === 404
+            ? "Visual Match is not available on this deployment yet. Wait for Vercel to finish, then add GEMINI_EMBED_API_KEY and SUPABASE_SERVICE_ROLE_KEY in Project Settings."
+            : "The matcher hit a server error instead of JSON. Check Vercel logs, and confirm the embed and service-role keys are set on the host."
+        );
+      }
 
       if (!response.ok || !data.success) {
         throw new Error(data.error || "Visual search failed. Please try again.");
