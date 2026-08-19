@@ -88,7 +88,7 @@ export function BestFitSuggestion({
 }: {
   candidates: BestFitCandidate[];
   currentWastePct: number;
-  onSwitchTile: (productId: string) => void;
+  onSwitchTile: (candidate: BestFitCandidate) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -110,7 +110,7 @@ export function BestFitSuggestion({
       <CandidateRow
         candidate={top}
         currentWastePct={currentWastePct}
-        onSwitch={() => onSwitchTile(top.productId)}
+        onSwitch={() => onSwitchTile(top)}
         featured
       />
 
@@ -137,7 +137,7 @@ export function BestFitSuggestion({
                   key={c.productId}
                   candidate={c}
                   currentWastePct={currentWastePct}
-                  onSwitch={() => onSwitchTile(c.productId)}
+                  onSwitch={() => onSwitchTile(c)}
                 />
               ))}
             </div>

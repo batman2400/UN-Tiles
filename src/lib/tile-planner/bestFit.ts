@@ -22,6 +22,10 @@ export type BestFitCandidate = {
   estimatedCost: number;
   savingsVsCurrent: number;
   wasteReduction: number;
+  /** Optimized offset/rotation from minimizeWaste – apply on switch. */
+  offsetXMm: number;
+  offsetYMm: number;
+  rotate: boolean;
 };
 
 export type CatalogEntry = {
@@ -126,6 +130,9 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
       estimatedCost,
       savingsVsCurrent: currentCost - estimatedCost,
       wasteReduction,
+      offsetXMm: best.offsetXMm,
+      offsetYMm: best.offsetYMm,
+      rotate: best.rotate,
     };
 
     const sizeKey = `${candMin}x${candMax}`;

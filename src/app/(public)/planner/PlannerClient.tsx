@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
+import type { BestFitCandidate } from "@/lib/tile-planner";
 import {
   findBestFitTiles,
   minimizeWaste,
@@ -73,11 +74,14 @@ export function PlannerClient({
   const tileSize = selected ? parseDimensions(selected.dimensions) : null;
   const canRotate = Boolean(tileSize && tileSize.widthMm !== tileSize.heightMm);
 
+  const tileWidthMm = tileSize?.widthMm ?? 0;
+  const tileHeightMm = tileSize?.heightMm ?? 0;
+
   const plannerInput = useMemo(() => {
-    if (!tileSize) return null;
+    if (tileWidthMm < 1 || tileHeightMm < 1) return null;
     return {
-      tileWidthMm: tileSize.widthMm,
-      tileHeightMm: tileSize.heightMm,
+      tileWidthMm,
+      tileHeightMm,
       roomWidth: Number.isFinite(roomWidth) ? roomWidth : 0,
       roomHeight: Number.isFinite(roomHeight) ? roomHeight : 0,
       unit,
@@ -93,7 +97,8 @@ export function PlannerClient({
       breakageBuffer,
     };
   }, [
-    tileSize,
+    tileWidthMm,
+    tileHeightMm,
     roomWidth,
     roomHeight,
     unit,
@@ -128,6 +133,18 @@ export function PlannerClient({
     window.history.replaceState(null, "", `/planner?${params.toString()}`);
   }, []);
 
+  /** Switch from Smart Size Optimization – apply the optimized offsets/rotation. */
+  const handleSwitchTile = useCallback((candidate: BestFitCandidate) => {
+    setSelectedId(candidate.productId);
+    setOffsetXMm(candidate.offsetXMm);
+    setOffsetYMm(candidate.offsetYMm);
+    setRotate(candidate.rotate);
+    setJustAdded(false);
+    const params = new URLSearchParams(window.location.search);
+    params.set("product", candidate.productId);
+    window.history.replaceState(null, "", `/planner?${params.toString()}`);
+  }, []);
+
   const handleUnit = useCallback(
     (next: LengthUnit) => {
       setRoomWidth((w) => convertLength(w, unit, next));
@@ -140,13 +157,13 @@ export function PlannerClient({
   );
 
   const handleMinimizeWaste = useCallback(() => {
-    if (!plannerInput || !tileSize || !output?.ok) return;
+    if (!plannerInput || tileWidthMm < 1 || tileHeightMm < 1 || !output?.ok) return;
     const room = roomFromInput(plannerInput);
     if (!room) return;
     const best = minimizeWaste({
       room,
-      tileWidthMm: tileSize.widthMm,
-      tileHeightMm: tileSize.heightMm,
+      tileWidthMm,
+      tileHeightMm,
       groutMm: plannerInput.groutMm,
       pattern,
       allowRotate: canRotate,
@@ -155,7 +172,7 @@ export function PlannerClient({
     setRotate(best.rotate);
     setOffsetXMm(best.offsetXMm);
     setOffsetYMm(best.offsetYMm);
-  }, [plannerInput, tileSize, pattern, canRotate, breakageBuffer, output]);
+  }, [plannerInput, tileWidthMm, tileHeightMm, pattern, canRotate, breakageBuffer, output]);
 
   const inCart = items.find((i) => i.id === selected?.id)?.cartQuantitySqft ?? 0;
   const recommended = result?.recommendedSqft ?? 0;
@@ -319,7 +336,7 @@ export function PlannerClient({
                 <BestFitSuggestion
                   candidates={bestFitCandidates}
                   currentWastePct={result.wastePct}
-                  onSwitchTile={handleSelect}
+                  onSwitchTile={handleSwitchTile}
                 />
               )}
             </div>
