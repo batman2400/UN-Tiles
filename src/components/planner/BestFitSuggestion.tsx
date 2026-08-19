@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronDown, Lightbulb } from "lucide-react";
+import { ChevronDown, Lightbulb } from "lucide-react";
 import type { BestFitCandidate } from "@/lib/tile-planner";
 
 function formatPrice(amount: number): string {
@@ -29,6 +29,10 @@ function CandidateRow({
   onSwitch: () => void;
   featured?: boolean;
 }) {
+  const reductionPP =
+    Math.round(currentWastePct * 1000) / 10 -
+    Math.round(candidate.wastePct * 1000) / 10;
+
   return (
     <div
       className={`flex items-start gap-3 ${
@@ -45,7 +49,7 @@ function CandidateRow({
         />
       </span>
 
-      <div className="min-w-0 flex-1 space-y-1">
+      <div className="min-w-0 flex-1 space-y-1.5">
         <p className="text-sm font-semibold text-zinc-900 truncate">
           {candidate.productName}
         </p>
@@ -53,21 +57,27 @@ function CandidateRow({
           {candidate.dimensions} · {candidate.category}
         </p>
 
-        <p className="text-xs text-zinc-700">
-          Waste{" "}
-          <span className="font-semibold text-[#9f403d]">
-            {fmtWaste(currentWastePct)}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {/* Waste badge */}
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            {fmtWaste(candidate.wastePct)} waste
           </span>
-          <ArrowRight className="inline w-3 h-3 mx-1 text-gray-400" />
-          <span className="font-semibold text-emerald-700">
-            {fmtWaste(candidate.wastePct)}
-          </span>
-          {candidate.savingsVsCurrent > 0 && (
-            <span className="ml-2 text-emerald-700 font-medium">
-              saving {formatPrice(candidate.savingsVsCurrent)}
+
+          {/* Reduction pill */}
+          {reductionPP > 0 && (
+            <span className="inline-flex items-center rounded-full bg-emerald-700/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+              ↓ {reductionPP.toFixed(1)}% less
             </span>
           )}
-        </p>
+        </div>
+
+        {/* Cost savings */}
+        {candidate.savingsVsCurrent > 0 && (
+          <p className="text-[11px] text-emerald-700 font-medium">
+            Save {formatPrice(candidate.savingsVsCurrent)}
+          </p>
+        )}
       </div>
 
       <button
