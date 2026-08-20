@@ -1011,7 +1011,7 @@ export function OrdersTable({
                       {viewOrder.payment_status === "Paid" ? (
                         <>
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Paid (Online Sandbox)</span>
+                          <span>{viewOrder.payment_method?.includes("Stripe") ? "Paid (Stripe)" : "Paid"}</span>
                         </>
                       ) : (
                         <>

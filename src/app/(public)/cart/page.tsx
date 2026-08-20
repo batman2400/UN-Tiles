@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Trash2, 
   ShoppingBag, 
@@ -17,7 +17,6 @@ import {
   Loader2, 
   MapPin, 
   CreditCard, 
-  Sparkles,
   Banknote,
   ShieldCheck
 } from "lucide-react";
@@ -25,10 +24,8 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { listAddresses } from "@/app/actions/addresses";
 import { AddAddressModal } from "@/components/AddAddressModal";
-import { SandboxPaymentModal } from "@/components/SandboxPaymentModal";
 import { StripePaymentModal } from "@/components/StripePaymentModal";
 import type { SavedAddress } from "@/lib/address";
-import type { PaymentDetailsSnapshot } from "@/lib/sandboxPayment";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-LK", {
@@ -39,8 +36,10 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export default function CartPage() {
+function CartPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const stripeReturnHandled = useRef(false);
   const { items, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
   
@@ -49,7 +48,7 @@ export default function CartPage() {
   
   // Fulfillment & Payment Methods
   const [fulfillmentMethod, setFulfillmentMethod] = useState<"pickup" | "delivery">("pickup");
-  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "sandbox" | "cod" | "showroom">("stripe");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "cod" | "showroom">("stripe");
   
   // Addresses
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
@@ -58,7 +57,6 @@ export default function CartPage() {
 
   // Modals
   const [showStripeModal, setShowStripeModal] = useState(false);
-  const [showSandboxModal, setShowSandboxModal] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -124,12 +122,6 @@ export default function CartPage() {
       return;
     }
 
-    // Launch Built-in Sandbox Modal
-    if (paymentMethod === "sandbox") {
-      setShowSandboxModal(true);
-      return;
-    }
-
     // For Cash on Delivery or Pay at Showroom
     setIsCheckingOut(true);
 
@@ -141,7 +133,6 @@ export default function CartPage() {
           deliveryMethod: fulfillmentMethod === "delivery" ? "Cash on Delivery" : "Pickup from Store",
           addressId: fulfillmentMethod === "delivery" ? selectedAddressId : null,
           paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Pickup from Store",
-          paymentStatus: "Pending",
           items: items.map((item) => ({
             product_id: item.id,
             quantity_sqft: item.cartQuantitySqft,
@@ -170,33 +161,57 @@ export default function CartPage() {
     }
   };
 
-  const handlePaymentSuccess = async (paymentDetails: PaymentDetailsSnapshot, methodLabel: string) => {
+  const placeOrder = async (options: {
+    paymentMethod: string;
+    paymentIntentId?: string;
+    deliveryMethod: string;
+    addressId: string | null;
+  }) => {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deliveryMethod: options.deliveryMethod,
+        addressId: options.addressId,
+        paymentMethod: options.paymentMethod,
+        paymentIntentId: options.paymentIntentId,
+        items: items.map((item) => ({
+          product_id: item.id,
+          quantity_sqft: item.cartQuantitySqft,
+        })),
+      }),
+    });
+
+    if (res.status === 401) {
+      router.push("/login?next=/cart");
+      throw new Error("Authentication required. Please log in to complete your purchase.");
+    }
+
+    const data = await res.json().catch(() => ({ error: "Checkout failed. Please try again." }));
+
+    if (!res.ok) {
+      throw new Error(data.error || "Checkout failed. Please try again.");
+    }
+
+    clearCart();
+    setShowStripeModal(false);
+    router.push("/profile?tab=orders");
+  };
+
+  const handleOnlineCheckout = async (
+    paymentIntentId: string | undefined,
+    methodLabel: string,
+    options?: { fulfillment?: "pickup" | "delivery"; addressId?: string | null }
+  ) => {
+    const fulfillment = options?.fulfillment ?? fulfillmentMethod;
+    const addressId = options?.addressId ?? selectedAddressId;
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deliveryMethod: fulfillmentMethod === "delivery" ? "Island-wide Delivery" : "Pickup from Store",
-          addressId: fulfillmentMethod === "delivery" ? selectedAddressId : null,
-          paymentMethod: methodLabel,
-          paymentStatus: "Paid",
-          paymentDetails,
-          items: items.map((item) => ({
-            product_id: item.id,
-            quantity_sqft: item.cartQuantitySqft,
-          })),
-        }),
+      await placeOrder({
+        paymentMethod: methodLabel,
+        paymentIntentId,
+        deliveryMethod: fulfillment === "delivery" ? "Island-wide Delivery" : "Pickup from Store",
+        addressId: fulfillment === "delivery" ? addressId : null,
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Order creation failed.");
-      }
-
-      clearCart();
-      setShowStripeModal(false);
-      setShowSandboxModal(false);
-      router.push("/profile?tab=orders");
     } catch (err: unknown) {
       console.error("Payment order saving error:", err);
       const msg = err instanceof Error ? err.message : "Failed to record order.";
@@ -204,6 +219,43 @@ export default function CartPage() {
       throw err;
     }
   };
+
+  useEffect(() => {
+    if (stripeReturnHandled.current) return;
+    if (!user || items.length === 0) return;
+    if (searchParams.get("stripe") !== "return") return;
+
+    const paymentIntentId = searchParams.get("payment_intent");
+    if (!paymentIntentId) return;
+
+    const fulfillment = searchParams.get("fulfillment") === "delivery" ? "delivery" : "pickup";
+    const addressId = searchParams.get("addressId");
+
+    if (fulfillment === "delivery" && !addressId) {
+      setCheckoutError("Delivery address is missing after Stripe authentication. Please complete checkout again.");
+      return;
+    }
+
+    stripeReturnHandled.current = true;
+
+    const finishStripeReturn = async () => {
+      setCheckoutError(null);
+      try {
+        await handleOnlineCheckout(paymentIntentId, "Stripe (Test Mode)", {
+          fulfillment,
+          addressId,
+        });
+        router.replace("/profile?tab=orders");
+      } catch {
+        stripeReturnHandled.current = false;
+        router.replace("/cart");
+      }
+    };
+
+    void finishStripeReturn();
+    // Fulfillment is restored from the Stripe return_url query, not component state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, items, searchParams]);
 
   // ── Empty Cart State ────────────────────────────────
 
@@ -546,15 +598,15 @@ export default function CartPage() {
                       onChange={() => setPaymentMethod("stripe")}
                       className="sr-only"
                     />
-                    <div className={`p-2 rounded-xl ${paymentMethod === "stripe" ? "bg-yellow-500 text-zinc-950" : "bg-purple-100 text-purple-700"}`}>
+                    <div className={`p-2 rounded-xl ${paymentMethod === "stripe" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
                       <CreditCard className="w-4 h-4 flex-shrink-0" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-                          Stripe Elements (Test Mode)
-                          <span className="text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded border border-purple-200">
-                            Live API
+                          Card / Wallet (Stripe)
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-yellow-50 text-yellow-800 px-1.5 py-0.5 rounded border border-yellow-200">
+                            Test Mode
                           </span>
                         </span>
                         {paymentMethod === "stripe" && (
@@ -565,45 +617,6 @@ export default function CartPage() {
                       </div>
                       <span className="text-[11px] text-gray-500 block mt-0.5">
                         Official Stripe Cards, Apple Pay, Google Pay & Link
-                      </span>
-                    </div>
-                  </label>
-
-                  {/* Built-in Sandbox Terminal */}
-                  <label
-                    className={`flex items-center gap-3.5 p-3.5 cursor-pointer transition-all rounded-2xl ${
-                      paymentMethod === "sandbox"
-                        ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
-                        : "border border-gray-200 bg-gray-50/60 hover:bg-gray-100"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="sandbox"
-                      checked={paymentMethod === "sandbox"}
-                      onChange={() => setPaymentMethod("sandbox")}
-                      className="sr-only"
-                    />
-                    <div className={`p-2 rounded-xl ${paymentMethod === "sandbox" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
-                      <Sparkles className="w-4 h-4 flex-shrink-0" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-                          Local Sandbox Simulator
-                          <span className="text-[9px] font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-800 px-1.5 py-0.2 rounded border border-yellow-500/30">
-                            Offline
-                          </span>
-                        </span>
-                        {paymentMethod === "sandbox" && (
-                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-gray-500 block mt-0.5">
-                        Built-in Virtual Card & 3DS challenge terminal
                       </span>
                     </div>
                   </label>
@@ -732,11 +745,6 @@ export default function CartPage() {
                     <CreditCard className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
                     <span>Pay with Stripe (Test Mode)</span>
                   </>
-                ) : paymentMethod === "sandbox" ? (
-                  <>
-                    <Sparkles className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
-                    <span>Pay with Sandbox Simulator</span>
-                  </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
@@ -771,20 +779,29 @@ export default function CartPage() {
         onClose={() => setShowStripeModal(false)}
         items={items}
         totalAmount={cartTotal}
-        onPaymentSuccess={(details) => handlePaymentSuccess(details, "Stripe (Test Mode)")}
-        onFallbackToSandbox={() => {
-          setPaymentMethod("sandbox");
-          setShowSandboxModal(true);
-        }}
-      />
-
-      {/* Built-in Sandbox Modal */}
-      <SandboxPaymentModal
-        isOpen={showSandboxModal}
-        onClose={() => setShowSandboxModal(false)}
-        totalAmount={cartTotal}
-        onPaymentSuccess={(details) => handlePaymentSuccess(details, "Online Payment (Sandbox)")}
+        fulfillmentMethod={fulfillmentMethod}
+        addressId={selectedAddressId}
+        onPaymentSuccess={(paymentIntentId) => handleOnlineCheckout(paymentIntentId, "Stripe (Test Mode)")}
       />
     </section>
+  );
+}
+
+export default function CartPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100svh-6rem)] bg-gradient-to-b from-gray-50/60 via-gray-50 to-gray-100/40 pt-28 pb-16 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+            <p className="text-xs uppercase font-bold tracking-widest text-gray-500">
+              Loading Cart & Checkout...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <CartPageContent />
+    </Suspense>
   );
 }

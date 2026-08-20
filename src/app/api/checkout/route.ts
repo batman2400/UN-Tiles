@@ -1,22 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { createClient } from "@/utils/supabase/server";
 import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
-
-// ── Types ──────────────────────────────────────────────
-
-interface CheckoutItem {
-  product_id: string;
-  quantity_sqft: number;
-}
+import { parseCheckoutItems, priceCartItems } from "@/lib/checkoutCart";
+import { getStripeServerClient } from "@/lib/stripe";
 
 interface CheckoutRequestBody {
-  items: CheckoutItem[];
+  items: unknown;
   deliveryMethod: string;
   addressId?: string | null;
   paymentMethod?: string;
-  paymentStatus?: string;
-  paymentDetails?: Record<string, unknown> | null;
+  paymentIntentId?: string;
 }
 
 interface ProcessCheckoutResult {
@@ -26,28 +20,23 @@ interface ProcessCheckoutResult {
   payment_method?: string;
 }
 
-// ── Constants ──────────────────────────────────────────
-
 const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store", "Island-wide Delivery"];
-const VALID_PAYMENT_METHODS = [
-  "Stripe (Test Mode)",
-  "Stripe",
-  "Online Payment (Sandbox)",
+const STRIPE_PAYMENT_METHODS = new Set(["Stripe (Test Mode)", "Stripe"]);
+const OFFLINE_PAYMENT_METHODS = new Set([
   "Cash on Delivery",
   "Pickup from Store",
-  "Pay at Showroom"
-];
-const MAX_CHECKOUT_LINES = 50;
+  "Pay at Showroom",
+]);
+const VALID_PAYMENT_METHODS = [...STRIPE_PAYMENT_METHODS, ...OFFLINE_PAYMENT_METHODS];
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-// ── Validation ─────────────────────────────────────────
+const PAYMENT_INTENT_ID_RE = /^pi_[a-zA-Z0-9]+$/;
 
 function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
   if (typeof body !== "object" || body === null) return false;
   const candidate = body as Record<string, unknown>;
 
-  if (!Array.isArray(candidate.items) || candidate.items.length === 0) return false;
+  if (parseCheckoutItems(candidate.items) === null) return false;
 
   if (
     typeof candidate.deliveryMethod !== "string" ||
@@ -68,28 +57,13 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
     }
   }
 
-  return candidate.items.every((item: unknown) => {
-    if (typeof item !== "object" || item === null) return false;
-    const entry = item as Record<string, unknown>;
-    return (
-      typeof entry.product_id === "string" &&
-      entry.product_id.length > 0 &&
-      typeof entry.quantity_sqft === "number" &&
-      entry.quantity_sqft > 0 &&
-      Number.isFinite(entry.quantity_sqft)
-    );
-  });
-}
-
-function mergeCheckoutItems(items: CheckoutItem[]): CheckoutItem[] {
-  const merged = new Map<string, number>();
-  for (const item of items) {
-    merged.set(item.product_id, (merged.get(item.product_id) ?? 0) + item.quantity_sqft);
+  if (candidate.paymentIntentId !== undefined) {
+    if (typeof candidate.paymentIntentId !== "string" || !PAYMENT_INTENT_ID_RE.test(candidate.paymentIntentId)) {
+      return false;
+    }
   }
-  return [...merged.entries()].map(([product_id, quantity_sqft]) => ({
-    product_id,
-    quantity_sqft,
-  }));
+
+  return true;
 }
 
 function isProcessCheckoutResult(value: unknown): value is ProcessCheckoutResult {
@@ -132,7 +106,9 @@ function checkoutErrorResponse(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 500 });
 }
 
-// ── Route Handler ──────────────────────────────────────
+function defaultPaymentMethod(deliveryMethod: string): string {
+  return deliveryMethod === "Cash on Delivery" ? "Cash on Delivery" : "Pickup from Store";
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -167,8 +143,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mappedItems = mergeCheckoutItems(body.items);
-    if (mappedItems.length === 0 || mappedItems.length > MAX_CHECKOUT_LINES) {
+    const mappedItems = parseCheckoutItems(body.items);
+    if (!mappedItems) {
       return NextResponse.json(
         { error: "Invalid cart data." },
         { status: 400 }
@@ -176,9 +152,117 @@ export async function POST(request: NextRequest) {
     }
 
     const isDelivery = body.deliveryMethod === "Cash on Delivery" || body.deliveryMethod === "Island-wide Delivery";
-    const paymentMethod = body.paymentMethod || (body.deliveryMethod === "Cash on Delivery" ? "Cash on Delivery" : "Pickup from Store");
-    const paymentStatus = body.paymentStatus || (paymentMethod === "Online Payment (Sandbox)" ? "Paid" : "Pending");
-    const paymentDetails = body.paymentDetails || {};
+    const requestedMethod = body.paymentMethod || defaultPaymentMethod(body.deliveryMethod);
+    const isStripeCheckout = STRIPE_PAYMENT_METHODS.has(requestedMethod);
+
+    let paymentMethod = requestedMethod;
+    let paymentStatus = "Pending";
+    let paymentDetails: Record<string, unknown> = {};
+
+    if (isStripeCheckout) {
+      const priced = await priceCartItems(supabase, mappedItems);
+      if (!priced.ok) {
+        return NextResponse.json({ error: priced.error }, { status: priced.status });
+      }
+
+      const stripe = getStripeServerClient();
+      if (!stripe) {
+        return NextResponse.json(
+          { error: "Stripe is not configured. Online payment is unavailable." },
+          { status: 503 }
+        );
+      }
+
+      if (!body.paymentIntentId || !PAYMENT_INTENT_ID_RE.test(body.paymentIntentId)) {
+        return NextResponse.json(
+          { error: "A completed Stripe payment is required to place this order." },
+          { status: 400 }
+        );
+      }
+
+      let paymentIntent;
+      try {
+        paymentIntent = await stripe.paymentIntents.retrieve(body.paymentIntentId);
+      } catch (retrieveError) {
+        console.error("Stripe PaymentIntent retrieve failed:", retrieveError);
+        return NextResponse.json(
+          { error: "Could not verify Stripe payment. Please try again." },
+          { status: 502 }
+        );
+      }
+
+      if (paymentIntent.status !== "succeeded") {
+        return NextResponse.json(
+          { error: "Stripe payment has not completed. Please authorize the card again." },
+          { status: 402 }
+        );
+      }
+
+      if (paymentIntent.metadata.userId !== user.id) {
+        return NextResponse.json(
+          { error: "This Stripe payment does not belong to the signed-in account." },
+          { status: 403 }
+        );
+      }
+
+      if (paymentIntent.currency !== "lkr") {
+        return NextResponse.json(
+          { error: "Stripe payment currency does not match this order." },
+          { status: 400 }
+        );
+      }
+
+      if (paymentIntent.amount !== priced.cart.stripeAmount) {
+        return NextResponse.json(
+          { error: "Stripe payment amount does not match the current cart total." },
+          { status: 400 }
+        );
+      }
+
+      if (paymentIntent.metadata.cartFingerprint && paymentIntent.metadata.cartFingerprint !== priced.cart.fingerprint) {
+        return NextResponse.json(
+          { error: "Your cart changed after payment started. Please pay again." },
+          { status: 409 }
+        );
+      }
+
+      const { data: existingOrders, error: existingError } = await supabase
+        .from("orders")
+        .select("id")
+        .eq("user_id", user.id)
+        .filter("payment_details->>transaction_id", "eq", paymentIntent.id)
+        .limit(1);
+
+      if (existingError) {
+        console.error("PaymentIntent reuse lookup failed:", existingError);
+        return NextResponse.json(
+          { error: "Could not verify payment uniqueness. Please try again." },
+          { status: 500 }
+        );
+      }
+
+      if (existingOrders && existingOrders.length > 0) {
+        return NextResponse.json(
+          { error: "This Stripe payment has already been used for an order." },
+          { status: 409 }
+        );
+      }
+
+      paymentMethod = "Stripe (Test Mode)";
+      paymentStatus = "Paid";
+      paymentDetails = {
+        transaction_id: paymentIntent.id,
+        auth_code: `STRIPE-${paymentIntent.id.slice(-6).toUpperCase()}`,
+        payment_channel: "card",
+        currency: "LKR",
+        amount: priced.cart.totalLKR,
+        paid_at: new Date(paymentIntent.created * 1000).toISOString(),
+        environment: "stripe_test_mode",
+      };
+    } else {
+      paymentStatus = "Pending";
+      paymentDetails = {};
+    }
 
     const { data, error } = await supabase.rpc("process_checkout", {
       p_user_id: user.id,

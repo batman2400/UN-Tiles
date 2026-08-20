@@ -600,7 +600,7 @@ function ProfileContent() {
                                 </span>
                                 {order.payment_status === "Paid" ? (
                                   <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
-                                    <ShieldCheck className="w-3 h-3" /> Paid (Sandbox)
+                                    <ShieldCheck className="w-3 h-3" /> {order.payment_method?.includes("Stripe") ? "Paid (Stripe)" : "Paid"}
                                   </span>
                                 ) : (
                                   <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center gap-1">

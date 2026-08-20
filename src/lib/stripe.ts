@@ -2,9 +2,17 @@ import Stripe from "stripe";
 
 let stripeClient: Stripe | null = null;
 
-export function getStripeServerClient(): Stripe | null {
-  const secretKey = process.env.STRIPE_SECRET_KEY?.trim();
+function readStripeSecretKey(): string | null {
+  const secretKey = process.env.STRIPE_SECRET_KEY?.trim().replace(/^["']|["']$/g, "");
   if (!secretKey || secretKey.startsWith("sk_test_your_")) {
+    return null;
+  }
+  return secretKey;
+}
+
+export function getStripeServerClient(): Stripe | null {
+  const secretKey = readStripeSecretKey();
+  if (!secretKey) {
     return null;
   }
 
