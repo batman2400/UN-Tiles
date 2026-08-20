@@ -90,10 +90,10 @@ export function TopNavBar() {
       {/* ── Split Island Navbar ── */}
       <div className="fixed top-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)]">
         <div className="max-w-[90rem] mx-auto px-3 sm:px-6 lg:px-10 pt-3 sm:pt-5">
-          <div className="grid grid-cols-[auto_1fr_auto] xl:grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+          <div className="relative flex items-center justify-between">
 
             {/* ═══ LEFT ISLAND — Brand Anchor ═══ */}
-            <div className="pointer-events-auto flex justify-start items-center min-w-0 flex-shrink-0">
+            <div className="pointer-events-auto flex-shrink-0 min-w-0 z-10">
               <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/final Logo without background.png"
@@ -107,109 +107,105 @@ export function TopNavBar() {
             </div>
 
             {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
-            <div className="hidden xl:flex justify-center items-center min-w-0">
-              <nav
-                className={`pointer-events-auto flex items-center gap-3.5 2xl:gap-6 rounded-full px-5 2xl:px-7 py-2.5 2xl:py-3 transition-all duration-500 shadow-sm ${pillClass}`}
-              >
-                {NAV_LINKS.map(({ href, label, badge }) => {
-                  const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-                  let currentLinkColor;
-                  if (isActive) {
-                    currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
-                  } else {
-                    currentLinkColor = scrolled
-                      ? "text-zinc-700 hover:text-black font-medium"
-                      : "text-white/80 hover:text-white font-medium";
-                  }
+            <nav
+              className={`pointer-events-auto hidden xl:flex items-center gap-6 2xl:gap-8 rounded-full px-7 2xl:px-9 h-[52px] transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
+            >
+              {NAV_LINKS.map(({ href, label, badge }) => {
+                const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+                let currentLinkColor;
+                if (isActive) {
+                  currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
+                } else {
+                  currentLinkColor = scrolled
+                    ? "text-zinc-700 hover:text-black font-medium"
+                    : "text-white/80 hover:text-white font-medium";
+                }
 
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className={`text-xs tracking-[0.14em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
-                    >
-                      <span>{label.toUpperCase()}</span>
-                      {badge && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
-                          {badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
+                  >
+                    <span>{label.toUpperCase()}</span>
+                    {badge && (
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
+                        {badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
 
             {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
-            <div className="flex justify-end items-center min-w-0 flex-shrink-0">
-              <div
-                className={`pointer-events-auto flex items-center gap-1 sm:gap-2.5 xl:gap-3 rounded-full px-2.5 sm:px-4 xl:px-5 py-1.5 sm:py-2 transition-all duration-500 shadow-sm ${pillClass}`}
+            <div
+              className={`pointer-events-auto flex items-center gap-2 sm:gap-4 rounded-full px-3 sm:px-5 h-[52px] transition-all duration-500 flex-shrink-0 z-10 ${pillClass}`}
+            >
+              {/* Search Form */}
+              <form 
+                onSubmit={handleSearchSubmit}
+                className={`hidden sm:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-28 md:w-36 lg:w-40 border-b border-current/20 mr-1' : 'w-0'}`}
               >
-                {/* Search Form */}
-                <form 
-                  onSubmit={handleSearchSubmit}
-                  className={`hidden sm:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-28 md:w-36 lg:w-40 border-b border-current/20 mr-1' : 'w-0'}`}
-                >
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
-                    className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
-                    onBlur={() => {
-                      if (!searchQuery) setSearchOpen(false);
-                    }}
-                  />
-                </form>
-                <button 
-                  type="button"
-                  onClick={() => setSearchOpen(!searchOpen)}
-                  aria-label="Search"
-                  className={`h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-                >
-                  <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-                </button>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
+                  onBlur={() => {
+                    if (!searchQuery) setSearchOpen(false);
+                  }}
+                />
+              </form>
+              <button 
+                type="button"
+                onClick={() => setSearchOpen(!searchOpen)}
+                aria-label="Search"
+                className={`h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+              >
+                <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+              </button>
 
-                {user?.role === "admin" && (
-                  <Link
-                    href="/admin"
-                    className={`hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2 py-1 rounded-full hover:bg-white/10 ${iconColor}`}
-                  >
-                    <Shield className="w-3.5 h-3.5" />
-                    <span className="hidden 2xl:inline">Admin</span>
-                  </Link>
-                )}
-
-                {/* Profile / Auth Icon */}
-                <div className="flex items-center">
-                  <AuthNavIcon className={iconColor} />
-                </div>
-
-                {/* Cart Icon */}
+              {user?.role === "admin" && (
                 <Link
-                  href="/cart"
-                  aria-label="Cart"
-                  className={`relative h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+                  href="/admin"
+                  className={`hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2 py-1 rounded-full hover:bg-white/10 ${iconColor}`}
                 >
-                  <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-                  {cartCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
-                      {cartCount}
-                    </span>
-                  )}
+                  <Shield className="w-3.5 h-3.5" />
+                  <span className="hidden 2xl:inline">Admin</span>
                 </Link>
+              )}
 
-                {/* Mobile / Tablet Menu Trigger (shown when screen < xl) */}
-                <button
-                  type="button"
-                  onClick={() => setMobileOpen(true)}
-                  aria-label="Open menu"
-                  className={`xl:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
+              {/* Profile / Auth Icon */}
+              <div className="flex items-center">
+                <AuthNavIcon className={iconColor} />
               </div>
+
+              {/* Cart Icon */}
+              <Link
+                href="/cart"
+                aria-label="Cart"
+                className={`relative h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+              >
+                <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                {cartCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+
+              {/* Mobile / Tablet Menu Trigger (shown when screen < xl) */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open menu"
+                className={`xl:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
             </div>
 
           </div>
