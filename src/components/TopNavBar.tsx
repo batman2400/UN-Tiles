@@ -76,60 +76,57 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
-  // Glassmorphism style for center & right pills
+  // Unified glassmorphism pill style
   const pillClass = scrolled
-    ? "bg-white/80 backdrop-blur-md border border-zinc-200/80 shadow-sm"
-    : "bg-black/35 backdrop-blur-md border border-white/10";
+    ? "bg-white/95 backdrop-blur-xl border border-zinc-200/90 shadow-xl shadow-black/5"
+    : "bg-white/85 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5";
 
-  const iconColor = scrolled
-    ? "text-zinc-700 hover:text-black"
-    : "text-white/85 hover:text-white";
+  const iconColor = "text-zinc-700 hover:text-black";
 
   return (
     <>
-      {/* ── Split Island Navbar ── */}
-      <div className="fixed top-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)]">
-        <div className="max-w-[90rem] mx-auto px-3 sm:px-6 lg:px-10 pt-3 sm:pt-5">
-          <div className="relative flex items-center justify-between">
-
-            {/* ═══ LEFT ISLAND — Brand Anchor ═══ */}
-            <div className="pointer-events-auto flex-shrink-0 min-w-0 z-10">
-              <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
+      {/* ── Unified Floating Glass Capsule Navbar ── */}
+      <header className="fixed top-0 left-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)] px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4">
+        <div className="max-w-7xl mx-auto">
+          <div
+            className={`pointer-events-auto h-14 sm:h-16 px-3.5 sm:px-6 rounded-full flex items-center justify-between transition-all duration-500 ${pillClass}`}
+          >
+            {/* ═══ 1. BRAND LOGO ═══ */}
+            <div className="flex items-center flex-shrink-0">
+              <Link
+                href="/"
+                className="flex items-center transition-transform duration-300 hover:scale-105"
+              >
                 <Image
                   src="/images/final Logo without background.png"
                   alt="UN Tiles"
-                  width={320}
-                  height={110}
-                  className="h-10 sm:h-14 lg:h-16 w-auto object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
+                  width={240}
+                  height={80}
+                  className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
                   priority
                 />
               </Link>
             </div>
 
-            {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
-            <nav
-              className={`pointer-events-auto hidden xl:flex items-center gap-6 2xl:gap-8 rounded-full px-7 2xl:px-9 h-[52px] transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
-            >
+            {/* ═══ 2. DIRECTORY NAVIGATION (Desktop) ═══ */}
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
               {NAV_LINKS.map(({ href, label, badge }) => {
-                const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-                let currentLinkColor;
-                if (isActive) {
-                  currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
-                } else {
-                  currentLinkColor = scrolled
-                    ? "text-zinc-700 hover:text-black font-medium"
-                    : "text-white/80 hover:text-white font-medium";
-                }
+                const isActive =
+                  href === "/" ? pathname === "/" : pathname.startsWith(href);
 
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
+                    className={`px-3 xl:px-4 py-2 rounded-full text-xs xl:text-[13px] tracking-wider uppercase transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                      isActive
+                        ? "text-black font-bold bg-zinc-900/10 shadow-inner"
+                        : "text-zinc-600 hover:text-black hover:bg-zinc-900/5 font-medium"
+                    }`}
                   >
-                    <span>{label.toUpperCase()}</span>
+                    <span>{label}</span>
                     {badge && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-800 font-bold border border-amber-500/30">
                         {badge}
                       </span>
                     )}
@@ -138,47 +135,51 @@ export function TopNavBar() {
               })}
             </nav>
 
-            {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
-            <div
-              className={`pointer-events-auto flex items-center gap-2 sm:gap-4 rounded-full px-3 sm:px-5 h-[52px] transition-all duration-500 flex-shrink-0 z-10 ${pillClass}`}
-            >
-              {/* Search Form */}
-              <form 
+            {/* ═══ 3. UTILITIES & ACTIONS ═══ */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Expandable Search */}
+              <form
                 onSubmit={handleSearchSubmit}
-                className={`hidden sm:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-28 md:w-36 lg:w-40 border-b border-current/20 mr-1' : 'w-0'}`}
+                className={`hidden sm:flex items-center transition-all duration-300 overflow-hidden ${
+                  searchOpen
+                    ? "w-32 sm:w-44 bg-zinc-100/90 rounded-full px-3 py-1 border border-zinc-200 mr-1"
+                    : "w-0"
+                }`}
               >
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
+                  placeholder="Search catalog..."
+                  className="bg-transparent outline-none text-xs text-zinc-800 placeholder:text-zinc-400 w-full"
                   onBlur={() => {
                     if (!searchQuery) setSearchOpen(false);
                   }}
                 />
               </form>
-              <button 
+
+              <button
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
                 aria-label="Search"
-                className={`h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+                className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
               >
                 <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
               </button>
 
+              {/* Admin Link */}
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
-                  className={`hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2 py-1 rounded-full hover:bg-white/10 ${iconColor}`}
+                  className={`hidden sm:flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full hover:bg-zinc-100 transition-colors ${iconColor}`}
                 >
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="hidden 2xl:inline">Admin</span>
+                  <Shield className="w-3.5 h-3.5 text-accent" />
+                  <span className="hidden xl:inline">Admin</span>
                 </Link>
               )}
 
-              {/* Profile / Auth Icon */}
+              {/* Profile / Account Icon */}
               <div className="flex items-center">
                 <AuthNavIcon className={iconColor} />
               </div>
@@ -187,7 +188,7 @@ export function TopNavBar() {
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+                className={`relative h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
               >
                 <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                 {cartCount > 0 && (
@@ -197,25 +198,24 @@ export function TopNavBar() {
                 )}
               </Link>
 
-              {/* Mobile / Tablet Menu Trigger (shown when screen < xl) */}
+              {/* Mobile / Tablet Menu Button */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
-                className={`xl:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
               >
                 <Menu className="w-5 h-5" />
               </button>
             </div>
-
           </div>
         </div>
-      </div>
+      </header>
 
       {/* ── Mobile & Tablet Drawer ── */}
       <AnimatePresence>
         {mobileOpen && (
-          <div className="fixed inset-0 z-[110] xl:hidden">
+          <div className="fixed inset-0 z-[110] lg:hidden">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
