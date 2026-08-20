@@ -5,7 +5,7 @@ export const EMBEDDING_MODEL = "gemini-embedding-2";
  * Stored in product_embeddings.model. Bump this when the embed prompt or
  * preprocessing changes so incremental reindex rewrites stale vectors.
  */
-export const EMBEDDING_VERSION = "gemini-embedding-2:v2";
+export const EMBEDDING_VERSION = "gemini-embedding-2:v3";
 
 export const OUTPUT_DIMENSIONALITY = 768;
 

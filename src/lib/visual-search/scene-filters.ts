@@ -3,7 +3,7 @@ import type { SceneBrief } from "./types";
 type TileCategory = NonNullable<SceneBrief["targetCategory"]>;
 
 const INDOOR_LIVING_RE =
-  /\b(dining|living|lounge|hall|hallway|foyer|entryway|entrance|bedroom|kitchen|office|study|corridor|lobby|salon|sitting|family|banquet|restaurant|reception|drawing|great room|villa|apartment)\b/i;
+  /\b(dining|living|lounge|hall|hallway|foyer|entryway|entrance|bedroom|kitchen|office|study|corridor|lobby|salon|sitting|family|banquet|restaurant|reception|drawing|gallery|atrium|vestibule|ballroom|chamber|mansion|palace|penthouse|passage|open[\s-]?plan)\b/i;
 
 const INDOOR_WET_ROOM_RE =
   /\b(bathroom|washroom|restroom|shower|toilet|powder|ensuite|en-suite|vanity|laundry)\b/i;
@@ -14,6 +14,7 @@ const BACKSPLASH_OR_WALL_RE =
 /**
  * True pool / submerged spaces only.
  * Do NOT use a bare `/spa/` — it matches "spacious" and "Spanish".
+ * Evidence comes from roomType + surfaces, not the ideal-tile sentence (Vision can hallucinate "pool" there).
  */
 const AQUATIC_RE =
   /\b(swimming\s*pools?|plunge\s*pools?|infinity\s*pools?|lap\s*pools?|pool\s*(basin|liner|deck|mosaic|tile)s?|underwater|submerged|hot\s*tubs?|jacuzzis?|outdoor\s*spas?|water\s*features?)\b/i;
@@ -24,17 +25,6 @@ export type SceneCatalogFilter = {
   allowedCategories?: string[];
   excludeCategories?: string[];
 };
-
-function sceneHaystack(scene: SceneBrief): string {
-  return [
-    scene.roomType,
-    scene.surfaces,
-    scene.idealTileQuery,
-    ...(scene.styleTags || []),
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
 
 export function isIndoorLivingSpace(scene: SceneBrief): boolean {
   return INDOOR_LIVING_RE.test(scene.roomType) || INDOOR_LIVING_RE.test(scene.surfaces);
@@ -49,25 +39,25 @@ export function isClearlyAquaticSpace(scene: SceneBrief): boolean {
     return false;
   }
 
-  const haystack = sceneHaystack(scene);
-  if (AQUATIC_RE.test(haystack)) {
-    return true;
-  }
-
-  if (scene.targetCategory === "pool-tiles" && STANDALONE_POOL_RE.test(haystack)) {
-    return true;
-  }
-
-  return false;
+  const evidence = `${scene.roomType} ${scene.surfaces}`;
+  return AQUATIC_RE.test(evidence) || STANDALONE_POOL_RE.test(evidence);
 }
 
 function prefersWallSurface(scene: SceneBrief): boolean {
   const haystack = `${scene.surfaces} ${scene.idealTileQuery}`;
-  return BACKSPLASH_OR_WALL_RE.test(haystack) && !/\bfloor\b/i.test(haystack);
+  if (/\bfloor\b/i.test(haystack) && !BACKSPLASH_OR_WALL_RE.test(haystack)) {
+    return false;
+  }
+  return BACKSPLASH_OR_WALL_RE.test(haystack) || /^\s*walls?\b/i.test(scene.surfaces || "");
+}
+
+function indoorDefaultCategory(scene: SceneBrief): TileCategory {
+  return prefersWallSurface(scene) ? "wall" : "floor";
 }
 
 /**
  * Correct Vision mistakes: glossy indoor halls are still floor, not pool.
+ * If the space is not clearly aquatic, never keep targetCategory "pool-tiles".
  */
 export function sanitizeSceneBrief(scene: SceneBrief): SceneBrief {
   const aquatic = isClearlyAquaticSpace(scene);
@@ -75,26 +65,33 @@ export function sanitizeSceneBrief(scene: SceneBrief): SceneBrief {
   let idealTileQuery = scene.idealTileQuery?.trim() || "";
   let surfaces = scene.surfaces;
 
-  if (!aquatic && (isIndoorLivingSpace(scene) || isIndoorWetRoom(scene))) {
-    if (targetCategory === "pool-tiles") {
-      targetCategory = prefersWallSurface(scene) ? "wall" : "floor";
-    }
-
-    if (/\b(pool|aquatic|underwater|submerged)\b/i.test(idealTileQuery)) {
-      idealTileQuery = prefersWallSurface(scene)
-        ? "matte ceramic wall tile that complements this indoor interior"
-        : "honed porcelain floor tile for this indoor residential space";
-    }
-
-    if (/\b(pool|aquatic)\b/i.test(surfaces)) {
-      surfaces = prefersWallSurface(scene) ? "Wall" : "Floor";
-    }
+  if (aquatic) {
+    return {
+      ...scene,
+      targetCategory: "pool-tiles",
+      idealTileQuery,
+      surfaces,
+    };
   }
 
-  if (aquatic) {
-    targetCategory = "pool-tiles";
-  } else if (isIndoorLivingSpace(scene) && !prefersWallSurface(scene)) {
+  if (targetCategory === "pool-tiles") {
+    targetCategory = indoorDefaultCategory(scene);
+  }
+
+  if (/\b(pool|aquatic|underwater|submerged)\b/i.test(idealTileQuery)) {
+    idealTileQuery = prefersWallSurface(scene)
+      ? "matte ceramic wall tile that complements this indoor interior"
+      : "honed porcelain floor tile for this indoor residential space";
+  }
+
+  if (/\b(pool|aquatic)\b/i.test(surfaces)) {
+    surfaces = prefersWallSurface(scene) ? "Wall" : "Floor";
+  }
+
+  if (isIndoorLivingSpace(scene) && !prefersWallSurface(scene)) {
     targetCategory = "floor";
+  } else if (isIndoorWetRoom(scene) && targetCategory === "all") {
+    targetCategory = prefersWallSurface(scene) ? "wall" : "floor";
   }
 
   return {
@@ -105,11 +102,13 @@ export function sanitizeSceneBrief(scene: SceneBrief): SceneBrief {
   };
 }
 
+/**
+ * Pool SKUs are allowed only when the room itself is aquatic.
+ * Never trust Vision targetCategory === "pool-tiles" alone.
+ */
 export function resolveSceneCatalogFilter(scene: SceneBrief): SceneCatalogFilter {
-  if (isClearlyAquaticSpace(scene) || scene.targetCategory === "pool-tiles") {
-    if (!isIndoorLivingSpace(scene) && !isIndoorWetRoom(scene)) {
-      return { allowedCategories: ["pool-tiles"] };
-    }
+  if (isClearlyAquaticSpace(scene)) {
+    return { allowedCategories: ["pool-tiles"] };
   }
 
   if (isIndoorLivingSpace(scene)) {
@@ -139,17 +138,18 @@ export function resolveSceneCatalogFilter(scene: SceneBrief): SceneCatalogFilter
   return { excludeCategories: ["pool-tiles"] };
 }
 
+/** Positive retrieval sentence only. Do not mention pool on indoor queries — negation attracts pool SKUs. */
 export function buildSceneSearchQuery(scene: SceneBrief): string {
   const query = scene.idealTileQuery.trim();
   if (isClearlyAquaticSpace(scene)) {
-    return `${query} swimming pool mosaic tile`;
+    return `swimming pool mosaic tile. ${query}`;
   }
   if (isIndoorLivingSpace(scene)) {
     const surface = prefersWallSurface(scene) ? "wall" : "floor";
-    return `indoor residential ${surface} porcelain tile for a ${scene.roomType}. ${query}. not a swimming pool tile`;
+    return `indoor residential ${surface} porcelain tile for a ${scene.roomType}. ${query}`;
   }
   if (isIndoorWetRoom(scene)) {
-    return `indoor bathroom ceramic tile for a ${scene.roomType}. ${query}. not a swimming pool tile`;
+    return `indoor bathroom ceramic tile for a ${scene.roomType}. ${query}`;
   }
-  return `${query}. indoor tile, not swimming pool mosaic`;
+  return `indoor porcelain tile. ${query}`;
 }

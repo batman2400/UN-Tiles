@@ -15,6 +15,21 @@ function humanizeSlug(slug: string): string {
     .join(" ");
 }
 
+function categoryUseCaseText(slug: string): string {
+  switch (slug) {
+    case "floor":
+      return "indoor residential floor tile for living rooms, dining rooms, halls, foyers, bedrooms, and kitchens. polished stone or marble-look porcelain flooring.";
+    case "wall":
+      return "indoor ceramic wall tile for bathrooms, kitchens, backsplashes, feature walls, and shower surrounds.";
+    case "mosaics":
+      return "indoor decorative mosaic sheet for vanity backsplashes, niches, and shower accents.";
+    case "pool-tiles":
+      return "swimming pool mosaic for outdoor aquatic basins. glossy cyan or blue submerged tile.";
+    default:
+      return "ceramic porcelain tile.";
+  }
+}
+
 async function resolveDocumentCaption(productId: string): Promise<{ title: string; text: string }> {
   try {
     const payload = await getRawCatalogPayload();
@@ -26,15 +41,15 @@ async function resolveDocumentCaption(productId: string): Promise<{ title: strin
       payload.categories.find((c) => c.slug === product.categorySlug)?.name ||
       humanizeSlug(product.categorySlug);
     const text = [
+      categoryUseCaseText(product.categorySlug),
       categoryName,
       product.finish ? `${product.finish} finish` : null,
       product.application ? `${product.application} use` : null,
       product.dimensions || null,
-      "ceramic porcelain tile",
     ]
       .filter(Boolean)
       .join(". ");
-    return { title: product.name, text };
+    return { title: `${product.name}. ${categoryName}`, text };
   } catch {
     return { title: productId, text: "ceramic tile" };
   }

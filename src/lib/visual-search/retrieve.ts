@@ -52,6 +52,53 @@ async function fillHistogramsFromCatalog(
   return existing;
 }
 
+function looksLikePoolProduct(product: Product): boolean {
+  return (
+    product.categorySlug === "pool-tiles" ||
+    /\bpool\b/i.test(`${product.id} ${product.name} ${product.categorySlug}`)
+  );
+}
+
+function filterHitsByCategory(
+  hits: { product_id: string; similarity: number }[],
+  productMap: Map<string, Product>,
+  options?: {
+    excludeCategories?: string[];
+    allowedCategories?: string[];
+  }
+): { product_id: string; similarity: number }[] {
+  const excludeSet = new Set(options?.excludeCategories ?? []);
+  const allowedSet = new Set(options?.allowedCategories ?? []);
+  const allowPool = allowedSet.has("pool-tiles");
+  const dropPool = !allowPool && (excludeSet.has("pool-tiles") || allowedSet.size > 0);
+
+  let next = hits;
+
+  if (excludeSet.size > 0) {
+    next = next.filter((hit) => {
+      const prod = productMap.get(hit.product_id);
+      if (!prod) return true;
+      return !excludeSet.has(prod.categorySlug);
+    });
+  }
+
+  if (allowedSet.size > 0) {
+    next = next.filter((hit) => {
+      const prod = productMap.get(hit.product_id);
+      return prod ? allowedSet.has(prod.categorySlug) : true;
+    });
+  }
+
+  if (dropPool) {
+    next = next.filter((hit) => {
+      const prod = productMap.get(hit.product_id);
+      return prod ? !looksLikePoolProduct(prod) : true;
+    });
+  }
+
+  return next;
+}
+
 function toMatchedProducts(
   hits: { product_id: string; similarity: number }[],
   productMap: Map<string, Product>
@@ -103,29 +150,11 @@ export async function retrieveCatalogMatches(
     similarity: Number(row.similarity),
   }));
 
-  // Filter out excluded categories (e.g. pool-tiles in residential rooms)
-  if (options?.excludeCategories && options.excludeCategories.length > 0) {
-    const excludeSet = new Set(options.excludeCategories);
-    const excludePool = excludeSet.has("pool-tiles");
-    hits = hits.filter((hit) => {
-      const prod = productMap.get(hit.product_id);
-      if (!prod) return true;
-      if (excludeSet.has(prod.categorySlug)) return false;
-      if (excludePool && /\bpool\b/i.test(`${prod.id} ${prod.name} ${prod.categorySlug}`)) {
-        return false;
-      }
-      return true;
-    });
-  }
-
-  // Filter for allowed categories if specified
-  if (options?.allowedCategories && options.allowedCategories.length > 0) {
-    const allowedSet = new Set(options.allowedCategories);
-    hits = hits.filter((hit) => {
-      const prod = productMap.get(hit.product_id);
-      return prod ? allowedSet.has(prod.categorySlug) : true;
-    });
-  }
+  // Category cut happens before palette re-rank so pool histograms cannot outrank indoor floors.
+  hits = filterHitsByCategory(hits, productMap, {
+    excludeCategories: options?.excludeCategories,
+    allowedCategories: options?.allowedCategories,
+  });
 
   let histograms = new Map<string, number[]>();
   if (options?.queryHistogram && (options.colorWeight ?? 0) > 0) {

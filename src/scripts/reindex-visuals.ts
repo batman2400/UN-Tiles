@@ -11,7 +11,7 @@ import { indexProduct } from "../lib/visual-search/indexProduct";
 async function main() {
   console.log("\n========================================================");
   console.log(" UN TILES — Gemini Visual Search Catalog Seeder");
-  console.log(" Model: gemini-embedding-2:v2 (768-d + caption + colour)");
+  console.log(" Model: gemini-embedding-2:v3 (768-d + caption + colour)");
   console.log("========================================================\n");
 
   const force = process.argv.includes("--force");
