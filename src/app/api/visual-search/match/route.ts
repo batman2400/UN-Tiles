@@ -31,11 +31,13 @@ export async function POST(req: NextRequest) {
 
   try {
     let fileBuffer: Buffer | null = null;
+    let requestedCategory = "all";
 
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       const file = (formData.get("image") || formData.get("file")) as File | null;
+      requestedCategory = formData.get("category")?.toString() || "all";
       if (!file) {
         return NextResponse.json(
           { success: false, error: "No image file provided in request." },
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
       fileBuffer = Buffer.from(arrayBuf);
     } else if (contentType.includes("application/json")) {
       const body = await req.json();
+      requestedCategory = body.category || "all";
       if (body.image || body.base64) {
         const rawBase64 = (body.image || body.base64).replace(/^data:image\/\w+;base64,/, "");
         fileBuffer = Buffer.from(rawBase64, "base64");
@@ -69,9 +72,24 @@ export async function POST(req: NextRequest) {
       console.warn("[Visual Match API] Query histogram failed; embedding rank only.", err);
     }
 
+    // Determine category filtering
+    let excludeCategories: string[] | undefined = undefined;
+    let allowedCategories: string[] | undefined = undefined;
+
+    if (requestedCategory === "pool-tiles") {
+      allowedCategories = ["pool-tiles"];
+    } else if (requestedCategory !== "all" && requestedCategory) {
+      allowedCategories = [requestedCategory];
+    } else {
+      // For general / "all" matching, exclude specialized pool tiles so indoor rooms/floors never get pool mosaic suggestions
+      excludeCategories = ["pool-tiles"];
+    }
+
     const matches = await retrieveCatalogMatches(embedding, {
       queryHistogram,
       colorWeight: MATCHER_COLOR_WEIGHT,
+      excludeCategories,
+      allowedCategories,
     });
 
     const queryTimeMs = Date.now() - startTime;

@@ -60,19 +60,6 @@ export async function processImageInput(
     const width = metadata.width ?? 0;
     const height = metadata.height ?? 0;
 
-    if (purpose === "match" && width > 0 && height > 0) {
-      const aspect = width / height;
-      if (aspect > 1.45 || aspect < 1 / 1.45) {
-        const side = Math.min(width, height);
-        pipeline = pipeline.extract({
-          left: Math.round((width - side) / 2),
-          top: Math.round((height - side) / 2),
-          width: side,
-          height: side,
-        });
-      }
-    }
-
     if (width > MAX_EDGE_PX || height > MAX_EDGE_PX) {
       pipeline = pipeline.resize({
         width: MAX_EDGE_PX,
