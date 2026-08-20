@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { href: "/collections", label: "Collections" },
   { href: "/planner", label: "Planner" },
   { href: "/visual-search", label: "Visual Match", badge: "AI" },
-  { href: "/about", label: "About Us" },
+  { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -89,7 +89,7 @@ export function TopNavBar() {
     <>
       {/* ── Split Island Navbar ── */}
       <div className="fixed top-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)]">
-        <div className="max-w-[90rem] mx-auto px-3 sm:px-6 lg:px-10 pt-3 sm:pt-5">
+        <div className="max-w-[92rem] mx-auto px-3 sm:px-5 lg:px-6 pt-3 sm:pt-4">
           <div className="flex items-center justify-between gap-2 relative">
 
             {/* ═══ LEFT ISLAND — Brand Anchor (no container) ═══ */}
@@ -100,15 +100,15 @@ export function TopNavBar() {
                   alt="UN Tiles"
                   width={320}
                   height={110}
-                  className="h-11 w-auto sm:h-[72px] object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
+                  className="h-10 sm:h-12 lg:h-14 w-auto object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
                   priority
                 />
               </Link>
             </div>
 
-            {/* ═══ CENTER ISLAND — Directory Pill (Shifted left to prevent cramping) ═══ */}
+            {/* ═══ CENTER ISLAND — Directory Pill (Dead Center) ═══ */}
             <nav
-              className={`pointer-events-auto hidden lg:flex items-center gap-4 lg:gap-5 xl:gap-7 2xl:gap-8 rounded-full px-5 lg:px-7 2xl:px-8 py-3 transition-all duration-500 absolute lg:left-[43%] xl:left-[45%] 2xl:left-1/2 -translate-x-1/2 ${pillClass}`}
+              className={`pointer-events-auto hidden lg:flex items-center gap-3 sm:gap-4 lg:gap-5 xl:gap-6 rounded-full px-5 lg:px-6 xl:px-7 py-2.5 sm:py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 shadow-sm ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -117,7 +117,7 @@ export function TopNavBar() {
                   currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
                 } else {
                   currentLinkColor = scrolled
-                    ? "text-zinc-700 hover:text-black font-medium"
+                    ? "text-zinc-700 hover:text-black font-semibold"
                     : "text-white/80 hover:text-white font-medium";
                 }
 
@@ -125,7 +125,7 @@ export function TopNavBar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
+                    className={`text-[11px] xl:text-xs tracking-[0.11em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
                   >
                     <span>{label.toUpperCase()}</span>
                     {badge && (
@@ -138,23 +138,23 @@ export function TopNavBar() {
               })}
             </nav>
 
-            {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
+            {/* ═══ RIGHT ISLAND — Utilities Pill (Moved to Right & Compact) ═══ */}
             <div
-              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-4 xl:gap-5 rounded-full px-2 sm:px-5 xl:px-6 py-1.5 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
+              className={`pointer-events-auto flex items-center gap-1 sm:gap-2.5 xl:gap-3 rounded-full px-2 sm:px-3.5 xl:px-4 py-1.5 sm:py-2.5 transition-all duration-500 flex-shrink-0 shadow-sm ${pillClass}`}
             >
               {/* Mobile menu trigger */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Open menu"
-                className={`lg:hidden h-10 w-10 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
               >
                 <Menu className="w-[18px] h-[18px]" />
               </button>
 
               <form 
                 onSubmit={handleSearchSubmit}
-                className={`hidden md:flex items-center transition-all duration-500 overflow-hidden ${searchOpen ? 'w-36 lg:w-40 border-b border-white/20 mr-1' : 'w-0'}`}
+                className={`hidden md:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-32 lg:w-36 border-b border-current/20 mr-1' : 'w-0'}`}
               >
                 <input
                   ref={searchInputRef}
@@ -172,33 +172,34 @@ export function TopNavBar() {
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
                 aria-label="Search"
-                className={`hidden md:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`hidden md:inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
               >
-                <Search className="w-[18px] h-[18px]" />
+                <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
               </button>
 
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
-                  className={`hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${iconColor}`}
+                  title="Admin Dashboard"
+                  className={`hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2 py-1 rounded-full hover:bg-white/10 ${iconColor}`}
                 >
-                  <Shield className="w-4 h-4" />
-                  <span className="hidden lg:inline">Admin</span>
+                  <Shield className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden 2xl:inline">Admin</span>
                 </Link>
               )}
 
-              <div className="hidden sm:block">
+              <div className="hidden sm:flex items-center">
                 <AuthNavIcon className={iconColor} />
               </div>
 
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative hidden sm:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
+                className={`relative hidden sm:inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
               >
-                <ShoppingCart className="w-[18px] h-[18px]" />
+                <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                 {cartCount > 0 && (
-                  <span className="absolute top-1 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
                     {cartCount}
                   </span>
                 )}
