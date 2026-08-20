@@ -26,7 +26,8 @@ import {
   XCircle,
   MessageSquareQuote,
   Sparkles,
-  History
+  History,
+  ShieldCheck
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
@@ -61,6 +62,9 @@ interface OrderRecord {
   total: string;
   delivery_method: string | null;
   delivery_address: AddressSnapshot | null;
+  payment_method?: string | null;
+  payment_status?: string | null;
+  payment_details?: Record<string, unknown> | null;
 }
 
 interface AddressRecord {
@@ -162,7 +166,7 @@ function ProfileContent() {
       const [ordersRes, addressesRes] = await Promise.all([
         supabase
           .from("orders")
-          .select("id, status, status_description, status_history, status_updated_at, items, date, total, delivery_method, delivery_address")
+          .select("id, status, status_description, status_history, status_updated_at, items, date, total, delivery_method, delivery_address, payment_method, payment_status, payment_details")
           .eq("user_id", user.id)
           .order("date", { ascending: false }),
         listAddresses(),
@@ -198,6 +202,9 @@ function ProfileContent() {
                     status_history: payload.new.status_history,
                     status_updated_at: payload.new.status_updated_at,
                     delivery_method: payload.new.delivery_method,
+                    payment_method: payload.new.payment_method,
+                    payment_status: payload.new.payment_status,
+                    payment_details: payload.new.payment_details,
                   }
                 : o
             )
@@ -211,6 +218,9 @@ function ProfileContent() {
                   status_history: payload.new.status_history,
                   status_updated_at: payload.new.status_updated_at,
                   delivery_method: payload.new.delivery_method,
+                  payment_method: payload.new.payment_method,
+                  payment_status: payload.new.payment_status,
+                  payment_details: payload.new.payment_details,
                 }
               : prev
           );
@@ -581,13 +591,22 @@ function ProfileContent() {
                           {/* Card Header Row */}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
                             <div>
-                              <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
                                 <span className="font-mono text-sm sm:text-base font-bold text-zinc-900 group-hover:text-yellow-600 transition-colors break-all">
                                   #{order.id.startsWith("UN-") ? order.id.toUpperCase() : `UN-2026-${order.id.substring(0, 8).toUpperCase()}`}
                                 </span>
                                 <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full ${badgeStyle}`}>
                                   {order.status}
                                 </span>
+                                {order.payment_status === "Paid" ? (
+                                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3" /> Paid (Sandbox)
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Pay Pending
+                                  </span>
+                                )}
                               </div>
                               <div className="flex items-center gap-2 text-xs text-gray-400 mt-1 font-mono">
                                 <Calendar className="w-3.5 h-3.5" />
@@ -971,6 +990,63 @@ function ProfileContent() {
                     {parseAndFormatTotal(viewOrder.total)}
                   </p>
                 </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Payment Status & Method</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 ${
+                      viewOrder.payment_status === "Paid"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}>
+                      {viewOrder.payment_status === "Paid" ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Paid (Online Sandbox)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Payment Pending</span>
+                        </>
+                      )}
+                    </span>
+                    {viewOrder.payment_method && (
+                      <span className="text-xs text-gray-600 font-medium">
+                        via {viewOrder.payment_method}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {viewOrder.payment_details && Boolean((viewOrder.payment_details as Record<string, unknown>).transaction_id) && (
+                  <div className="bg-gradient-to-br from-gray-50 to-amber-50/20 p-3.5 rounded-xl border border-gray-200/80 font-mono text-xs space-y-1.5">
+                    <div className="flex items-center justify-between text-gray-500">
+                      <span>Transaction ID:</span>
+                      <span className="text-zinc-900 font-bold">{String((viewOrder.payment_details as Record<string, unknown>).transaction_id)}</span>
+                    </div>
+                    {Boolean((viewOrder.payment_details as Record<string, unknown>).auth_code) && (
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Authorization Code:</span>
+                        <span className="text-zinc-800">{String((viewOrder.payment_details as Record<string, unknown>).auth_code)}</span>
+                      </div>
+                    )}
+                    {Boolean((viewOrder.payment_details as Record<string, unknown>).card_brand) && (
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Card:</span>
+                        <span className="text-zinc-800">
+                          {String((viewOrder.payment_details as Record<string, unknown>).card_brand)} •••• {String((viewOrder.payment_details as Record<string, unknown>).last4 ?? "")}
+                        </span>
+                      </div>
+                    )}
+                    {Boolean((viewOrder.payment_details as Record<string, unknown>).wallet_provider) && (
+                      <div className="flex items-center justify-between text-gray-500">
+                        <span>Wallet:</span>
+                        <span className="text-zinc-800">{String((viewOrder.payment_details as Record<string, unknown>).wallet_provider)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Delivery Method</span>
                   <p className="text-sm font-medium text-gray-700">

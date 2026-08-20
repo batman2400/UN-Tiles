@@ -5,7 +5,7 @@ import {
   CheckCircle, AlertTriangle, Package, Search, ChevronDown, ChevronLeft, ChevronRight, 
   Truck, Store, Download, Eye, X, Mail, Phone, Calendar, ListOrdered, MapPin, 
   MessageSquare, MessageSquareQuote, Clock, Sparkles, History, Check,
-  ArrowRight, ShieldAlert
+  ArrowRight, ShieldAlert, ShieldCheck
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
@@ -29,6 +29,9 @@ export interface AdminOrder {
   total: string;
   delivery_method: string;
   delivery_address: AddressSnapshot | null;
+  payment_method?: string | null;
+  payment_status?: string | null;
+  payment_details?: Record<string, unknown> | null;
   date: string;
   profiles: {
     first_name: string;
@@ -330,7 +333,22 @@ export function OrdersTable({
   const handleExportCsv = () => {
     downloadCsv(
       `orders-export-${new Date().toISOString().slice(0, 10)}.csv`,
-      ["Order ID", "Date", "Customer Name", "Email", "Phone", "Delivery Method", "Delivery Address", "Items", "Total", "Status", "Status Description"],
+      [
+        "Order ID",
+        "Date",
+        "Customer Name",
+        "Email",
+        "Phone",
+        "Delivery Method",
+        "Delivery Address",
+        "Payment Status",
+        "Payment Method",
+        "Transaction ID",
+        "Items",
+        "Total",
+        "Status",
+        "Status Description"
+      ],
       filteredOrders.map((o) => [
         o.id,
         new Date(o.date).toLocaleString(),
@@ -339,6 +357,9 @@ export function OrdersTable({
         o.profiles?.phone || "",
         o.delivery_method,
         formatAddressSnapshot(o.delivery_address),
+        o.payment_status || "Pending",
+        o.payment_method || "Cash on Delivery",
+        o.payment_details ? String((o.payment_details as Record<string, unknown>).transaction_id || "") : "",
         o.items,
         o.total,
         o.status,
@@ -569,9 +590,18 @@ export function OrdersTable({
                     )}
                   </td>
                   <td className="px-6 py-3 text-right">
-                    <span className="font-mono text-sm font-bold text-gray-900">
+                    <span className="font-mono text-sm font-bold text-gray-900 block">
                       {formatCurrency(order.total)}
                     </span>
+                    {order.payment_status === "Paid" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200/60 mt-1">
+                        <ShieldCheck className="w-3 h-3" /> Paid (Sandbox)
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/60 mt-1">
+                        <Clock className="w-3 h-3" /> Pending
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-right">
                     <div className="flex flex-col items-end gap-1.5">
@@ -964,6 +994,58 @@ export function OrdersTable({
                   )}
                   {viewOrder.profiles?.phone && (
                     <p className="text-sm text-gray-600 flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-gray-400" />{viewOrder.profiles.phone}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Details</p>
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 text-sm text-gray-700">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500 font-medium">Payment Status</span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      viewOrder.payment_status === "Paid"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-amber-50 text-amber-700 border border-amber-200"
+                    }`}>
+                      {viewOrder.payment_status === "Paid" ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Paid (Online Sandbox)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Payment Pending</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-100">
+                    <span className="text-gray-500 font-medium">Method</span>
+                    <span className="font-semibold text-gray-900">{viewOrder.payment_method || "Cash on Delivery"}</span>
+                  </div>
+                  {viewOrder.payment_details && Boolean((viewOrder.payment_details as Record<string, unknown>).transaction_id) && (
+                    <div className="mt-2 pt-2 border-t border-gray-100 font-mono text-[11px] space-y-1">
+                      <div className="flex justify-between text-gray-500">
+                        <span>Txn Reference:</span>
+                        <span className="text-gray-900 font-bold">{String((viewOrder.payment_details as Record<string, unknown>).transaction_id)}</span>
+                      </div>
+                      {Boolean((viewOrder.payment_details as Record<string, unknown>).auth_code) && (
+                        <div className="flex justify-between text-gray-500">
+                          <span>Auth Code:</span>
+                          <span className="text-gray-800">{String((viewOrder.payment_details as Record<string, unknown>).auth_code)}</span>
+                        </div>
+                      )}
+                      {Boolean((viewOrder.payment_details as Record<string, unknown>).card_brand) && (
+                        <div className="flex justify-between text-gray-500">
+                          <span>Card:</span>
+                          <span className="text-gray-800">
+                            {String((viewOrder.payment_details as Record<string, unknown>).card_brand)} •••• {String((viewOrder.payment_details as Record<string, unknown>).last4 ?? "")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

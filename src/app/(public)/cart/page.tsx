@@ -4,12 +4,31 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Trash2, ShoppingBag, ArrowRight, Lock, Minus, Plus, Truck, Store, Check, Loader2, MapPin } from "lucide-react";
+import { 
+  Trash2, 
+  ShoppingBag, 
+  ArrowRight, 
+  Lock, 
+  Minus, 
+  Plus, 
+  Truck, 
+  Store, 
+  Check, 
+  Loader2, 
+  MapPin, 
+  CreditCard, 
+  Sparkles,
+  Banknote,
+  ShieldCheck
+} from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { listAddresses } from "@/app/actions/addresses";
 import { AddAddressModal } from "@/components/AddAddressModal";
+import { SandboxPaymentModal } from "@/components/SandboxPaymentModal";
+import { StripePaymentModal } from "@/components/StripePaymentModal";
 import type { SavedAddress } from "@/lib/address";
+import type { PaymentDetailsSnapshot } from "@/lib/sandboxPayment";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-LK", {
@@ -24,12 +43,22 @@ export default function CartPage() {
   const router = useRouter();
   const { items, cartTotal, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user } = useAuth();
+  
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const [deliveryMethod, setDeliveryMethod] = useState<"cod" | "pickup">("pickup");
+  
+  // Fulfillment & Payment Methods
+  const [fulfillmentMethod, setFulfillmentMethod] = useState<"pickup" | "delivery">("pickup");
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "sandbox" | "cod" | "showroom">("stripe");
+  
+  // Addresses
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
+
+  // Modals
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [showSandboxModal, setShowSandboxModal] = useState(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -62,7 +91,18 @@ export default function CartPage() {
     };
   }, [user?.id]);
 
-  const handleCheckout = async () => {
+  // Adjust default payment option when fulfillment method changes
+  const handleFulfillmentChange = (method: "pickup" | "delivery") => {
+    setFulfillmentMethod(method);
+    setCheckoutError(null);
+    if (method === "pickup" && paymentMethod === "cod") {
+      setPaymentMethod("stripe");
+    } else if (method === "delivery" && paymentMethod === "showroom") {
+      setPaymentMethod("stripe");
+    }
+  };
+
+  const handleCheckoutInitiation = async () => {
     setCheckoutError(null);
 
     if (!user) {
@@ -72,12 +112,25 @@ export default function CartPage() {
 
     if (items.length === 0) return;
 
-    if (deliveryMethod === "cod" && !selectedAddressId) {
-      setCheckoutError("Add a delivery address to use Cash on Delivery.");
+    if (fulfillmentMethod === "delivery" && !selectedAddressId) {
+      setCheckoutError("Please select or add a delivery address.");
       setShowAddressForm(true);
       return;
     }
 
+    // Launch Stripe Elements Modal
+    if (paymentMethod === "stripe") {
+      setShowStripeModal(true);
+      return;
+    }
+
+    // Launch Built-in Sandbox Modal
+    if (paymentMethod === "sandbox") {
+      setShowSandboxModal(true);
+      return;
+    }
+
+    // For Cash on Delivery or Pay at Showroom
     setIsCheckingOut(true);
 
     try {
@@ -85,8 +138,10 @@ export default function CartPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          deliveryMethod: deliveryMethod === "cod" ? "Cash on Delivery" : "Pickup from Store",
-          addressId: deliveryMethod === "cod" ? selectedAddressId : null,
+          deliveryMethod: fulfillmentMethod === "delivery" ? "Cash on Delivery" : "Pickup from Store",
+          addressId: fulfillmentMethod === "delivery" ? selectedAddressId : null,
+          paymentMethod: paymentMethod === "cod" ? "Cash on Delivery" : "Pickup from Store",
+          paymentStatus: "Pending",
           items: items.map((item) => ({
             product_id: item.id,
             quantity_sqft: item.cartQuantitySqft,
@@ -102,19 +157,51 @@ export default function CartPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setCheckoutError(
-          data.error || "Checkout failed. Please try again."
-        );
+        setCheckoutError(data.error || "Checkout failed. Please try again.");
         return;
       }
 
-      // Success — clear cart and redirect to profile orders
       clearCart();
       router.push("/profile?tab=orders");
     } catch {
       setCheckoutError("Network error. Please check your connection and try again.");
     } finally {
       setIsCheckingOut(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentDetails: PaymentDetailsSnapshot, methodLabel: string) => {
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deliveryMethod: fulfillmentMethod === "delivery" ? "Island-wide Delivery" : "Pickup from Store",
+          addressId: fulfillmentMethod === "delivery" ? selectedAddressId : null,
+          paymentMethod: methodLabel,
+          paymentStatus: "Paid",
+          paymentDetails,
+          items: items.map((item) => ({
+            product_id: item.id,
+            quantity_sqft: item.cartQuantitySqft,
+          })),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Order creation failed.");
+      }
+
+      clearCart();
+      setShowStripeModal(false);
+      setShowSandboxModal(false);
+      router.push("/profile?tab=orders");
+    } catch (err: unknown) {
+      console.error("Payment order saving error:", err);
+      const msg = err instanceof Error ? err.message : "Failed to record order.";
+      setCheckoutError(msg);
+      throw err;
     }
   };
 
@@ -154,7 +241,7 @@ export default function CartPage() {
         {/* Header */}
         <div className="mb-8 motion-fade-up">
           <span className="text-[10px] font-bold uppercase tracking-widest text-yellow-600 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
-            Shopping Cart
+            Shopping Cart & Checkout
           </span>
           <h1 className="text-3xl sm:text-4xl font-display font-bold tracking-tight text-zinc-900 mt-2">
             Your Selection ({items.length} {items.length === 1 ? "Item" : "Items"})
@@ -216,7 +303,6 @@ export default function CartPage() {
                     <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
                       <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Qty (sq ft):</span>
                       
-                      {/* Sleek Rounded Pill Quantity Selector */}
                       <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
                         <button
                           onClick={() => {
@@ -272,7 +358,7 @@ export default function CartPage() {
                       </span>
                     </div>
 
-                    {/* Delete Icon with Red Hover Effect */}
+                    {/* Delete Icon */}
                     <div className="flex justify-end items-center">
                       <button
                         onClick={() => removeFromCart(item.id)}
@@ -305,193 +391,335 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* ── Order Summary Glassmorphism Sidebar ────────────────── */}
-          <div className="lg:w-96 motion-fade-up motion-delay-2">
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl border border-white/40 sticky top-28">
+          {/* ── Order Summary & Checkout Sidebar ────────────────── */}
+          <div className="lg:w-[420px] motion-fade-up motion-delay-2">
+            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-7 shadow-xl border border-gray-100 sticky top-28 space-y-6">
               
-              <div className="pb-6 mb-6 border-b border-gray-100">
+              <div className="pb-4 border-b border-gray-100">
                 <h2 className="text-xl font-display font-bold text-zinc-900 tracking-tight">
-                  Order Summary
+                  Checkout Summary
                 </h2>
-                <p className="text-xs text-gray-500 mt-0.5">Calculated total and delivery preferences.</p>
+                <p className="text-xs text-gray-500 mt-0.5">Select fulfillment and payment preferences.</p>
               </div>
 
-              {/* ── Delivery Method Selectors ─────────────────── */}
-              <div className="mb-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-3">
-                  Delivery Method
+              {/* ── Step 1: Fulfillment Method ─────────────────── */}
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2.5">
+                  1. Fulfillment Option
                 </p>
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   
                   {/* Pickup Option */}
-                  <label
-                    className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
-                      deliveryMethod === "pickup"
-                        ? "border-2 border-yellow-500 bg-yellow-50/30 shadow-sm rounded-xl"
-                        : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100 rounded-xl"
+                  <button
+                    type="button"
+                    onClick={() => handleFulfillmentChange("pickup")}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                      fulfillmentMethod === "pickup"
+                        ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                        : "border-gray-200 bg-gray-50/60 hover:bg-gray-100"
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="deliveryMethod"
-                      value="pickup"
-                      checked={deliveryMethod === "pickup"}
-                      onChange={() => setDeliveryMethod("pickup")}
-                      className="sr-only"
-                    />
-                    <div className={`p-2 rounded-lg ${deliveryMethod === "pickup" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200/60 text-gray-500"}`}>
-                      <Store className="w-5 h-5 flex-shrink-0" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm font-bold block ${
-                          deliveryMethod === "pickup" ? "text-zinc-900" : "text-gray-700"
-                        }`}>
-                          Pickup from Store
-                        </span>
-                        {deliveryMethod === "pickup" && (
-                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-2 rounded-xl ${fulfillmentMethod === "pickup" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
+                        <Store className="w-4 h-4" />
                       </div>
-                      <span className="text-xs text-gray-500 block mt-0.5">
-                        Collect from showroom
-                      </span>
+                      {fulfillmentMethod === "pickup" && (
+                        <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
                     </div>
-                  </label>
+                    <div>
+                      <span className="text-xs font-bold text-zinc-900 block">Showroom Pickup</span>
+                      <span className="text-[10px] text-gray-500 block mt-0.5">Collect from Gallery</span>
+                    </div>
+                  </button>
 
-                  {/* Cash on Delivery Option */}
-                  <label
-                    className={`flex items-center gap-4 p-4 cursor-pointer transition-all ${
-                      deliveryMethod === "cod"
-                        ? "border-2 border-yellow-500 bg-yellow-50/30 shadow-sm rounded-xl"
-                        : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100 rounded-xl"
+                  {/* Delivery Option */}
+                  <button
+                    type="button"
+                    onClick={() => handleFulfillmentChange("delivery")}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                      fulfillmentMethod === "delivery"
+                        ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                        : "border-gray-200 bg-gray-50/60 hover:bg-gray-100"
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="deliveryMethod"
-                      value="cod"
-                      checked={deliveryMethod === "cod"}
-                      onChange={() => setDeliveryMethod("cod")}
-                      className="sr-only"
-                    />
-                    <div className={`p-2 rounded-lg ${deliveryMethod === "cod" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200/60 text-gray-500"}`}>
-                      <Truck className="w-5 h-5 flex-shrink-0" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <span className={`text-sm font-bold block ${
-                          deliveryMethod === "cod" ? "text-zinc-900" : "text-gray-700"
-                        }`}>
-                          Cash on Delivery
-                        </span>
-                        {deliveryMethod === "cod" && (
-                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                          </div>
-                        )}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-2 rounded-xl ${fulfillmentMethod === "delivery" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
+                        <Truck className="w-4 h-4" />
                       </div>
-                      <span className="text-xs text-gray-500 block mt-0.5">
-                        Pay upon tile delivery
-                      </span>
+                      {fulfillmentMethod === "delivery" && (
+                        <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
                     </div>
-                  </label>
+                    <div>
+                      <span className="text-xs font-bold text-zinc-900 block">Island Delivery</span>
+                      <span className="text-[10px] text-gray-500 block mt-0.5">Direct to Site</span>
+                    </div>
+                  </button>
                 </div>
 
-                {deliveryMethod === "cod" && (
-                  <div className="mt-4 space-y-3">
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                      Delivery Address
-                    </p>
-
-                    {addresses.length === 0 && (
-                      <p className="text-xs text-gray-500">
-                        Add a delivery address before placing a Cash on Delivery order.
+                {/* Delivery Address Selector (If Delivery selected) */}
+                {fulfillmentMethod === "delivery" && (
+                  <div className="mt-3.5 space-y-2.5 bg-gray-50/80 p-3.5 rounded-2xl border border-gray-200/80 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-gray-600">
+                        Delivery Address
                       </p>
-                    )}
-
-                    {addresses.map((addr) => (
-                      <label
-                        key={addr.id}
-                        className={`flex items-start gap-3 p-3 cursor-pointer transition-all rounded-xl ${
-                          selectedAddressId === addr.id
-                            ? "border-2 border-yellow-500 bg-yellow-50/30"
-                            : "border border-gray-200 bg-gray-50/50 hover:bg-gray-100"
-                        }`}
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressForm(true)}
+                        className="text-[10px] font-bold uppercase text-yellow-700 hover:text-yellow-800"
                       >
-                        <input
-                          type="radio"
-                          name="deliveryAddress"
-                          value={addr.id}
-                          checked={selectedAddressId === addr.id}
-                          onChange={() => setSelectedAddressId(addr.id)}
-                          className="sr-only"
-                        />
-                        <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
-                          selectedAddressId === addr.id ? "text-yellow-600" : "text-gray-400"
-                        }`} />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-zinc-900">{addr.label || "Address"}</p>
-                          <p className="text-xs text-gray-600">{addr.line1}</p>
-                          {addr.line2 && <p className="text-xs text-gray-500">{addr.line2}</p>}
-                          <p className="text-[10px] uppercase tracking-wider text-gray-400 mt-1">
-                            {addr.country || "Sri Lanka"}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
+                        + New
+                      </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={() => setShowAddressForm(true)}
-                      className="w-full text-xs font-bold uppercase tracking-widest text-white bg-zinc-900 hover:bg-yellow-500 hover:text-black rounded-xl py-3 transition-all"
-                    >
-                      + Add a new address
-                    </button>
+                    {addresses.length === 0 ? (
+                      <div className="text-center py-3">
+                        <p className="text-xs text-gray-500 mb-2">No delivery address saved yet.</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddressForm(true)}
+                          className="text-xs font-bold uppercase tracking-wider text-zinc-900 bg-yellow-400 hover:bg-yellow-500 px-4 py-2 rounded-xl shadow-sm transition-all"
+                        >
+                          + Add Delivery Address
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                        {addresses.map((addr) => (
+                          <label
+                            key={addr.id}
+                            className={`flex items-start gap-2.5 p-2.5 cursor-pointer transition-all rounded-xl ${
+                              selectedAddressId === addr.id
+                                ? "border-2 border-yellow-500 bg-yellow-50/50"
+                                : "border border-gray-200 bg-white hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="deliveryAddress"
+                              value={addr.id}
+                              checked={selectedAddressId === addr.id}
+                              onChange={() => setSelectedAddressId(addr.id)}
+                              className="sr-only"
+                            />
+                            <MapPin className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
+                              selectedAddressId === addr.id ? "text-yellow-600" : "text-gray-400"
+                            }`} />
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-zinc-900">{addr.label || "Address"}</p>
+                              <p className="text-[11px] text-gray-600 truncate">{addr.line1}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
+              {/* ── Step 2: Payment Method ─────────────────────── */}
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2.5">
+                  2. Payment Method
+                </p>
+                <div className="space-y-2">
+                  
+                  {/* Stripe Test Mode Option */}
+                  <label
+                    className={`flex items-center gap-3.5 p-3.5 cursor-pointer transition-all rounded-2xl ${
+                      paymentMethod === "stripe"
+                        ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                        : "border border-gray-200 bg-gray-50/60 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="stripe"
+                      checked={paymentMethod === "stripe"}
+                      onChange={() => setPaymentMethod("stripe")}
+                      className="sr-only"
+                    />
+                    <div className={`p-2 rounded-xl ${paymentMethod === "stripe" ? "bg-yellow-500 text-zinc-950" : "bg-purple-100 text-purple-700"}`}>
+                      <CreditCard className="w-4 h-4 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                          Stripe Elements (Test Mode)
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded border border-purple-200">
+                            Live API
+                          </span>
+                        </span>
+                        {paymentMethod === "stripe" && (
+                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-gray-500 block mt-0.5">
+                        Official Stripe Cards, Apple Pay, Google Pay & Link
+                      </span>
+                    </div>
+                  </label>
+
+                  {/* Built-in Sandbox Terminal */}
+                  <label
+                    className={`flex items-center gap-3.5 p-3.5 cursor-pointer transition-all rounded-2xl ${
+                      paymentMethod === "sandbox"
+                        ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                        : "border border-gray-200 bg-gray-50/60 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="sandbox"
+                      checked={paymentMethod === "sandbox"}
+                      onChange={() => setPaymentMethod("sandbox")}
+                      className="sr-only"
+                    />
+                    <div className={`p-2 rounded-xl ${paymentMethod === "sandbox" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
+                      <Sparkles className="w-4 h-4 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                          Local Sandbox Simulator
+                          <span className="text-[9px] font-bold uppercase tracking-wider bg-yellow-500/20 text-yellow-800 px-1.5 py-0.2 rounded border border-yellow-500/30">
+                            Offline
+                          </span>
+                        </span>
+                        {paymentMethod === "sandbox" && (
+                          <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-gray-500 block mt-0.5">
+                        Built-in Virtual Card & 3DS challenge terminal
+                      </span>
+                    </div>
+                  </label>
+
+                  {/* Cash on Delivery (Delivery only) */}
+                  {fulfillmentMethod === "delivery" && (
+                    <label
+                      className={`flex items-center gap-3.5 p-3.5 cursor-pointer transition-all rounded-2xl ${
+                        paymentMethod === "cod"
+                          ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                          : "border border-gray-200 bg-gray-50/60 hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === "cod"}
+                        onChange={() => setPaymentMethod("cod")}
+                        className="sr-only"
+                      />
+                      <div className={`p-2 rounded-xl ${paymentMethod === "cod" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
+                        <Banknote className="w-4 h-4 flex-shrink-0" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-zinc-900">
+                            Cash on Delivery (COD)
+                          </span>
+                          {paymentMethod === "cod" && (
+                            <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-gray-500 block mt-0.5">
+                          Pay cash upon material unloading
+                        </span>
+                      </div>
+                    </label>
+                  )}
+
+                  {/* Pay at Showroom (Pickup only) */}
+                  {fulfillmentMethod === "pickup" && (
+                    <label
+                      className={`flex items-center gap-3.5 p-3.5 cursor-pointer transition-all rounded-2xl ${
+                        paymentMethod === "showroom"
+                          ? "border-2 border-yellow-500 bg-yellow-50/40 shadow-sm"
+                          : "border border-gray-200 bg-gray-50/60 hover:bg-gray-100"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="showroom"
+                        checked={paymentMethod === "showroom"}
+                        onChange={() => setPaymentMethod("showroom")}
+                        className="sr-only"
+                      />
+                      <div className={`p-2 rounded-xl ${paymentMethod === "showroom" ? "bg-yellow-500 text-zinc-950" : "bg-gray-200 text-gray-600"}`}>
+                        <Store className="w-4 h-4 flex-shrink-0" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-zinc-900">
+                            Pay at Showroom
+                          </span>
+                          {paymentMethod === "showroom" && (
+                            <div className="w-4 h-4 bg-yellow-500 text-zinc-950 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] text-gray-500 block mt-0.5">
+                          Settle payment during in-person tile collection
+                        </span>
+                      </div>
+                    </label>
+                  )}
+
+                </div>
+              </div>
+
               {/* Price Breakdown */}
-              <div className="space-y-3 py-4 border-t border-b border-gray-100 mb-6">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2.5 py-4 border-t border-b border-gray-100">
+                <div className="flex justify-between text-xs">
                   <span className="text-gray-500 font-medium">
                     Subtotal ({items.length} {items.length === 1 ? "item" : "items"})
                   </span>
                   <span className="font-mono text-zinc-900 font-bold">{formatCurrency(cartTotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500 font-medium">Shipping</span>
-                  <span className="font-mono text-emerald-600 font-bold text-xs uppercase">
-                    {deliveryMethod === "pickup" ? "Free (Store Pickup)" : "Free (Island-wide)"}
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500 font-medium">Shipping / Logistics</span>
+                  <span className="font-mono text-emerald-600 font-bold uppercase">
+                    {fulfillmentMethod === "pickup" ? "Free (Pickup)" : "Free (Island-wide)"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline pt-2">
+                  <span className="font-display font-bold text-zinc-900 text-base">Total Payable</span>
+                  <span className="font-mono font-bold text-xl text-zinc-900">
+                    {formatCurrency(cartTotal)}
                   </span>
                 </div>
               </div>
 
-              {/* Total Calculation Row */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2 mb-6">
-                <div>
-                  <span className="font-display font-bold text-zinc-900 text-lg block">Total Amount</span>
-                  <span className="text-[10px] text-gray-400 font-medium">Taxes included where applicable</span>
-                </div>
-                <span className="font-mono font-bold text-xl sm:text-2xl text-zinc-900 break-all">
-                  {formatCurrency(cartTotal)}
-                </span>
-              </div>
-
               {/* Error Notification */}
               {checkoutError && (
-                <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 motion-fade-up">
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3.5 motion-fade-up">
                   <p className="text-xs font-semibold text-red-700">{checkoutError}</p>
                 </div>
               )}
 
-              {/* Massive Primary PROCEED TO CHECKOUT Button */}
+              {/* Action Button */}
               <button
-                onClick={handleCheckout}
-                disabled={isCheckingOut || (deliveryMethod === "cod" && !selectedAddressId)}
+                onClick={handleCheckoutInitiation}
+                disabled={isCheckingOut || (fulfillmentMethod === "delivery" && !selectedAddressId)}
                 className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-4 w-full shadow-lg transition-all duration-300 text-center uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
                 {isCheckingOut ? (
@@ -499,23 +727,34 @@ export default function CartPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span>Processing Order...</span>
                   </>
+                ) : paymentMethod === "stripe" ? (
+                  <>
+                    <CreditCard className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
+                    <span>Pay with Stripe (Test Mode)</span>
+                  </>
+                ) : paymentMethod === "sandbox" ? (
+                  <>
+                    <Sparkles className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
+                    <span>Pay with Sandbox Simulator</span>
+                  </>
                 ) : (
                   <>
                     <Lock className="w-4 h-4 text-yellow-400 group-hover:text-black transition-colors" />
-                    <span>Proceed to Checkout</span>
+                    <span>Confirm & Place Order</span>
                   </>
                 )}
               </button>
 
-              <p className="text-[11px] text-gray-400 text-center mt-4">
-                {deliveryMethod === "cod"
-                  ? "Pay in cash when your order arrives (Free Delivery)"
-                  : "Your order will be ready for store pickup"}
-              </p>
+              <div className="flex items-center justify-center gap-2 text-[10px] text-gray-400">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Stripe Test Mode & SSL Encrypted Checkout</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Add Address Modal */}
       <AddAddressModal
         open={showAddressForm}
         onClose={() => setShowAddressForm(false)}
@@ -524,6 +763,27 @@ export default function CartPage() {
           setSelectedAddressId(address.id);
           setCheckoutError(null);
         }}
+      />
+
+      {/* Stripe Payment Elements Modal */}
+      <StripePaymentModal
+        isOpen={showStripeModal}
+        onClose={() => setShowStripeModal(false)}
+        items={items}
+        totalAmount={cartTotal}
+        onPaymentSuccess={(details) => handlePaymentSuccess(details, "Stripe (Test Mode)")}
+        onFallbackToSandbox={() => {
+          setPaymentMethod("sandbox");
+          setShowSandboxModal(true);
+        }}
+      />
+
+      {/* Built-in Sandbox Modal */}
+      <SandboxPaymentModal
+        isOpen={showSandboxModal}
+        onClose={() => setShowSandboxModal(false)}
+        totalAmount={cartTotal}
+        onPaymentSuccess={(details) => handlePaymentSuccess(details, "Online Payment (Sandbox)")}
       />
     </section>
   );

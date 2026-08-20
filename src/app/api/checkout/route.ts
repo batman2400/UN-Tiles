@@ -14,16 +14,29 @@ interface CheckoutRequestBody {
   items: CheckoutItem[];
   deliveryMethod: string;
   addressId?: string | null;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paymentDetails?: Record<string, unknown> | null;
 }
 
 interface ProcessCheckoutResult {
   order_id: string;
   total: number;
+  payment_status?: string;
+  payment_method?: string;
 }
 
 // ── Constants ──────────────────────────────────────────
 
-const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store"];
+const VALID_DELIVERY_METHODS = ["Cash on Delivery", "Pickup from Store", "Island-wide Delivery"];
+const VALID_PAYMENT_METHODS = [
+  "Stripe (Test Mode)",
+  "Stripe",
+  "Online Payment (Sandbox)",
+  "Cash on Delivery",
+  "Pickup from Store",
+  "Pay at Showroom"
+];
 const MAX_CHECKOUT_LINES = 50;
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -43,8 +56,14 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
     return false;
   }
 
-  if (candidate.deliveryMethod === "Cash on Delivery") {
+  if (candidate.deliveryMethod === "Cash on Delivery" || candidate.deliveryMethod === "Island-wide Delivery") {
     if (typeof candidate.addressId !== "string" || !UUID_RE.test(candidate.addressId)) {
+      return false;
+    }
+  }
+
+  if (candidate.paymentMethod !== undefined) {
+    if (typeof candidate.paymentMethod !== "string" || !VALID_PAYMENT_METHODS.includes(candidate.paymentMethod)) {
       return false;
     }
   }
@@ -143,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidCheckoutBody(body)) {
       return NextResponse.json(
-        { error: "Invalid cart data. Cash on Delivery requires a saved delivery address." },
+        { error: "Invalid cart or checkout data. Delivery requires a saved delivery address." },
         { status: 400 }
       );
     }
@@ -156,11 +175,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const isDelivery = body.deliveryMethod === "Cash on Delivery" || body.deliveryMethod === "Island-wide Delivery";
+    const paymentMethod = body.paymentMethod || (body.deliveryMethod === "Cash on Delivery" ? "Cash on Delivery" : "Pickup from Store");
+    const paymentStatus = body.paymentStatus || (paymentMethod === "Online Payment (Sandbox)" ? "Paid" : "Pending");
+    const paymentDetails = body.paymentDetails || {};
+
     const { data, error } = await supabase.rpc("process_checkout", {
       p_user_id: user.id,
       p_items: mappedItems,
       p_delivery_method: body.deliveryMethod,
-      p_address_id: body.deliveryMethod === "Cash on Delivery" ? body.addressId : null,
+      p_address_id: isDelivery ? body.addressId : null,
+      p_payment_method: paymentMethod,
+      p_payment_status: paymentStatus,
+      p_payment_details: paymentDetails,
     });
 
     if (error) {
@@ -184,6 +211,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       order_id: data.order_id,
+      payment_status: data.payment_status || paymentStatus,
+      payment_method: data.payment_method || paymentMethod,
     });
   } catch (error) {
     console.error("Unexpected checkout error:", error);
