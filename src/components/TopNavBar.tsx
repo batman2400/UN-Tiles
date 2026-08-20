@@ -106,9 +106,9 @@ export function TopNavBar() {
               </Link>
             </div>
 
-            {/* ═══ CENTER ISLAND — Directory Pill (Dead Center) ═══ */}
+            {/* ═══ CENTER ISLAND — Directory Pill (Dead Center with Generous Spacing) ═══ */}
             <nav
-              className={`pointer-events-auto hidden lg:flex items-center gap-3 sm:gap-4 lg:gap-5 xl:gap-6 rounded-full px-5 lg:px-6 xl:px-7 py-2.5 sm:py-3 transition-all duration-500 absolute left-1/2 -translate-x-1/2 shadow-sm ${pillClass}`}
+              className={`pointer-events-auto hidden lg:flex items-center gap-4 sm:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8 rounded-full px-6 lg:px-7 xl:px-8 py-3 sm:py-3.5 transition-all duration-500 absolute left-1/2 -translate-x-1/2 shadow-sm ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -118,14 +118,14 @@ export function TopNavBar() {
                 } else {
                   currentLinkColor = scrolled
                     ? "text-zinc-700 hover:text-black font-semibold"
-                    : "text-white/80 hover:text-white font-medium";
+                    : "text-white/85 hover:text-white font-medium";
                 }
 
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`text-[11px] xl:text-xs tracking-[0.11em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
+                    className={`text-xs xl:text-[12.5px] tracking-[0.14em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
                   >
                     <span>{label.toUpperCase()}</span>
                     {badge && (
@@ -138,20 +138,11 @@ export function TopNavBar() {
               })}
             </nav>
 
-            {/* ═══ RIGHT ISLAND — Utilities Pill (Moved to Right & Compact) ═══ */}
+            {/* ═══ RIGHT ISLAND — Utilities Pill (Moved to Right & Mobile Optimized) ═══ */}
             <div
-              className={`pointer-events-auto flex items-center gap-1 sm:gap-2.5 xl:gap-3 rounded-full px-2 sm:px-3.5 xl:px-4 py-1.5 sm:py-2.5 transition-all duration-500 flex-shrink-0 shadow-sm ${pillClass}`}
+              className={`pointer-events-auto flex items-center gap-1 sm:gap-2.5 xl:gap-3 rounded-full px-2.5 sm:px-4 xl:px-5 py-2 sm:py-2.5 transition-all duration-500 flex-shrink-0 shadow-sm ${pillClass}`}
             >
-              {/* Mobile menu trigger */}
-              <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                aria-label="Open menu"
-                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-              >
-                <Menu className="w-[18px] h-[18px]" />
-              </button>
-
+              {/* Search Toggle / Form */}
               <form 
                 onSubmit={handleSearchSubmit}
                 className={`hidden md:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-32 lg:w-36 border-b border-current/20 mr-1' : 'w-0'}`}
@@ -177,6 +168,7 @@ export function TopNavBar() {
                 <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
               </button>
 
+              {/* Admin Link */}
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
@@ -188,14 +180,16 @@ export function TopNavBar() {
                 </Link>
               )}
 
+              {/* User Avatar */}
               <div className="hidden sm:flex items-center">
                 <AuthNavIcon className={iconColor} />
               </div>
 
+              {/* Cart Icon (Visible on all screens including Mobile) */}
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative hidden sm:inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+                className={`relative inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
               >
                 <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                 {cartCount > 0 && (
@@ -204,6 +198,16 @@ export function TopNavBar() {
                   </span>
                 )}
               </Link>
+
+              {/* Mobile menu trigger */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open menu"
+                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
+              >
+                <Menu className="w-[18px] h-[18px]" />
+              </button>
             </div>
 
           </div>
