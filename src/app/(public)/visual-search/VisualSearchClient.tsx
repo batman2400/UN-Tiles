@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Upload,
+  Camera,
+  ImageIcon,
   Sparkles,
   Layers,
   Home,
@@ -15,18 +17,28 @@ import {
   Info,
   X,
   Scan,
+  CheckCircle2,
 } from "lucide-react";
 import { VisualMatchCard } from "@/components/visual-search/VisualMatchCard";
 import { SceneBriefPanel } from "@/components/visual-search/SceneBriefPanel";
+import { compressImageForUpload } from "@/lib/visual-search/client-compress";
 import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
 
 type SearchMode = "matcher" | "advisor";
+
+interface CompressionStats {
+  originalKb: number;
+  compressedKb: number;
+  savedPercent: number;
+}
 
 export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }) {
   const [mode, setMode] = useState<SearchMode>("matcher");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionStats, setCompressionStats] = useState<CompressionStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,24 +47,63 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
   const [queryTimeMs, setQueryTimeMs] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const activePreviewUrlRef = useRef<string | null>(null);
+
   const advisorLocked = mode === "advisor" && !visionEnabled;
 
-  const handleFileSelect = (file: File) => {
-    setError(null);
-    if (!["image/jpeg", "image/png", "image/webp", "image/jpg"].includes(file.type)) {
-      setError("Please upload a valid image (JPEG, PNG, or WebP).");
-      return;
-    }
-    if (file.size > 4.5 * 1024 * 1024) {
-      setError("Image size exceeds 4.5MB. Please upload a smaller photo.");
-      return;
-    }
+  // Cleanup object URLs on unmount to prevent mobile Safari memory leaks
+  useEffect(() => {
+    return () => {
+      if (activePreviewUrlRef.current) {
+        URL.revokeObjectURL(activePreviewUrlRef.current);
+      }
+    };
+  }, []);
 
-    setSelectedFile(file);
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    setMatches(null);
-    setSceneBrief(null);
+  const handleFileSelect = async (file: File) => {
+    setError(null);
+    setIsCompressing(true);
+
+    try {
+      // Clean up previous preview URL
+      if (activePreviewUrlRef.current) {
+        URL.revokeObjectURL(activePreviewUrlRef.current);
+        activePreviewUrlRef.current = null;
+      }
+
+      // Fast client-side downscale and compression (~40ms in browser)
+      const compressed = await compressImageForUpload(file, {
+        maxEdge: 1536,
+        quality: 0.85,
+      });
+
+      setSelectedFile(compressed.file);
+      setPreviewUrl(compressed.previewUrl);
+      activePreviewUrlRef.current = compressed.previewUrl;
+
+      const origKb = Math.round(compressed.originalSize / 1024);
+      const compKb = Math.round(compressed.compressedSize / 1024);
+      const saved = Math.max(0, Math.round(((compressed.originalSize - compressed.compressedSize) / compressed.originalSize) * 100));
+
+      if (origKb > compKb) {
+        setCompressionStats({
+          originalKb: origKb,
+          compressedKb: compKb,
+          savedPercent: saved,
+        });
+      } else {
+        setCompressionStats(null);
+      }
+
+      setMatches(null);
+      setSceneBrief(null);
+    } catch (err: unknown) {
+      console.error("[VisualSearch] Compression error:", err);
+      setError("Could not process this photo. Please try another image.");
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -76,8 +127,12 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
 
   const handleReset = () => {
     setSelectedFile(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (activePreviewUrlRef.current) {
+      URL.revokeObjectURL(activePreviewUrlRef.current);
+      activePreviewUrlRef.current = null;
+    }
     setPreviewUrl(null);
+    setCompressionStats(null);
     setMatches(null);
     setSceneBrief(null);
     setError(null);
@@ -114,14 +169,19 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         scene?: SceneBrief;
         queryTimeMs?: number;
       };
+
       try {
         data = JSON.parse(raw) as typeof data;
       } catch {
-        throw new Error(
-          response.status === 404
-            ? "Visual Match is not available on this deployment yet. Wait for Vercel to finish, then add GEMINI_EMBED_API_KEY and SUPABASE_SERVICE_ROLE_KEY in Project Settings."
-            : "The matcher hit a server error instead of JSON. Check Vercel logs, and confirm the embed and service-role keys are set on the host."
-        );
+        if (response.status === 404) {
+          throw new Error("Visual Match is not configured on this deployment yet.");
+        } else if (response.status === 413) {
+          throw new Error("Image payload too large. Please select a smaller photo.");
+        } else {
+          throw new Error(
+            "The AI matcher encountered a server error. Please ensure GEMINI_EMBED_API_KEY and SUPABASE_SERVICE_ROLE_KEY are configured in your Vercel Project Settings."
+          );
+        }
       }
 
       if (!response.ok || !data.success) {
@@ -145,7 +205,8 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
 
   return (
     <div className="min-h-screen bg-background text-on-surface pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12">
+        {/* Header Title */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
@@ -156,58 +217,63 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
             Find Your Perfect Tile Match
           </h1>
 
-          <p className="text-base sm:text-lg text-on-surface-variant leading-relaxed">
+          <p className="text-sm sm:text-lg text-on-surface-variant leading-relaxed">
             Upload an inspiration photo, material texture, or a picture of your room.
             Our Gemini AI vector matcher instantly pairs it with our curated catalog.
           </p>
         </div>
 
+        {/* Mode Switcher Tabs */}
         <div className="flex justify-center">
-          <div className="inline-flex p-1.5 rounded-2xl bg-surface-container border border-outline/30 premium-shadow">
+          <div className="inline-flex p-1 sm:p-1.5 rounded-2xl bg-surface-container border border-outline/30 premium-shadow max-w-full">
             <button
+              type="button"
               onClick={() => {
                 setMode("matcher");
                 setMatches(null);
                 setSceneBrief(null);
                 setError(null);
               }}
-              className={`flex items-center gap-2 px-5 sm:px-7 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                 mode === "matcher"
                   ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              <Layers className="w-4 h-4" />
+              <Layers className="w-4 h-4 shrink-0" />
               <span>Tile Matcher</span>
-              <span className="hidden sm:inline text-[10px] opacity-75 font-normal">
+              <span className="hidden md:inline text-[10px] opacity-75 font-normal">
                 (Material & Pattern)
               </span>
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 setMode("advisor");
                 setMatches(null);
                 setSceneBrief(null);
                 setError(null);
               }}
-              className={`flex items-center gap-2 px-5 sm:px-7 py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
                 mode === "advisor"
                   ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:text-on-surface"
               }`}
             >
-              <Home className="w-4 h-4" />
+              <Home className="w-4 h-4 shrink-0" />
               <span>Scene Advisor</span>
-              <span className="hidden sm:inline text-[10px] opacity-75 font-normal">
+              <span className="hidden md:inline text-[10px] opacity-75 font-normal">
                 (Room & Lighting)
               </span>
             </button>
           </div>
         </div>
 
-        <div className="max-w-2xl mx-auto bg-surface-container-lowest border border-outline/40 rounded-3xl p-6 sm:p-8 premium-shadow-lg transition-all">
+        {/* Main Upload / Search Card */}
+        <div className="max-w-2xl mx-auto bg-surface-container-lowest border border-outline/40 rounded-3xl p-5 sm:p-8 premium-shadow-lg transition-all">
           <div className="space-y-6">
+            {/* Context Info Banner */}
             <div className="flex items-start gap-3 bg-surface-container/60 p-3.5 rounded-2xl text-xs text-on-surface-variant border border-outline/20">
               <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
               <p>
@@ -238,94 +304,174 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                   Open Tile Matcher
                 </button>
               </div>
+            ) : isCompressing ? (
+              <div className="rounded-2xl border-2 border-dashed border-accent/50 p-10 text-center flex flex-col items-center justify-center gap-3 bg-accent/5">
+                <RefreshCw className="w-7 h-7 text-accent animate-spin" />
+                <p className="text-sm font-semibold text-on-surface">Optimizing photo for instant match...</p>
+                <p className="text-xs text-on-surface-variant">Compressing and preserving fine texture details</p>
+              </div>
             ) : !previewUrl ? (
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={`group relative border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all duration-300 flex flex-col items-center justify-center gap-4 ${
-                  isDragging
-                    ? "border-accent bg-accent/5 scale-[1.01]"
-                    : "border-outline hover:border-accent hover:bg-surface-container/40"
-                }`}
-              >
-                <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:text-accent group-hover:scale-110 transition-all duration-300">
-                  <Upload className="w-7 h-7" />
+              <div className="space-y-4">
+                {/* Drag and Drop Zone */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`group relative border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center transition-all duration-300 flex flex-col items-center justify-center gap-3 ${
+                    isDragging
+                      ? "border-accent bg-accent/5 scale-[1.01]"
+                      : "border-outline hover:border-accent hover:bg-surface-container/40"
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-surface-container flex items-center justify-center text-on-surface-variant group-hover:text-accent group-hover:scale-110 transition-all duration-300">
+                    <Upload className="w-6 h-6" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-sm sm:text-base font-semibold text-on-surface">
+                      Select or snap a photo of any tile or space
+                    </p>
+                    <p className="text-xs text-on-surface-variant">
+                      Supports iPhone photos, JPEG, PNG, or WebP
+                    </p>
+                  </div>
+
+                  {/* Mobile-Friendly Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2 w-full max-w-sm">
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current?.click()}
+                      className="flex-1 min-w-[130px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-primary text-on-primary text-xs font-semibold hover:bg-black transition-all shadow-sm active:scale-95"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Take Photo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 min-w-[130px] flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-surface-container border border-outline/30 text-on-surface text-xs font-semibold hover:bg-surface-container-high transition-all active:scale-95"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      <span>Choose Photo</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-1.5">
-                  <p className="text-sm sm:text-base font-semibold text-on-surface">
-                    Drag and drop your photo here, or{" "}
-                    <span className="text-accent underline underline-offset-4">browse files</span>
-                  </p>
-                  <p className="text-xs text-on-surface-variant">
-                    Supports JPEG, PNG, or WebP (up to 4.5 MB)
-                  </p>
-                </div>
-
+                {/* Hidden File Inputs */}
+                {/* Standard File Picker */}
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*"
                   className="hidden"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       handleFileSelect(e.target.files[0]);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+
+                {/* Camera Capture File Picker for Mobile */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileSelect(e.target.files[0]);
+                      e.target.value = "";
                     }
                   }}
                 />
               </div>
             ) : (
-              <div className="relative rounded-2xl overflow-hidden bg-surface-container border border-outline/30 aspect-4/3 max-h-80 mx-auto group">
-                <Image
-                  src={previewUrl}
-                  alt="Search upload preview"
-                  fill
-                  unoptimized
-                  className="object-contain"
-                />
+              <div className="space-y-3">
+                {/* Image Preview Container with Smooth Hardware-Accelerated Scanner */}
+                <div className="relative rounded-2xl overflow-hidden bg-surface-container border border-outline/30 aspect-4/3 max-h-80 mx-auto group transform-gpu">
+                  <Image
+                    src={previewUrl}
+                    alt="Search upload preview"
+                    fill
+                    unoptimized
+                    className="object-contain"
+                  />
 
-                {!isLoading && (
-                  <button
-                    onClick={handleReset}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md border border-white/20 transition-all"
-                    title="Remove image"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
+                  {/* Clear Button */}
+                  {!isLoading && (
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-sm border border-white/20 transition-all z-20"
+                      title="Remove image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
 
-                {isLoading && (
-                  <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex flex-col items-center justify-center text-white space-y-3 z-30">
-                    <div className="relative w-16 h-16 flex items-center justify-center">
-                      <div className="absolute inset-0 rounded-full border-2 border-amber-400/30 animate-ping" />
-                      <div className="w-12 h-12 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
-                      <Scan className="w-5 h-5 text-amber-300 absolute" />
+                  {/* GPU-Isolated Smooth Scanning Overlay (Zero Screen Blinking) */}
+                  {isLoading && (
+                    <div className="absolute inset-0 bg-black/65 backdrop-blur-sm flex flex-col items-center justify-center text-white space-y-4 z-30 transform-gpu will-change-transform">
+                      {/* Scanning Radar Line */}
+                      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_rgba(251,191,36,0.9)] animate-pulse" />
+
+                      {/* Smooth Center AI Spinner */}
+                      <div className="relative w-14 h-14 flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin" />
+                        <Scan className="w-5 h-5 text-amber-300 absolute" />
+                      </div>
+
+                      <div className="text-center px-4 space-y-1">
+                        <p className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-amber-200">
+                          {mode === "matcher"
+                            ? "Matching 768-D Vector Embeddings..."
+                            : "Analyzing Space & Designing Brief..."}
+                        </p>
+                        <p className="text-[11px] text-stone-300">
+                          Searching curated UN Tiles catalog
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-amber-200">
-                      {mode === "matcher"
-                        ? "Generating 768-D Vector Embeddings..."
-                        : "Analyzing Space & Designing Brief..."}
-                    </p>
+                  )}
+                </div>
+
+                {/* Compression Efficiency Badge */}
+                {compressionStats && !isLoading && (
+                  <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-container text-[11px] text-on-surface-variant border border-outline/20">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      <span>Optimized for fast matching</span>
+                    </span>
+                    <span className="text-[10px] font-mono text-on-surface-variant">
+                      {compressionStats.originalKb}KB → {compressionStats.compressedKb}KB ({compressionStats.savedPercent}% smaller)
+                    </span>
                   </div>
                 )}
               </div>
             )}
 
+            {/* Error Message */}
             {error && (
-              <div className="flex items-center gap-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 p-4 rounded-xl text-xs sm:text-sm text-red-700 dark:text-red-300">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>{error}</span>
+              <div className="flex items-start gap-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 p-4 rounded-xl text-xs sm:text-sm text-red-700 dark:text-red-300">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold">Visual Search Notice</p>
+                  <p className="text-xs opacity-90 leading-relaxed">{error}</p>
+                </div>
               </div>
             )}
 
+            {/* Search Action Buttons */}
             {previewUrl && !advisorLocked && (
-              <div className="flex items-center gap-3 pt-2">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 pt-2">
                 <button
+                  type="button"
                   onClick={handleSearch}
-                  disabled={isLoading}
-                  className="flex-1 py-3.5 px-6 rounded-xl bg-primary text-on-primary font-semibold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-black transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isLoading || isCompressing}
+                  className="flex-1 py-3.5 px-6 rounded-xl bg-primary text-on-primary font-semibold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-black transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
                 >
                   {isLoading ? (
                     <>
@@ -341,9 +487,10 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleReset}
-                  disabled={isLoading}
-                  className="py-3.5 px-4 rounded-xl border border-outline text-on-surface text-xs font-semibold uppercase tracking-wider hover:bg-surface-container transition-all"
+                  disabled={isLoading || isCompressing}
+                  className="py-3.5 px-5 rounded-xl border border-outline text-on-surface text-xs font-semibold uppercase tracking-wider hover:bg-surface-container transition-all disabled:opacity-50"
                 >
                   Clear
                 </button>
@@ -352,12 +499,14 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           </div>
         </div>
 
+        {/* Scene Advisor Output */}
         {sceneBrief && (
           <div className="space-y-6 pt-4">
             <SceneBriefPanel brief={sceneBrief} />
           </div>
         )}
 
+        {/* Catalog Match Results */}
         {matches && (
           <div className="space-y-6 pt-6">
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-outline/30 pb-4">
@@ -408,6 +557,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           </div>
         )}
 
+        {/* Footer Disclaimer */}
         <div className="border-t border-outline/30 pt-8 mt-16 max-w-4xl mx-auto text-center space-y-2 text-xs text-on-surface-variant leading-relaxed">
           <p>
             <strong>Note:</strong> AI visual match rankings are generated via Google Gemini multimodal embeddings and provide design inspiration. Because lighting, screen calibration, and glaze finishes vary, we recommend confirming exact tile colors and surface textures at our UN Tiles showroom before placing large orders.

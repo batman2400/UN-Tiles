@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ChevronDown, Sparkles } from "lucide-react";
 import type { LengthUnit, NotchCorner, Pattern, RoomShape } from "@/lib/tile-planner";
 import { polygonToPath, roomPolygon } from "@/lib/tile-planner";
@@ -195,7 +195,6 @@ export function RoomInputs({
   const maxY = Math.max(0, Math.round(pitchYMm) - 1);
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const advancedRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="space-y-6">
@@ -342,12 +341,9 @@ export function RoomInputs({
         </button>
 
         <div
-          ref={advancedRef}
           className="overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out"
           style={{
-            maxHeight: showAdvanced
-              ? `${advancedRef.current?.scrollHeight ?? 600}px`
-              : "0px",
+            maxHeight: showAdvanced ? "800px" : "0px",
             opacity: showAdvanced ? 1 : 0,
           }}
         >
