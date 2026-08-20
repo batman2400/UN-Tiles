@@ -6,10 +6,10 @@ const PRIMARY_MODEL = "gemini-3.7-flash";
 const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
 
 function getVisionClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_VISION_API_KEY;
+  const apiKey = process.env.GEMINI_VISION_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
     throw new Error(
-      "Missing GEMINI_VISION_API_KEY environment variable. " +
+      "Missing GEMINI_VISION_API_KEY or GEMINI_API_KEY environment variable. " +
       "Please set GEMINI_VISION_API_KEY in your .env.local or deployment environment."
     );
   }
@@ -17,7 +17,10 @@ function getVisionClient(): GoogleGenAI {
 }
 
 export function isVisionConfigured(): boolean {
-  return Boolean(process.env.GEMINI_VISION_API_KEY?.trim());
+  return Boolean(
+    process.env.GEMINI_VISION_API_KEY?.trim() ||
+    process.env.GEMINI_API_KEY?.trim()
+  );
 }
 
 const SCENE_PROMPT = `
