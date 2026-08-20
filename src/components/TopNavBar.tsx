@@ -76,57 +76,60 @@ export function TopNavBar() {
     if (mobileOpen) setMobileOpen(false);
   }
 
-  // Unified glassmorphism pill style
+  // Glassmorphism style for center & right pills
   const pillClass = scrolled
-    ? "bg-white/95 backdrop-blur-xl border border-zinc-200/90 shadow-xl shadow-black/5"
-    : "bg-white/85 backdrop-blur-xl border border-white/60 shadow-lg shadow-black/5";
+    ? "bg-white/80 backdrop-blur-md border border-zinc-200/80 shadow-sm"
+    : "bg-black/35 backdrop-blur-md border border-white/10";
 
-  const iconColor = "text-zinc-700 hover:text-black";
+  const iconColor = scrolled
+    ? "text-zinc-700 hover:text-black"
+    : "text-white/85 hover:text-white";
 
   return (
     <>
-      {/* ── Unified Floating Glass Capsule Navbar ── */}
-      <header className="fixed top-0 left-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)] px-3 sm:px-6 lg:px-8 pt-3 sm:pt-4">
-        <div className="max-w-7xl mx-auto">
-          <div
-            className={`pointer-events-auto h-14 sm:h-16 px-3.5 sm:px-6 rounded-full flex items-center justify-between transition-all duration-500 ${pillClass}`}
-          >
-            {/* ═══ 1. BRAND LOGO ═══ */}
-            <div className="flex items-center flex-shrink-0">
-              <Link
-                href="/"
-                className="flex items-center transition-transform duration-300 hover:scale-105"
-              >
+      {/* ── Split Island Navbar ── */}
+      <div className="fixed top-0 w-full z-[100] pointer-events-none pt-[env(safe-area-inset-top)]">
+        <div className="max-w-[90rem] mx-auto px-3 sm:px-6 lg:px-10 pt-3 sm:pt-5">
+          <div className="flex items-center justify-between gap-2 relative">
+
+            {/* ═══ LEFT ISLAND — Brand Anchor (no container) ═══ */}
+            <div className="pointer-events-auto flex-shrink-0 min-w-0">
+              <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
                 <Image
                   src="/images/final Logo without background.png"
                   alt="UN Tiles"
-                  width={240}
-                  height={80}
-                  className="h-8 sm:h-10 w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.08)]"
+                  width={320}
+                  height={110}
+                  className="h-11 w-auto sm:h-[72px] object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
                   priority
                 />
               </Link>
             </div>
 
-            {/* ═══ 2. DIRECTORY NAVIGATION (Desktop) ═══ */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {/* ═══ CENTER ISLAND — Directory Pill (Shifted left to prevent cramping) ═══ */}
+            <nav
+              className={`pointer-events-auto hidden lg:flex items-center gap-4 lg:gap-5 xl:gap-7 2xl:gap-8 rounded-full px-5 lg:px-7 2xl:px-8 py-3 transition-all duration-500 absolute lg:left-[43%] xl:left-[45%] 2xl:left-1/2 -translate-x-1/2 ${pillClass}`}
+            >
               {NAV_LINKS.map(({ href, label, badge }) => {
-                const isActive =
-                  href === "/" ? pathname === "/" : pathname.startsWith(href);
+                const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+                let currentLinkColor;
+                if (isActive) {
+                  currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
+                } else {
+                  currentLinkColor = scrolled
+                    ? "text-zinc-700 hover:text-black font-medium"
+                    : "text-white/80 hover:text-white font-medium";
+                }
 
                 return (
                   <Link
                     key={href}
                     href={href}
-                    className={`px-3 xl:px-4 py-2 rounded-full text-xs xl:text-[13px] tracking-wider uppercase transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
-                      isActive
-                        ? "text-black font-bold bg-zinc-900/10 shadow-inner"
-                        : "text-zinc-600 hover:text-black hover:bg-zinc-900/5 font-medium"
-                    }`}
+                    className={`text-xs tracking-[0.18em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
                   >
-                    <span>{label}</span>
+                    <span>{label.toUpperCase()}</span>
                     {badge && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-800 font-bold border border-amber-500/30">
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
                         {badge}
                       </span>
                     )}
@@ -135,84 +138,78 @@ export function TopNavBar() {
               })}
             </nav>
 
-            {/* ═══ 3. UTILITIES & ACTIONS ═══ */}
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              {/* Expandable Search */}
-              <form
+            {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
+            <div
+              className={`pointer-events-auto flex items-center gap-1.5 sm:gap-4 xl:gap-5 rounded-full px-2 sm:px-5 xl:px-6 py-1.5 sm:py-3 transition-all duration-500 flex-shrink-0 ${pillClass}`}
+            >
+              {/* Mobile menu trigger */}
+              <button
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                aria-label="Open menu"
+                className={`lg:hidden h-10 w-10 inline-flex items-center justify-center transition-colors duration-300 ${iconColor}`}
+              >
+                <Menu className="w-[18px] h-[18px]" />
+              </button>
+
+              <form 
                 onSubmit={handleSearchSubmit}
-                className={`hidden sm:flex items-center transition-all duration-300 overflow-hidden ${
-                  searchOpen
-                    ? "w-32 sm:w-44 bg-zinc-100/90 rounded-full px-3 py-1 border border-zinc-200 mr-1"
-                    : "w-0"
-                }`}
+                className={`hidden md:flex items-center transition-all duration-500 overflow-hidden ${searchOpen ? 'w-36 lg:w-40 border-b border-white/20 mr-1' : 'w-0'}`}
               >
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search catalog..."
-                  className="bg-transparent outline-none text-xs text-zinc-800 placeholder:text-zinc-400 w-full"
+                  placeholder="Search..."
+                  className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
                   onBlur={() => {
                     if (!searchQuery) setSearchOpen(false);
                   }}
                 />
               </form>
-
-              <button
+              <button 
                 type="button"
                 onClick={() => setSearchOpen(!searchOpen)}
                 aria-label="Search"
-                className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
+                className={`hidden md:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
-                <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                <Search className="w-[18px] h-[18px]" />
               </button>
 
-              {/* Admin Link */}
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
-                  className={`hidden sm:flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full hover:bg-zinc-100 transition-colors ${iconColor}`}
+                  className={`hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 ${iconColor}`}
                 >
-                  <Shield className="w-3.5 h-3.5 text-accent" />
-                  <span className="hidden xl:inline">Admin</span>
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden lg:inline">Admin</span>
                 </Link>
               )}
 
-              {/* Profile / Account Icon */}
-              <div className="flex items-center">
+              <div className="hidden sm:block">
                 <AuthNavIcon className={iconColor} />
               </div>
 
-              {/* Cart Icon */}
               <Link
                 href="/cart"
                 aria-label="Cart"
-                className={`relative h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
+                className={`relative hidden sm:inline-flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${iconColor}`}
               >
-                <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+                <ShoppingCart className="w-[18px] h-[18px]" />
                 {cartCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="absolute top-1 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
                     {cartCount}
                   </span>
                 )}
               </Link>
-
-              {/* Mobile / Tablet Menu Button */}
-              <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                aria-label="Open menu"
-                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 rounded-full inline-flex items-center justify-center hover:bg-zinc-100 transition-colors ${iconColor}`}
-              >
-                <Menu className="w-5 h-5" />
-              </button>
             </div>
+
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* ── Mobile & Tablet Drawer ── */}
+      {/* ── Mobile Drawer ── */}
       <AnimatePresence>
         {mobileOpen && (
           <div className="fixed inset-0 z-[110] lg:hidden">
@@ -231,7 +228,7 @@ export function TopNavBar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute top-0 right-0 h-full w-[min(22rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+              className="absolute top-0 right-0 h-full w-[min(20rem,88vw)] bg-surface-container-lowest shadow-2xl flex flex-col pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
             >
               <div className="flex items-center justify-between p-5 sm:p-6 border-b ghost-border">
                 <Image
@@ -239,15 +236,15 @@ export function TopNavBar() {
                   alt="UN Tiles"
                   width={200}
                   height={70}
-                  className="h-9 sm:h-10 w-auto object-contain"
+                  className="h-10 w-auto object-contain"
                 />
                 <button
                   type="button"
                   onClick={() => setMobileOpen(false)}
                   aria-label="Close menu"
-                  className="min-h-10 min-w-10 inline-flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors rounded-full hover:bg-surface-container"
+                  className="min-h-11 min-w-11 inline-flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             
