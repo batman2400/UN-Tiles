@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -17,6 +17,7 @@ import {
   Info,
   X,
   Scan,
+  Filter,
 } from "lucide-react";
 import { VisualMatchCard } from "@/components/visual-search/VisualMatchCard";
 import { SceneBriefPanel } from "@/components/visual-search/SceneBriefPanel";
@@ -25,8 +26,17 @@ import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
 
 type SearchMode = "matcher" | "advisor";
 
+const CATEGORY_TABS = [
+  { id: "all", label: "All Matches" },
+  { id: "floor", label: "Floor Tiles" },
+  { id: "wall", label: "Wall Tiles" },
+  { id: "mosaics", label: "Mosaics" },
+  { id: "pool-tiles", label: "Pool Tiles" },
+];
+
 export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }) {
   const [mode, setMode] = useState<SearchMode>("matcher");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -114,6 +124,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
     setSceneBrief(null);
     setError(null);
     setQueryTimeMs(null);
+    setSelectedCategory("all");
   };
 
   const handleSearch = async () => {
@@ -123,6 +134,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
     setError(null);
     setMatches(null);
     setSceneBrief(null);
+    setSelectedCategory("all");
 
     const formData = new FormData();
     formData.append("image", selectedFile);
@@ -165,7 +177,9 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         throw new Error(data.error || "Visual search failed. Please try again.");
       }
 
-      setMatches(data.matches || []);
+      if (Array.isArray(data.matches)) {
+        setMatches(data.matches);
+      }
       if (data.scene) {
         setSceneBrief(data.scene);
       }
@@ -179,6 +193,21 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       setIsLoading(false);
     }
   };
+
+  const categoryCounts = useMemo(() => {
+    if (!matches) return {};
+    const counts: Record<string, number> = { all: matches.length };
+    for (const m of matches) {
+      counts[m.categorySlug] = (counts[m.categorySlug] || 0) + 1;
+    }
+    return counts;
+  }, [matches]);
+
+  const filteredMatches = useMemo(() => {
+    if (!matches) return [];
+    if (selectedCategory === "all") return matches;
+    return matches.filter((m) => m.categorySlug === selectedCategory);
+  }, [matches, selectedCategory]);
 
   return (
     <div className="min-h-screen bg-background text-on-surface pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8">
@@ -472,7 +501,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         {/* Catalog Match Results */}
         {matches && (
           <div className="space-y-6 pt-6">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-outline/30 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline/30 pb-4">
               <div>
                 <p className="text-xs uppercase tracking-widest text-accent font-semibold">
                   Catalog Matches
@@ -492,9 +521,43 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
               )}
             </div>
 
-            {matches.length > 0 ? (
+            {/* Category Filter Pills */}
+            {matches.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 pb-2">
+                {CATEGORY_TABS.map((tab) => {
+                  const count = categoryCounts[tab.id] || 0;
+                  if (tab.id !== "all" && count === 0) return null;
+                  const isActive = selectedCategory === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(tab.id)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                        isActive
+                          ? "bg-primary text-on-primary shadow-sm"
+                          : "bg-surface-container/70 text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-outline/30"
+                      }`}
+                    >
+                      <span>{tab.label}</span>
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-surface text-on-surface-variant"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {filteredMatches.length > 0 ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {matches.map((product, index) => (
+                {filteredMatches.map((product, index) => (
                   <VisualMatchCard
                     key={product.id}
                     product={product}
@@ -502,6 +565,19 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                     priority={index < 4}
                   />
                 ))}
+              </div>
+            ) : matches.length > 0 ? (
+              <div className="text-center py-10 space-y-3 bg-surface-container/30 rounded-3xl p-6 border border-outline/20">
+                <p className="text-sm text-on-surface-variant">
+                  No matches in the <strong className="text-on-surface capitalize">{selectedCategory.replace("-", " ")}</strong> category.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-on-primary text-xs font-semibold uppercase tracking-wider hover:bg-black transition-all"
+                >
+                  View All {matches.length} Matches
+                </button>
               </div>
             ) : (
               <div className="text-center py-12 space-y-4 bg-surface-container/30 rounded-3xl p-8 border border-outline/20">
