@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { SceneBrief } from "./types";
+import { sanitizeSceneBrief } from "./scene-filters";
 
 const PRIMARY_MODEL = "gemini-3.7-flash";
 const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
@@ -24,24 +25,25 @@ You are an expert architectural interior designer for UN Tiles, a luxury tile br
 Analyze this room/interior photo carefully.
 
 UN Tiles Catalog Categories:
-- "floor": polished marble slabs, natural travertine, terracotta, limestone, natural oak wood-look porcelain planks, and slate for living rooms, dining rooms, hallways, foyers, bedrooms, and commercial/residential indoor flooring.
-- "wall": decorative wall ceramics, zellige artisan tiles, metro subway bricks, and metallic slabs for backsplashes, shower walls, fireplace surrounds, and feature walls.
-- "mosaics": fluted kit-kat finger tiles and geometric sheets for vanity backsplashes, niche accents, and shower pans.
-- "pool-tiles": ONLY for swimming pools, outdoor spas, fountains, and submerged aquatic features.
+- "floor": polished marble, travertine, terracotta, limestone, wood-look porcelain, and slate for living rooms, dining rooms, halls, foyers, bedrooms, and indoor flooring.
+- "wall": decorative wall ceramics, zellige, metro subway, and metallic slabs for backsplashes, shower walls, fireplace surrounds, and feature walls.
+- "mosaics": kit-kat finger tiles and geometric sheets for vanity backsplashes, niches, and shower pans.
+- "pool-tiles": ONLY swimming pools, outdoor spas, fountains, and submerged aquatic features.
 
 CRITICAL ARCHITECTURAL RULES:
-1. For targetCategory: Choose EXACTLY ONE UN Tiles category:
-   - "pool-tiles" if and only if the image is a swimming pool, outdoor spa, plunge pool, fountain, or aquatic area.
-   - "floor" for indoor living rooms, dining rooms, hallways, retail stores, foyers, bedrooms, and general flooring.
+1. targetCategory — choose EXACTLY ONE:
+   - "pool-tiles" ONLY if the photo clearly shows a swimming pool, plunge pool, outdoor spa, fountain basin, or underwater mosaic. Water reflections on an indoor floor do NOT count.
+   - "floor" for indoor living rooms, dining rooms, halls, hallways, foyers, bedrooms, kitchens (floor), retail interiors, and banquet halls.
    - "wall" for bathroom walls, backsplashes, shower walls, fireplace surrounds, feature accent walls.
-   - "mosaics" for kit-kat finger tiles, geometric mosaic swatches, vanity backsplashes.
-   - "all" if multi-surface or ambiguous.
-2. For indoor living spaces (Living Room, Dining Room, Hallway, Foyer, Bedroom, Kitchen Floor), recommend authentic residential FLOOR or WALL tiles. NEVER suggest pool tiles for standard indoor living rooms, dining rooms, or hallways.
-3. For roomType, identify the space accurately (e.g., "Dining Room", "Luxury Living Room", "Modern Hallway", "Contemporary Kitchen", "Master Bathroom", "Outdoor Patio", "Swimming Pool").
-4. For idealTileQuery, write ONE short, descriptive sentence (12-25 words) specifying the ideal tile material, finish, tone, and texture to harmonize with this space (e.g., "warm ivory honed travertine porcelain floor tile with subtle linear veining" or "natural honey oak wood-look porcelain plank tile for warm dining room flooring").
-5. Extract 4 to 5 dominant and accent hex colors from the room (e.g., ["#F4EFEA", "#C9B8A2", "#685F54", "#2B2824"]). Ensure valid #RRGGBB format.
-6. styleTags: 3 to 4 design aesthetic tags (e.g., ["Minimalist", "Warm Japandi", "Modern Industrial", "Contemporary Luxury"]).
-7. surfaces: Which tile surfaces are prominent or recommended for this space (e.g., "Floor", "Floor & Feature Wall", "Kitchen Backsplash", "Shower Enclosure", "Pool Basin").
+   - "mosaics" for kit-kat / geometric mosaic swatches or vanity backsplashes.
+   - "all" if multi-surface or ambiguous — never default indoor rooms to pool-tiles.
+2. Glossy, wet-looking, or highly reflective marble in a hall, dining room, or living room is still FLOOR. Never call it a pool.
+3. NEVER set targetCategory to "pool-tiles" for a hall, dining room, living room, bedroom, kitchen, foyer, lobby, or bathroom.
+4. roomType must be specific and honest (e.g. "Dining Room", "Grand Hall", "Luxury Living Room", "Modern Hallway", "Master Bathroom", "Swimming Pool"). Do not invent a pool if furniture, a table, chairs, a chandelier, or a corridor is visible.
+5. idealTileQuery: ONE sentence (12-25 words) naming indoor floor/wall material, finish, and tone. For halls and dining rooms always specify "floor tile" (porcelain, marble-look, wood-look, travertine). Never mention pool, aquatic, or submerged mosaic for indoor rooms.
+6. Extract 4 to 5 hex colors (#RRGGBB).
+7. styleTags: 3 to 4 aesthetic tags. Do not use tags like "Poolside" or "Aquatic" unless the photo is actually a pool.
+8. surfaces: "Floor" for halls and dining rooms unless the photo is clearly a wall/backsplash.
 `;
 
 export async function analyzeScene(
@@ -126,7 +128,7 @@ export async function analyzeScene(
         );
       }
 
-      return parsed;
+      return sanitizeSceneBrief(parsed);
     } catch (err: unknown) {
       lastError = err;
       const errObj = err as { status?: number; message?: string } | undefined;
