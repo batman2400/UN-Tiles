@@ -17,7 +17,6 @@ import {
   Info,
   X,
   Scan,
-  CheckCircle2,
 } from "lucide-react";
 import { VisualMatchCard } from "@/components/visual-search/VisualMatchCard";
 import { SceneBriefPanel } from "@/components/visual-search/SceneBriefPanel";
@@ -26,19 +25,12 @@ import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
 
 type SearchMode = "matcher" | "advisor";
 
-interface CompressionStats {
-  originalKb: number;
-  compressedKb: number;
-  savedPercent: number;
-}
-
 export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }) {
   const [mode, setMode] = useState<SearchMode>("matcher");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
-  const [compressionStats, setCompressionStats] = useState<CompressionStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,20 +74,6 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       setPreviewUrl(compressed.previewUrl);
       activePreviewUrlRef.current = compressed.previewUrl;
 
-      const origKb = Math.round(compressed.originalSize / 1024);
-      const compKb = Math.round(compressed.compressedSize / 1024);
-      const saved = Math.max(0, Math.round(((compressed.originalSize - compressed.compressedSize) / compressed.originalSize) * 100));
-
-      if (origKb > compKb) {
-        setCompressionStats({
-          originalKb: origKb,
-          compressedKb: compKb,
-          savedPercent: saved,
-        });
-      } else {
-        setCompressionStats(null);
-      }
-
       setMatches(null);
       setSceneBrief(null);
     } catch (err: unknown) {
@@ -132,7 +110,6 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       activePreviewUrlRef.current = null;
     }
     setPreviewUrl(null);
-    setCompressionStats(null);
     setMatches(null);
     setSceneBrief(null);
     setError(null);
@@ -305,10 +282,9 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                 </button>
               </div>
             ) : isCompressing ? (
-              <div className="rounded-2xl border-2 border-dashed border-accent/50 p-10 text-center flex flex-col items-center justify-center gap-3 bg-accent/5">
-                <RefreshCw className="w-7 h-7 text-accent animate-spin" />
-                <p className="text-sm font-semibold text-on-surface">Optimizing photo for instant match...</p>
-                <p className="text-xs text-on-surface-variant">Compressing and preserving fine texture details</p>
+              <div className="rounded-2xl border-2 border-dashed border-outline/40 p-10 text-center flex flex-col items-center justify-center gap-3 bg-surface-container/30">
+                <RefreshCw className="w-6 h-6 text-accent animate-spin" />
+                <p className="text-xs text-on-surface-variant font-medium">Loading photo...</p>
               </div>
             ) : !previewUrl ? (
               <div className="space-y-4">
@@ -437,19 +413,6 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                     </div>
                   )}
                 </div>
-
-                {/* Compression Efficiency Badge */}
-                {compressionStats && !isLoading && (
-                  <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-surface-container text-[11px] text-on-surface-variant border border-outline/20">
-                    <span className="flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      <span>Optimized for fast matching</span>
-                    </span>
-                    <span className="text-[10px] font-mono text-on-surface-variant">
-                      {compressionStats.originalKb}KB → {compressionStats.compressedKb}KB ({compressionStats.savedPercent}% smaller)
-                    </span>
-                  </div>
-                )}
               </div>
             )}
 
