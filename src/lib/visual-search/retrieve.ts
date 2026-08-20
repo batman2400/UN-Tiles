@@ -79,6 +79,8 @@ export async function retrieveCatalogMatches(
     queryHistogram?: number[] | null;
     colorWeight?: number;
     take?: number;
+    excludeCategories?: string[];
+    allowedCategories?: string[];
   }
 ): Promise<MatchedProduct[]> {
   const take = options?.take ?? MATCH_RESULT_COUNT;
@@ -93,13 +95,31 @@ export async function retrieveCatalogMatches(
     throw new Error(`Database matching query failed: ${rpcError.message}`);
   }
 
-  const hits = ((rpcRows || []) as RpcRow[]).map((row) => ({
+  const { allProducts } = await getCatalogDataUncached();
+  const productMap = new Map(allProducts.map((p) => [p.id, p]));
+
+  let hits = ((rpcRows || []) as RpcRow[]).map((row) => ({
     product_id: row.product_id,
     similarity: Number(row.similarity),
   }));
 
-  const { allProducts } = await getCatalogDataUncached();
-  const productMap = new Map(allProducts.map((p) => [p.id, p]));
+  // Filter out excluded categories (e.g. pool-tiles in residential rooms)
+  if (options?.excludeCategories && options.excludeCategories.length > 0) {
+    const excludeSet = new Set(options.excludeCategories);
+    hits = hits.filter((hit) => {
+      const prod = productMap.get(hit.product_id);
+      return prod ? !excludeSet.has(prod.categorySlug) : true;
+    });
+  }
+
+  // Filter for allowed categories if specified
+  if (options?.allowedCategories && options.allowedCategories.length > 0) {
+    const allowedSet = new Set(options.allowedCategories);
+    hits = hits.filter((hit) => {
+      const prod = productMap.get(hit.product_id);
+      return prod ? allowedSet.has(prod.categorySlug) : true;
+    });
+  }
 
   let histograms = new Map<string, number[]>();
   if (options?.queryHistogram && (options.colorWeight ?? 0) > 0) {
