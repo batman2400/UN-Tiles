@@ -1,8 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { SceneBrief } from "./types";
 
-const PRIMARY_MODEL = "gemini-2.5-flash";
-const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash"];
+const PRIMARY_MODEL = "gemini-3.7-flash";
+const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
 
 function getVisionClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_VISION_API_KEY;
