@@ -93,17 +93,29 @@ export async function POST(req: NextRequest) {
     // 5. Embed idealTileQuery with Gemini Embedding 2 (Key A) and re-rank by palette
     let matches: MatchedProduct[] = [];
     try {
-      const isAquaticSpace = /pool|swim|spa|jacuzzi|fountain|water\s*feature/i.test(
-        `${scene.roomType} ${scene.styleTags?.join(" ") || ""} ${scene.surfaces || ""}`
-      );
+      const isAquaticSpace =
+        scene.targetCategory === "pool-tiles" ||
+        /pool|swim|spa|jacuzzi|fountain|water\s*feature/i.test(
+          `${scene.roomType} ${scene.styleTags?.join(" ") || ""} ${scene.surfaces || ""} ${scene.idealTileQuery}`
+        );
 
-      const excludeCategories = isAquaticSpace ? [] : ["pool-tiles"];
+      let allowedCategories: string[] | undefined = undefined;
+      let excludeCategories: string[] | undefined = undefined;
+
+      if (isAquaticSpace) {
+        allowedCategories = ["pool-tiles"];
+      } else if (scene.targetCategory && scene.targetCategory !== "all") {
+        excludeCategories = ["pool-tiles"];
+      } else {
+        excludeCategories = ["pool-tiles"];
+      }
 
       const textEmbedding = await embedQueryText(scene.idealTileQuery);
       matches = await retrieveCatalogMatches(textEmbedding, {
         queryHistogram: histogramFromPalette(scene.palette),
         colorWeight: SCENE_PALETTE_WEIGHT,
-        excludeCategories,
+        allowedCategories,
+        excludeCategories: allowedCategories ? undefined : excludeCategories,
       });
     } catch (embedErr: unknown) {
       // Graceful fallback: If text embed fails, we still return the Scene Brief!

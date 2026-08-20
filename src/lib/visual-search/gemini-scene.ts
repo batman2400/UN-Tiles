@@ -23,19 +23,25 @@ const SCENE_PROMPT = `
 You are an expert architectural interior designer for UN Tiles, a luxury tile brand.
 Analyze this room/interior photo carefully.
 
-UN Tiles Catalog Context:
-- Floor Tiles: polished marble slabs, natural travertine, terracotta, limestone, natural oak wood-look porcelain planks, and slate for living rooms, dining rooms, hallways, foyers, bedrooms, and general indoor flooring.
-- Wall Tiles: decorative wall ceramics, zellige artisan tiles, metro subway bricks, and metallic slabs for backsplashes, shower walls, fireplace surrounds, and feature walls.
-- Mosaics: fluted kit-kat finger tiles and geometric sheets for vanity backsplashes, niche accents, and shower pans.
-- Pool Tiles: ONLY for swimming pools, outdoor spas, fountains, and submerged aquatic features.
+UN Tiles Catalog Categories:
+- "floor": polished marble slabs, natural travertine, terracotta, limestone, natural oak wood-look porcelain planks, and slate for living rooms, dining rooms, hallways, foyers, bedrooms, and commercial/residential indoor flooring.
+- "wall": decorative wall ceramics, zellige artisan tiles, metro subway bricks, and metallic slabs for backsplashes, shower walls, fireplace surrounds, and feature walls.
+- "mosaics": fluted kit-kat finger tiles and geometric sheets for vanity backsplashes, niche accents, and shower pans.
+- "pool-tiles": ONLY for swimming pools, outdoor spas, fountains, and submerged aquatic features.
 
 CRITICAL ARCHITECTURAL RULES:
-1. For indoor living spaces (Living Room, Dining Room, Hallway, Foyer, Bedroom, Kitchen Floor), recommend authentic residential FLOOR or WALL tiles (e.g., honed travertine, polished marble, natural oak planks, matte limestone, terracotta, fluted wall batons). NEVER suggest pool tiles for standard indoor living rooms, dining rooms, or hallways.
-2. For roomType, identify the space accurately (e.g., "Dining Room", "Luxury Living Room", "Modern Hallway", "Contemporary Kitchen", "Master Bathroom", "Outdoor Patio", "Swimming Pool").
-3. For idealTileQuery, write ONE short, descriptive sentence (12-25 words) specifying the ideal tile material, finish, tone, and texture to harmonize with this space (e.g., "warm ivory honed travertine porcelain floor tile with subtle linear veining" or "natural honey oak wood-look porcelain plank tile for warm dining room flooring").
-4. Extract 4 to 5 dominant and accent hex colors from the room (e.g., ["#F4EFEA", "#C9B8A2", "#685F54", "#2B2824"]). Ensure valid #RRGGBB format.
-5. styleTags: 3 to 4 design aesthetic tags (e.g., ["Minimalist", "Warm Japandi", "Modern Industrial", "Contemporary Luxury"]).
-6. surfaces: Which tile surfaces are prominent or recommended for this space (e.g., "Floor", "Floor & Feature Wall", "Kitchen Backsplash", "Shower Enclosure").
+1. For targetCategory: Choose EXACTLY ONE UN Tiles category:
+   - "pool-tiles" if and only if the image is a swimming pool, outdoor spa, plunge pool, fountain, or aquatic area.
+   - "floor" for indoor living rooms, dining rooms, hallways, retail stores, foyers, bedrooms, and general flooring.
+   - "wall" for bathroom walls, backsplashes, shower walls, fireplace surrounds, feature accent walls.
+   - "mosaics" for kit-kat finger tiles, geometric mosaic swatches, vanity backsplashes.
+   - "all" if multi-surface or ambiguous.
+2. For indoor living spaces (Living Room, Dining Room, Hallway, Foyer, Bedroom, Kitchen Floor), recommend authentic residential FLOOR or WALL tiles. NEVER suggest pool tiles for standard indoor living rooms, dining rooms, or hallways.
+3. For roomType, identify the space accurately (e.g., "Dining Room", "Luxury Living Room", "Modern Hallway", "Contemporary Kitchen", "Master Bathroom", "Outdoor Patio", "Swimming Pool").
+4. For idealTileQuery, write ONE short, descriptive sentence (12-25 words) specifying the ideal tile material, finish, tone, and texture to harmonize with this space (e.g., "warm ivory honed travertine porcelain floor tile with subtle linear veining" or "natural honey oak wood-look porcelain plank tile for warm dining room flooring").
+5. Extract 4 to 5 dominant and accent hex colors from the room (e.g., ["#F4EFEA", "#C9B8A2", "#685F54", "#2B2824"]). Ensure valid #RRGGBB format.
+6. styleTags: 3 to 4 design aesthetic tags (e.g., ["Minimalist", "Warm Japandi", "Modern Industrial", "Contemporary Luxury"]).
+7. surfaces: Which tile surfaces are prominent or recommended for this space (e.g., "Floor", "Floor & Feature Wall", "Kitchen Backsplash", "Shower Enclosure", "Pool Basin").
 `;
 
 export async function analyzeScene(
@@ -80,6 +86,10 @@ export async function analyzeScene(
               },
               surfaces: { type: Type.STRING },
               idealTileQuery: { type: Type.STRING },
+              targetCategory: {
+                type: Type.STRING,
+                enum: ["floor", "wall", "mosaics", "pool-tiles", "all"],
+              },
             },
             required: [
               "roomType",
@@ -88,6 +98,7 @@ export async function analyzeScene(
               "styleTags",
               "surfaces",
               "idealTileQuery",
+              "targetCategory",
             ],
           },
           thinkingConfig: {
@@ -124,7 +135,6 @@ export async function analyzeScene(
         console.warn(`[Gemini Vision] Model ${model} returned 404, attempting fallback model...`);
         continue;
       }
-      // If it's not a 404 (e.g. rate limit, auth error, bad json), throw immediately or report
       throw err;
     }
   }
@@ -133,4 +143,80 @@ export async function analyzeScene(
     throw lastError;
   }
   throw new Error("Failed to analyze scene with Gemini Vision models.");
+}
+
+export type TileCategory = "floor" | "wall" | "mosaics" | "pool-tiles" | "all";
+
+const CLASSIFY_PROMPT = `
+You are an architectural tile classification AI for UN Tiles.
+Inspect this photo (which may be an indoor room, floor, wall, backsplash, pool, or material swatch).
+Classify it into EXACTLY ONE UN Tiles category:
+
+- "pool-tiles": If the image is a swimming pool, outdoor spa, plunge pool, fountain, water feature, or submerged pool mosaic.
+- "floor": If the image is an indoor floor, living room, dining room, hallway, retail store, bedroom floor, marble floor, wooden floor, or floor tile swatch.
+- "wall": If the image is a wall, bathroom wall, kitchen backsplash, shower enclosure, subway brick, or wall tile swatch.
+- "mosaics": If the image is a kit-kat finger tile, geometric mosaic sheet, or small decorative mosaic swatch.
+- "all": If completely ambiguous or multi-surface.
+`;
+
+export async function classifyTileCategory(
+  imageBuffer: Buffer,
+  mimeType: string = "image/jpeg"
+): Promise<TileCategory> {
+  if (!isVisionConfigured()) {
+    return "all";
+  }
+
+  const ai = getVisionClient();
+  const base64Data = imageBuffer.toString("base64");
+  const modelsToTry = [PRIMARY_MODEL, ...FALLBACK_MODELS];
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [
+          {
+            inlineData: {
+              mimeType,
+              data: base64Data,
+            },
+          },
+          {
+            text: CLASSIFY_PROMPT,
+          },
+        ],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              category: {
+                type: Type.STRING,
+                enum: ["floor", "wall", "mosaics", "pool-tiles", "all"],
+              },
+              reasoning: {
+                type: Type.STRING,
+              },
+            },
+            required: ["category"],
+          },
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+        },
+      });
+
+      const text = response.text?.trim();
+      if (!text) return "all";
+      const parsed = JSON.parse(text) as { category?: TileCategory };
+      if (parsed.category && ["floor", "wall", "mosaics", "pool-tiles", "all"].includes(parsed.category)) {
+        return parsed.category;
+      }
+      return "all";
+    } catch (err) {
+      console.warn(`[Classify Category] Model ${model} failed, trying next...`, err);
+    }
+  }
+  return "all";
 }

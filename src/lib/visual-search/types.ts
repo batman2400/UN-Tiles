@@ -7,6 +7,7 @@ export interface SceneBrief {
   styleTags: string[];
   surfaces: string;
   idealTileQuery: string;
+  targetCategory?: "floor" | "wall" | "mosaics" | "pool-tiles" | "all";
 }
 
 export type MatchedProduct = Product & {

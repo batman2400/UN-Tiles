@@ -4,6 +4,7 @@ import { processImageInput } from "@/lib/visual-search/image-input";
 import { embedQueryImage } from "@/lib/visual-search/gemini-embeddings";
 import { computeColorHistogram } from "@/lib/visual-search/color-histogram";
 import { retrieveCatalogMatches } from "@/lib/visual-search/retrieve";
+import { classifyTileCategory } from "@/lib/visual-search/gemini-scene";
 import { MATCHER_COLOR_WEIGHT } from "@/lib/visual-search/constants";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
 
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       console.warn("[Visual Match API] Query histogram failed; embedding rank only.", err);
     }
 
-    // Determine category filtering
+    // Dynamic AI Category Classification
     let excludeCategories: string[] | undefined = undefined;
     let allowedCategories: string[] | undefined = undefined;
 
@@ -81,8 +82,17 @@ export async function POST(req: NextRequest) {
     } else if (requestedCategory !== "all" && requestedCategory) {
       allowedCategories = [requestedCategory];
     } else {
-      // For general / "all" matching, exclude specialized pool tiles so indoor rooms/floors never get pool mosaic suggestions
-      excludeCategories = ["pool-tiles"];
+      // Ask Gemini Vision to classify the image context into UN Tiles categories
+      try {
+        const detectedCategory = await classifyTileCategory(processed.buffer, processed.mimeType);
+        if (detectedCategory === "pool-tiles") {
+          allowedCategories = ["pool-tiles"];
+        } else if (detectedCategory !== "all") {
+          excludeCategories = ["pool-tiles"];
+        }
+      } catch (classifyErr) {
+        console.warn("[Tile Matcher] AI category classification skipped:", classifyErr);
+      }
     }
 
     const matches = await retrieveCatalogMatches(embedding, {
