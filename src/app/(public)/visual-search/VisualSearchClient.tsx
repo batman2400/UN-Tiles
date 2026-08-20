@@ -286,7 +286,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                 {mode === "matcher"
                   ? "Upload a tile photo, material crop, texture, or pattern swatch. We will match its color, veining, and visual texture against catalog tiles."
                   : visionEnabled
-                    ? "Upload a photo of your bathroom, kitchen, living room, or outdoor space. We will extract the architectural theme and recommend harmonizing tiles."
+                    ? "Upload a photo of a hall, dining room, living room, kitchen, bathroom, or outdoor space. Indoor rooms get floor or wall tiles — never pool mosaics."
                     : "Scene Advisor is not enabled yet. Use Tile Matcher to find similar catalog tiles from a design or material photo."}
               </p>
             </div>

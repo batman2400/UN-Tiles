@@ -106,9 +106,15 @@ export async function retrieveCatalogMatches(
   // Filter out excluded categories (e.g. pool-tiles in residential rooms)
   if (options?.excludeCategories && options.excludeCategories.length > 0) {
     const excludeSet = new Set(options.excludeCategories);
+    const excludePool = excludeSet.has("pool-tiles");
     hits = hits.filter((hit) => {
       const prod = productMap.get(hit.product_id);
-      return prod ? !excludeSet.has(prod.categorySlug) : true;
+      if (!prod) return true;
+      if (excludeSet.has(prod.categorySlug)) return false;
+      if (excludePool && /\bpool\b/i.test(`${prod.id} ${prod.name} ${prod.categorySlug}`)) {
+        return false;
+      }
+      return true;
     });
   }
 

@@ -5,6 +5,10 @@ import { analyzeScene, isVisionConfigured } from "@/lib/visual-search/gemini-sce
 import { embedQueryText } from "@/lib/visual-search/gemini-embeddings";
 import { histogramFromPalette } from "@/lib/visual-search/color-histogram";
 import { retrieveCatalogMatches } from "@/lib/visual-search/retrieve";
+import {
+  buildSceneSearchQuery,
+  resolveSceneCatalogFilter,
+} from "@/lib/visual-search/scene-filters";
 import { SCENE_PALETTE_WEIGHT } from "@/lib/visual-search/constants";
 import { publicErrorMessage } from "@/lib/visual-search/public-error";
 import type { MatchedProduct, SceneBrief } from "@/lib/visual-search/types";
@@ -93,29 +97,13 @@ export async function POST(req: NextRequest) {
     // 5. Embed idealTileQuery with Gemini Embedding 2 (Key A) and re-rank by palette
     let matches: MatchedProduct[] = [];
     try {
-      const isAquaticSpace =
-        scene.targetCategory === "pool-tiles" ||
-        /pool|swim|spa|jacuzzi|fountain|water\s*feature/i.test(
-          `${scene.roomType} ${scene.styleTags?.join(" ") || ""} ${scene.surfaces || ""} ${scene.idealTileQuery}`
-        );
-
-      let allowedCategories: string[] | undefined = undefined;
-      let excludeCategories: string[] | undefined = undefined;
-
-      if (isAquaticSpace) {
-        allowedCategories = ["pool-tiles"];
-      } else if (scene.targetCategory && scene.targetCategory !== "all") {
-        excludeCategories = ["pool-tiles"];
-      } else {
-        excludeCategories = ["pool-tiles"];
-      }
-
-      const textEmbedding = await embedQueryText(scene.idealTileQuery);
+      const catalogFilter = resolveSceneCatalogFilter(scene);
+      const textEmbedding = await embedQueryText(buildSceneSearchQuery(scene));
       matches = await retrieveCatalogMatches(textEmbedding, {
         queryHistogram: histogramFromPalette(scene.palette),
         colorWeight: SCENE_PALETTE_WEIGHT,
-        allowedCategories,
-        excludeCategories: allowedCategories ? undefined : excludeCategories,
+        allowedCategories: catalogFilter.allowedCategories,
+        excludeCategories: catalogFilter.excludeCategories,
       });
     } catch (embedErr: unknown) {
       // Graceful fallback: If text embed fails, we still return the Scene Brief!
