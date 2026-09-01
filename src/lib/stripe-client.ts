@@ -12,7 +12,9 @@ export function getStripeClient(): Promise<StripeClientInstance | null> | null {
   }
 
   if (!stripePromise) {
-    stripePromise = loadStripe(publishableKey);
+    stripePromise = loadStripe(publishableKey, {
+      assistant: { enabled: false },
+    });
   }
 
   return stripePromise;
