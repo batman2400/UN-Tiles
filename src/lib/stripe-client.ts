@@ -13,7 +13,9 @@ export function getStripeClient(): Promise<StripeClientInstance | null> | null {
 
   if (!stripePromise) {
     stripePromise = loadStripe(publishableKey, {
-      assistant: { enabled: false },
+      developerTools: {
+        assistant: { enabled: false },
+      },
     });
   }
 
