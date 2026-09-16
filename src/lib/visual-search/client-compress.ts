@@ -27,18 +27,26 @@ export const CLIENT_JPEG_QUALITY = 0.85;
 /**
  * Loads a File/Blob into an HTMLImageElement using an object URL.
  */
-function loadImage(file: File | Blob): Promise<HTMLImageElement> {
+function loadImage(file: File | Blob): Promise<{ img: HTMLImageElement; cleanup: () => void }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
 
+    const cleanup = () => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // Ignore revocation errors
+      }
+    };
+
     img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
+      // Do NOT revoke immediately here; WebKit/Safari can drop texture before canvas draw
+      resolve({ img, cleanup });
     };
 
     img.onerror = () => {
-      URL.revokeObjectURL(url);
+      cleanup();
       reject(new Error("Failed to decode image in browser. Please select a valid photo."));
     };
 
@@ -92,6 +100,12 @@ export async function compressImageForUpload(
   const quality = options?.quality ?? CLIENT_JPEG_QUALITY;
   const originalSize = file.size;
 
+  // Clone blob slice to guard against detached/closed file descriptors on mobile OS
+  const sourceBlob = file.slice(0, file.size, file.type || "image/jpeg");
+
+  let canvas: HTMLCanvasElement | null = null;
+  let imageCleanup: (() => void) | null = null;
+
   try {
     // 1. Try modern createImageBitmap for fastest multi-threaded decode if supported
     let imageSource: ImageBitmap | HTMLImageElement;
@@ -100,19 +114,21 @@ export async function compressImageForUpload(
 
     if (typeof window !== "undefined" && typeof window.createImageBitmap === "function") {
       try {
-        imageSource = await createImageBitmap(file);
+        imageSource = await createImageBitmap(sourceBlob);
         srcWidth = imageSource.width;
         srcHeight = imageSource.height;
       } catch {
-        // Fallback to HTMLImageElement if createImageBitmap fails on specific formats
-        const img = await loadImage(file);
+        // Fallback to HTMLImageElement if createImageBitmap fails on specific formats or Safari
+        const { img, cleanup } = await loadImage(sourceBlob);
         imageSource = img;
+        imageCleanup = cleanup;
         srcWidth = img.naturalWidth || img.width;
         srcHeight = img.naturalHeight || img.height;
       }
     } else {
-      const img = await loadImage(file);
+      const { img, cleanup } = await loadImage(sourceBlob);
       imageSource = img;
+      imageCleanup = cleanup;
       srcWidth = img.naturalWidth || img.width;
       srcHeight = img.naturalHeight || img.height;
     }
@@ -121,7 +137,7 @@ export async function compressImageForUpload(
     const { width, height } = calculateScaledDimensions(srcWidth, srcHeight, maxEdge);
 
     // 3. Render onto HTML5 Canvas with high quality bicubic smoothing
-    const canvas = document.createElement("canvas");
+    canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
 
@@ -139,13 +155,21 @@ export async function compressImageForUpload(
 
     ctx.drawImage(imageSource, 0, 0, width, height);
 
-    // Close ImageBitmap if used to immediately free GPU texture memory
+    // Close/release memory now that pixels are rendered to canvas
+    if (imageCleanup) {
+      imageCleanup();
+      imageCleanup = null;
+    }
     if ("close" in imageSource && typeof imageSource.close === "function") {
       imageSource.close();
     }
 
     // 4. Convert canvas to JPEG blob
     const blob = await new Promise<Blob>((resolve, reject) => {
+      if (!canvas) {
+        reject(new Error("Canvas was released prematurely."));
+        return;
+      }
       canvas.toBlob(
         (b) => {
           if (b) {
@@ -159,8 +183,14 @@ export async function compressImageForUpload(
       );
     });
 
-    // 5. Wrap blob in a standard File object
-    const fileName = (file.name ? file.name.replace(/\.[^/.]+$/, "") : "tile_photo") + "_optimized.jpg";
+    // Clean up canvas GPU texture memory to prevent exhaustion on repeated uploads
+    canvas.width = 0;
+    canvas.height = 0;
+    canvas = null;
+
+    // 5. Wrap blob in a standard File object with unique timestamp
+    const baseName = (file.name ? file.name.replace(/\.[^/.]+$/, "") : "tile_photo");
+    const fileName = `${baseName}_optimized_${Date.now()}.jpg`;
     const compressedFile = new File([blob], fileName, {
       type: "image/jpeg",
       lastModified: Date.now(),
@@ -177,9 +207,16 @@ export async function compressImageForUpload(
       height,
     };
   } catch (err) {
+    if (imageCleanup) {
+      imageCleanup();
+    }
+    if (canvas) {
+      canvas.width = 0;
+      canvas.height = 0;
+    }
     console.warn("[client-compress] Client compression encountered an issue, falling back to original file:", err);
 
-    // Safe fallback: if canvas compression fails, return original file with object URL
+    // Safe fallback: return original file with fresh object URL
     const previewUrl = URL.createObjectURL(file);
     return {
       file,

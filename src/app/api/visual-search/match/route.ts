@@ -14,7 +14,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
 
-  const rateLimit = checkRateLimit(req, 10, 60 * 1000);
+  const rateLimit = checkRateLimit(req, 30, 60 * 1000);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {

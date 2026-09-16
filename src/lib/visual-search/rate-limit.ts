@@ -29,13 +29,18 @@ function cleanup() {
 
 /**
  * Checks if the request from a given client IP is within rate limits.
- * Default: 10 requests per minute per IP.
+ * Default: 30 requests per minute per IP (relaxed for responsive testing).
  */
 export function checkRateLimit(
   req: NextRequest,
-  limit: number = 10,
+  limit: number = 30,
   windowMs: number = 60 * 1000
 ): { allowed: boolean; remaining: number; resetMs: number } {
+  // Allow unrestricted testing during local development
+  if (process.env.NODE_ENV === "development") {
+    return { allowed: true, remaining: 999, resetMs: windowMs };
+  }
+
   cleanup();
 
   const forwarded = req.headers.get("x-forwarded-for");

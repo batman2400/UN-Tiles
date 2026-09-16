@@ -2,8 +2,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { SceneBrief } from "./types";
 import { sanitizeSceneBrief } from "./scene-filters";
 
-const PRIMARY_MODEL = "gemini-3.7-flash";
-const FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-2.5-flash", "gemini-2.0-flash"];
+const PRIMARY_MODEL = "gemini-3.5-flash-lite";
+const FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-3.6-flash"];
 
 function getVisionClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_VISION_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim();
@@ -85,7 +85,10 @@ export async function analyzeScene(
   const modelsToTry = [PRIMARY_MODEL, ...FALLBACK_MODELS];
   let lastError: unknown = null;
 
-  for (const model of modelsToTry) {
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const model = modelsToTry[i];
+    const isLastModel = i === modelsToTry.length - 1;
+
     try {
       const response = await ai.models.generateContent({
         model,
@@ -132,9 +135,6 @@ export async function analyzeScene(
               "targetCategory",
             ],
           },
-          thinkingConfig: {
-            thinkingBudget: 0,
-          },
         },
       });
 
@@ -160,10 +160,10 @@ export async function analyzeScene(
       return sanitizeSceneBrief(parsed);
     } catch (err: unknown) {
       lastError = err;
-      const errObj = err as { status?: number; message?: string } | undefined;
-      const is404 = errObj?.status === 404 || errObj?.message?.includes("404") || errObj?.message?.includes("not found");
-      if (is404 && model !== modelsToTry[modelsToTry.length - 1]) {
-        console.warn(`[Gemini Vision] Model ${model} returned 404, attempting fallback model...`);
+      const errMessage = err instanceof Error ? err.message : String(err);
+      console.warn(`[Gemini Vision] Model ${model} encountered an issue: ${errMessage}`);
+      if (!isLastModel) {
+        console.warn(`[Gemini Vision] Attempting fallback model ${modelsToTry[i + 1]}...`);
         continue;
       }
       throw err;
@@ -229,9 +229,6 @@ export async function classifyTileCategory(
               },
             },
             required: ["category"],
-          },
-          thinkingConfig: {
-            thinkingBudget: 0,
           },
         },
       });

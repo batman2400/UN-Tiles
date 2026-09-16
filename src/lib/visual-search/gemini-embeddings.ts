@@ -14,7 +14,8 @@ function getEmbedClient(): GoogleGenAI {
 }
 
 /**
- * Utility to retry an async function on 429 (Resource Exhausted) or temporary network errors with exponential backoff.
+ * Utility to retry an async function on 429 (Rate Limit), 503 (High Demand/Unavailable),
+ * or temporary network errors with exponential backoff.
  */
 async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs = 1000): Promise<T> {
   let delay = initialDelayMs;
@@ -23,18 +24,24 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelayMs
       return await fn();
     } catch (error: unknown) {
       const errObj = error as { status?: number; message?: string } | undefined;
-      const isRateLimit =
+      const isTransient =
         errObj?.status === 429 ||
+        errObj?.status === 503 ||
+        errObj?.status === 500 ||
         errObj?.message?.includes("429") ||
+        errObj?.message?.includes("503") ||
+        errObj?.message?.includes("500") ||
         errObj?.message?.toLowerCase().includes("quota") ||
         errObj?.message?.toLowerCase().includes("resource exhausted") ||
-        errObj?.message?.toLowerCase().includes("rate limit");
+        errObj?.message?.toLowerCase().includes("rate limit") ||
+        errObj?.message?.toLowerCase().includes("high demand") ||
+        errObj?.message?.toLowerCase().includes("unavailable");
 
-      if (attempt === maxRetries || !isRateLimit) {
+      if (attempt === maxRetries || !isTransient) {
         throw error;
       }
 
-      console.warn(`[Gemini Embeddings] Rate limited (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`);
+      console.warn(`[Gemini Embeddings] Transient API status ${errObj?.status || "error"} (attempt ${attempt}/${maxRetries}). Retrying in ${delay}ms...`);
       await new Promise((resolve) => setTimeout(resolve, delay));
       delay *= 2;
     }

@@ -91,6 +91,11 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       setError("Could not process this photo. Please try another image.");
     } finally {
       setIsCompressing(false);
+      // Reset input values AFTER compression finishes so mobile OS file descriptors aren't prematurely invalidated
+      setTimeout(() => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (cameraInputRef.current) cameraInputRef.current.value = "";
+      }, 100);
     }
   };
 
@@ -119,6 +124,12 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       URL.revokeObjectURL(activePreviewUrlRef.current);
       activePreviewUrlRef.current = null;
     }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = "";
+    }
     setPreviewUrl(null);
     setMatches(null);
     setSceneBrief(null);
@@ -136,8 +147,18 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
     setSceneBrief(null);
     setSelectedCategory("all");
 
+    // Clone a fresh slice of the file to prevent detached/already-consumed stream errors on repeated searches
+    const freshFile = new File(
+      [selectedFile.slice(0, selectedFile.size, selectedFile.type)],
+      selectedFile.name,
+      {
+        type: selectedFile.type,
+        lastModified: Date.now(),
+      }
+    );
+
     const formData = new FormData();
-    formData.append("image", selectedFile);
+    formData.append("image", freshFile);
 
     const endpoint =
       mode === "matcher"
@@ -362,36 +383,6 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                     </button>
                   </div>
                 </div>
-
-                {/* Hidden File Inputs */}
-                {/* Standard File Picker */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileSelect(e.target.files[0]);
-                      e.target.value = "";
-                    }
-                  }}
-                />
-
-                {/* Camera Capture File Picker for Mobile */}
-                <input
-                  ref={cameraInputRef}
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileSelect(e.target.files[0]);
-                      e.target.value = "";
-                    }
-                  }}
-                />
               </div>
             ) : (
               <div className="space-y-3">
@@ -488,6 +479,32 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                 </button>
               </div>
             )}
+
+            {/* Permanently Mounted Hidden File Inputs to Preserve Event Listeners & Avoid Sandbox File Descriptors Invalidation */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleFileSelect(e.target.files[0]);
+                }
+              }}
+            />
+
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handleFileSelect(e.target.files[0]);
+                }
+              }}
+            />
           </div>
         </div>
 

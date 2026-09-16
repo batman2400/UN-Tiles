@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 1. IP Rate Limiting (~10 req/min)
-  const rateLimit = checkRateLimit(req, 10, 60 * 1000);
+  // 1. IP Rate Limiting (~30 req/min)
+  const rateLimit = checkRateLimit(req, 30, 60 * 1000);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
