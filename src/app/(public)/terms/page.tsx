@@ -1,4 +1,13 @@
 import React from 'react';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "UN Tiles terms of service — the terms and conditions governing your use of our website, products, and services.",
+  alternates: { canonical: "/terms" },
+};
+
 
 export default function TermsPage() {
   return (

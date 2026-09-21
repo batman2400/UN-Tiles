@@ -6,7 +6,7 @@ export default function PlannerLoading() {
       <section className="relative h-[38vh] min-h-[260px] sm:h-[46vh] sm:min-h-[320px] flex items-end bg-background overflow-hidden">
         <Image
           src="/images/contact_hero_v6.jpg"
-          alt=""
+          alt="Smart tile planner loading"
           fill
           sizes="100vw"
           className="object-cover opacity-40"

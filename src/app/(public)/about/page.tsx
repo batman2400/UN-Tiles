@@ -1,9 +1,24 @@
 import Image from "next/image";
 import { preload } from "react-dom";
+import type { Metadata } from "next";
 import { Star } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
+
+export const metadata: Metadata = {
+  title: "About Us",
+  description:
+    "UN Tiles (Unicorn Enterprises) — since 2004, Sri Lanka's trusted importer of premium ceramic tiles and sanitary ware. 20+ years of experience, 1000+ satisfied customers.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About UN Tiles | Our Story",
+    description:
+      "Since 2004, Sri Lanka's trusted importer of premium ceramic tiles and sanitary ware. Sourcing from China, Vietnam, India, and Lanka Tiles.",
+    url: "https://www.untiles.com/about",
+  },
+};
+
 export default function About() {
   preload("/images/about.jpg", { as: "image", fetchPriority: "high" });
 
@@ -212,6 +227,66 @@ export default function About() {
         </div>
       </section>
 
+      {/* ══════ WHY CHOOSE (AEO Q&A PATTERNS) ══════ */}
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-t ghost-border">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal>
+            <div className="text-center mb-10 md:mb-14">
+              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Why Us</p>
+              <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Why Choose UN Tiles?</h2>
+            </div>
+          </ScrollReveal>
+          <div className="grid gap-8 md:grid-cols-2">
+            <ScrollReveal>
+              <div>
+                <h3 className="font-semibold text-on-surface text-lg mb-2">What makes UN Tiles different from other tile suppliers?</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  With over 20 years of experience, we combine global sourcing from 4 countries with local expertise. Every tile in our collection is hand-selected for quality, durability, and design merit — and priced competitively for the Sri Lankan market.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={100}>
+              <div>
+                <h3 className="font-semibold text-on-surface text-lg mb-2">Who are UN Tiles&apos; customers?</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  We serve homeowners, interior designers, architects, contractors, and property developers across Sri Lanka — from single-room renovations to large-scale commercial projects.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={200}>
+              <div>
+                <h3 className="font-semibold text-on-surface text-lg mb-2">What tile finishes and sizes are available?</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  We stock matte, glossy, rustic, and polished finishes in a wide range of sizes — from small mosaic tiles to large-format porcelain slabs. Browse our collections page to filter by category.
+                </p>
+              </div>
+            </ScrollReveal>
+            <ScrollReveal delay={300}>
+              <div>
+                <h3 className="font-semibold text-on-surface text-lg mb-2">Does UN Tiles offer project consultation?</h3>
+                <p className="text-on-surface-variant leading-relaxed">
+                  Yes. Visit our Colombo showroom or use our online contact form to speak with a design consultant who can help you select the right tiles for your project&apos;s requirements and budget.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* BreadcrumbList JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://www.untiles.com" },
+              { "@type": "ListItem", position: 2, name: "About", item: "https://www.untiles.com/about" },
+            ],
+          }),
+        }}
+      />
 
     </div>
   );

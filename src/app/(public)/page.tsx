@@ -10,11 +10,61 @@ import { StatsCounter } from "@/components/StatsCounter";
 import { ProductCard } from "@/components/ProductCard";
 import { Hero10 } from "@/components/ui/hero-10";
 
+const faqItems = [
+  {
+    question: "What types of tiles does UN Tiles offer?",
+    answer:
+      "We offer a wide range of premium architectural tiles including floor tiles, wall tiles, porcelain slabs, ceramic tiles, and vitrified tiles in various sizes and finishes — matte, glossy, rustic, and polished.",
+  },
+  {
+    question: "Where does UN Tiles source its products?",
+    answer:
+      "Our products are sourced from leading manufacturers across China, Vietnam, India, and Lanka Tiles (Sri Lanka), allowing us to offer diverse designs, finishes, sizes, and price points.",
+  },
+  {
+    question: "How do I calculate how many tiles I need for my room?",
+    answer:
+      "Use our free Smart Tile Planner tool at untiles.com/planner. Enter your room dimensions (supports rectangle and L-shaped layouts), select a tile, and the tool will calculate the exact quantity you need — including a waste buffer.",
+  },
+  {
+    question: "Does UN Tiles deliver across Sri Lanka?",
+    answer:
+      "Yes, we offer delivery services across Sri Lanka. Visit our contact page or call us to discuss delivery options for your location and project requirements.",
+  },
+  {
+    question: "What is the difference between porcelain and ceramic tiles?",
+    answer:
+      "Porcelain tiles are denser, more durable, and less porous than ceramic tiles — making them ideal for high-traffic areas and outdoor use. Ceramic tiles are lighter and more affordable, best suited for interior walls and low-traffic floors. Both are available in our collections.",
+  },
+  {
+    question: "Can I visit the UN Tiles showroom?",
+    answer:
+      "Yes! Our showroom is located at No. 161/A, Polhengoda Road, Colombo 05. Walk-ins are welcome. You can also reach us online through our contact page.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.answer,
+    },
+  })),
+};
+
 export default function Home() {
   preload("/images/light_luxury_tiles.jpg", { as: "image", fetchPriority: "high" });
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       
       {/* ══════ HERO SECTION ══════ */}
       <Hero10 />
@@ -287,6 +337,33 @@ async function HomeBelowFold() {
                 <div className="flex flex-col items-center justify-center text-center group bg-white/50 backdrop-blur-md border border-white/40 p-4 sm:p-8 rounded-2xl sm:rounded-3xl hover:bg-white/70 transition-all duration-500 hover:-translate-y-2 premium-shadow hover:premium-shadow-lg">
                   <StatsCounter end={stat.end} suffix={stat.suffix} label={stat.label} />
                 </div>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════ FAQ SECTION (AEO) ══════ */}
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-t ghost-border">
+        <div className="max-w-4xl mx-auto">
+          <ScrollReveal>
+            <div className="text-center mb-10 md:mb-14">
+              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Common Questions</p>
+              <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Frequently Asked Questions</h2>
+            </div>
+          </ScrollReveal>
+          <div className="space-y-4">
+            {faqItems.map((item, idx) => (
+              <ScrollReveal key={idx} delay={idx * 60}>
+                <details className="group rounded-2xl border border-outline bg-white/60 backdrop-blur-sm overflow-hidden transition-all hover:bg-white/80">
+                  <summary className="flex items-center justify-between cursor-pointer px-5 sm:px-7 py-4 sm:py-5 text-left">
+                    <h3 className="font-semibold text-on-surface text-sm sm:text-base pr-4">{item.question}</h3>
+                    <span className="flex-shrink-0 text-accent text-xl font-light transition-transform group-open:rotate-45">+</span>
+                  </summary>
+                  <div className="px-5 sm:px-7 pb-5 sm:pb-6">
+                    <p className="text-on-surface-variant text-sm sm:text-base leading-relaxed">{item.answer}</p>
+                  </div>
+                </details>
               </ScrollReveal>
             ))}
           </div>

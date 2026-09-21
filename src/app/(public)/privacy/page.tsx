@@ -1,4 +1,12 @@
  import React from 'react';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "UN Tiles privacy policy — how we collect, use, and protect your personal information when you use our website and services.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

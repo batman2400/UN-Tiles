@@ -1,16 +1,67 @@
 import Image from "next/image";
 import { preload } from "react-dom";
+import type { Metadata } from "next";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { MapPin } from "lucide-react";
 import ContactBlock from "@/components/ui/contact-1";
 import ContactSolutionForm from "@/components/ui/contact-4";
 
+export const metadata: Metadata = {
+  title: "Contact Us",
+  description:
+    "Visit our showroom at No. 161/A, Polhengoda Road, Colombo 05 or get in touch online. UN Tiles — premium architectural tile solutions for your project.",
+  alternates: { canonical: "/contact" },
+  openGraph: {
+    title: "Contact UN Tiles",
+    description:
+      "Visit our showroom at Polhengoda Road, Colombo 05 or reach out online for premium tile solutions.",
+    url: "https://www.untiles.com/contact",
+  },
+};
+
 export default function Contact() {
   preload("/images/contact_hero.jpg", { as: "image", fetchPriority: "high" });
 
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": "https://www.untiles.com/#business",
+    name: "UN Tiles (Unicorn Enterprises)",
+    image: "https://www.untiles.com/icons/icon-512.png",
+    url: "https://www.untiles.com",
+    description:
+      "Premium ceramic tiles and sanitary ware importer in Colombo, Sri Lanka. Serving homeowners, architects, and contractors since 2004.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "No. 161/A, Polhengoda Road",
+      addressLocality: "Colombo 05",
+      addressCountry: "LK",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 6.8823419,
+      longitude: 79.8808345,
+    },
+    hasMap:
+      "https://maps.google.com/maps?q=6.8823419,79.8808345",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5.0",
+      reviewCount: "5",
+      bestRating: "5",
+    },
+    priceRange: "$$",
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessJsonLd),
+        }}
+      />
       
       {/* ══════ HERO ══════ */}
       <section

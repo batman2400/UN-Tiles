@@ -17,9 +17,65 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "UN Tiles | Premium Architectural Tiles",
-  description: "High-end tiling with weight, texture, and structural integrity.",
+  metadataBase: new URL("https://www.untiles.com"),
+  title: {
+    default: "UN Tiles | Architectural Tile Solutions & Intelligent Planner",
+    template: "%s | UN Tiles",
+  },
+  description:
+    "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections, plan layouts with our intelligent tile planner, and order with confidence.",
   applicationName: "UN Tiles",
+  keywords: [
+    "architectural tiles",
+    "premium tiles",
+    "tile planner",
+    "tile collections",
+    "UN Tiles",
+    "interior design",
+    "floor tiles",
+    "wall tiles",
+  ],
+  authors: [{ name: "UN Tiles" }],
+  creator: "UN Tiles",
+  publisher: "UN Tiles",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "UN Tiles",
+    title: "UN Tiles | Architectural Tile Solutions & Intelligent Planner",
+    description:
+      "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections and plan layouts with our intelligent tile planner.",
+    url: "https://www.untiles.com",
+    images: [
+      {
+        url: "/icons/icon-512.png",
+        width: 512,
+        height: 512,
+        alt: "UN Tiles",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "UN Tiles | Architectural Tile Solutions & Intelligent Planner",
+    description:
+      "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections and plan layouts with our intelligent tile planner.",
+    images: ["/icons/icon-512.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -53,6 +109,60 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "UN Tiles",
+    alternateName: "Unicorn Enterprises",
+    url: "https://www.untiles.com",
+    logo: "https://www.untiles.com/icons/icon-512.png",
+    foundingDate: "2004",
+    description:
+      "Sri Lanka's trusted importer of premium ceramic tiles and sanitary ware since 2004. Sourcing from China, Vietnam, India, and Lanka Tiles.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "No. 161/A, Polhengoda Road",
+      addressLocality: "Colombo 05",
+      addressCountry: "LK",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 6.8823419,
+      longitude: 79.8808345,
+    },
+    sameAs: [
+      "https://www.google.com/maps/place/Unicorn+enterprises/@6.8823419,79.8782596,17z",
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5.0",
+      reviewCount: "5",
+      bestRating: "5",
+    },
+  };
+
+  const webSiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "UN Tiles",
+    url: "https://www.untiles.com",
+    description:
+      "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections, plan layouts with our intelligent tile planner.",
+    publisher: {
+      "@type": "Organization",
+      name: "UN Tiles",
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate:
+          "https://www.untiles.com/collections?search={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html
       lang="en"
@@ -63,6 +173,18 @@ export default function RootLayout({
         className="min-h-full flex flex-col font-sans bg-noise ambient-glow-bg bg-background"
         style={{ backgroundColor: "#faf8f5" }}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(webSiteJsonLd),
+          }}
+        />
         <Providers>
           <main className="flex-1">
             {children}
