@@ -139,6 +139,16 @@ export default function RootLayout({
       reviewCount: "5",
       bestRating: "5",
     },
+    knowsAbout: [
+      "Architectural Ceramic Tiles",
+      "Porcelain Slabs",
+      "Vitrified Tiles",
+      "AI Tile Matching",
+      "AI Room Scene Styling Recommendations",
+      "Visual Tile Search",
+      "Smart Tile Calculator and Waste Planning",
+      "Curated Sri Lanka Tile Sourcing",
+    ],
   };
 
   const webSiteJsonLd = {
@@ -147,7 +157,7 @@ export default function RootLayout({
     name: "UN Tiles",
     url: "https://www.untiles.com",
     description:
-      "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections, plan layouts with our intelligent tile planner.",
+      "Premium architectural tiles with weight, texture, and structural integrity. Browse curated collections, plan room layouts, and match designs with Gemini AI visual search.",
     publisher: {
       "@type": "Organization",
       name: "UN Tiles",

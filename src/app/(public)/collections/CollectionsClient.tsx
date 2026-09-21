@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import type { Product, CategoryCard } from "@/data/products";
-import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Search, X, SlidersHorizontal, ChevronDown, Sparkles } from "lucide-react";
 
 interface CollectionsClientProps {
   allProducts: Product[];
@@ -170,23 +171,34 @@ export function CollectionsClient({
         
         {/* Instant Search Bar & Active Filter Badges */}
         <div className="mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/80">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search tiles, finish, size..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => handleSearchChange("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-zinc-900 rounded-full transition-colors"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
+          <div className="flex items-center gap-2.5 flex-1">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search tiles, finish, size..."
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => handleSearchChange("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-zinc-900 rounded-full transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <Link
+              href="/visual-search"
+              className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-xl uppercase tracking-wider transition-all shadow-sm shrink-0 group"
+              title="Upload photo or inspiration image for AI tile suggestions"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
+              <span className="hidden sm:inline">AI Suggestions</span>
+              <span className="sm:hidden">AI Match</span>
+            </Link>
           </div>
 
           {hasActiveFilters && (
@@ -341,12 +353,21 @@ export function CollectionsClient({
                 <p className="text-xs text-gray-500 max-w-sm mx-auto mb-6">
                   Try clearing your active category or dimension filters to view more products.
                 </p>
-                <button
-                  onClick={clearAllFilters}
-                  className="bg-surface-dark text-on-surface-dark hover:bg-accent hover:text-on-accent font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all shadow-md"
-                >
-                  Clear All Filters
-                </button>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={clearAllFilters}
+                    className="bg-surface-dark text-on-surface-dark hover:bg-accent hover:text-on-accent font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all shadow-md w-full sm:w-auto"
+                  >
+                    Clear All Filters
+                  </button>
+                  <Link
+                    href="/visual-search"
+                    className="inline-flex items-center justify-center gap-2 border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all w-full sm:w-auto"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Try AI Suggestions</span>
+                  </Link>
+                </div>
               </div>
             ) : (
               <>

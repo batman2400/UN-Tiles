@@ -15,7 +15,7 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/collections", label: "Collections" },
   { href: "/planner", label: "Planner" },
-  { href: "/visual-search", label: "Visual Match", badge: "AI" },
+  { href: "/visual-search", label: "AI Suggestions", badge: "AI" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

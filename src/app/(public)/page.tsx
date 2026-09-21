@@ -27,6 +27,11 @@ const faqItems = [
       "Use our free Smart Tile Planner tool at untiles.com/planner. Enter your room dimensions (supports rectangle and L-shaped layouts), select a tile, and the tool will calculate the exact quantity you need — including a waste buffer.",
   },
   {
+    question: "Can AI help me choose or match tiles for my space?",
+    answer:
+      "Yes! UN Tiles features a Gemini AI-powered Visual Search and Scene Advisor at untiles.com/visual-search. Upload an inspiration photo or a picture of your room, and our AI analyzes lighting, palette, and architectural style to recommend matching tiles from our catalog.",
+  },
+  {
     question: "Does UN Tiles deliver across Sri Lanka?",
     answer:
       "Yes, we offer delivery services across Sri Lanka. Visit our contact page or call us to discuss delivery options for your location and project requirements.",
