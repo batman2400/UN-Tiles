@@ -35,6 +35,8 @@ export const metadata: Metadata = {
     "buy tiles in sri lanka",
     "purchase tiles in sri lanka",
     "un tiles",
+    "untiles",
+    "untiles.com",
     "tiles shop in sri lanka",
     "tiles showroom colombo",
     "buy floor tiles sri lanka",
@@ -108,6 +110,11 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  verification: {
+    other: {
+      "msvalidate.01": "29E279796686D822DDAD973C17292E95",
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -127,7 +134,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": ["Organization", "Store", "OnlineStore", "HomeGoodsStore"],
     name: "UN Tiles",
-    alternateName: "Unicorn Enterprises",
+    alternateName: ["Unicorn Enterprises", "Untiles", "UNTiles", "untiles.com", "UN Tiles Sri Lanka"],
     url: "https://www.untiles.com",
     logo: "https://www.untiles.com/icons/icon-512.png",
     foundingDate: "2004",
