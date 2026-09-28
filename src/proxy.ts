@@ -2,6 +2,32 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
+  // ── Permanent Ban on vercel.app Indexing ──
+  const host = request.headers.get("host") || "";
+  if (host.includes("vercel.app")) {
+    // If search crawler checks robots.txt on vercel.app, forbid all crawling
+    if (request.nextUrl.pathname === "/robots.txt") {
+      return new NextResponse("User-agent: *\nDisallow: /\n", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain",
+          "X-Robots-Tag": "noindex, nofollow, noarchive",
+        },
+      });
+    }
+
+    const canonicalUrl = new URL(
+      request.nextUrl.pathname + request.nextUrl.search,
+      "https://www.untiles.com"
+    );
+    return NextResponse.redirect(canonicalUrl, {
+      status: 308,
+      headers: {
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+      },
+    });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
