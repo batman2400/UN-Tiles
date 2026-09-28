@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 import { getCatalogData } from "@/data/products";
-import { ArrowRight, Shield, Truck, Award, Gem, Sparkles, Camera, Layers } from "lucide-react";
+import { ArrowRight, Shield, Truck, Award, Gem, Sparkles, Camera, Layers, Calculator } from "lucide-react";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -12,9 +12,29 @@ import { Hero10 } from "@/components/ui/hero-10";
 
 const faqItems = [
   {
+    question: "Where can I buy tiles in Sri Lanka?",
+    answer:
+      "You can buy premium architectural tiles online at UN Tiles (untiles.com) or at our Colombo showroom located at No. 161/A, Polhengoda Road, Colombo 05. We stock porcelain floor tiles, wall tiles, pool tiles, and mosaics with fast islandwide delivery across Sri Lanka.",
+  },
+  {
+    question: "How do I use the AI Tiles Finder in Sri Lanka?",
+    answer:
+      "UN Tiles features Sri Lanka's #1 Gemini AI-powered Tiles Finder at untiles.com/visual-search. Simply upload a photo of your room, an inspiration image from Pinterest/Instagram, or an existing tile swatch. Our AI instantly matches your image with available tiles in our catalog.",
+  },
+  {
+    question: "Can I purchase floor and wall tiles online in Sri Lanka with delivery?",
+    answer:
+      "Yes! You can browse our online collections with transparent per-sqft pricing in LKR, calculate the exact quantity you need with our Smart Tile Planner, and purchase securely online. We deliver directly to job sites and residences across all districts in Sri Lanka.",
+  },
+  {
+    question: "What are the tile prices in Sri Lanka per square foot?",
+    answer:
+      "Tile prices at UN Tiles start from competitive wholesale and retail rates in LKR per square foot, depending on the material, finish (polished, matte, rustic), and dimensions (e.g. 60x60 cm and 120x60 cm slabs). View our collections page for transparent, up-to-date pricing.",
+  },
+  {
     question: "What types of tiles does UN Tiles offer?",
     answer:
-      "We offer a wide range of premium architectural tiles including floor tiles, wall tiles, porcelain slabs, ceramic tiles, and vitrified tiles in various sizes and finishes — matte, glossy, rustic, and polished.",
+      "We offer a wide range of premium architectural tiles including porcelain floor tiles, wall tiles, porcelain slabs, ceramic tiles, pool tiles, and vitrified tiles in various sizes and finishes — matte, glossy, rustic, and polished.",
   },
   {
     question: "Where does UN Tiles source its products?",
@@ -24,25 +44,10 @@ const faqItems = [
   {
     question: "How do I calculate how many tiles I need for my room?",
     answer:
-      "Use our free Smart Tile Planner tool at untiles.com/planner. Enter your room dimensions (supports rectangle and L-shaped layouts), select a tile, and the tool will calculate the exact quantity you need — including a waste buffer.",
+      "Use our free Smart Tile Planner tool at untiles.com/planner. Enter your room dimensions (supports rectangle and L-shaped layouts), select a tile, and the tool will calculate the exact quantity you need — including an automatic waste buffer.",
   },
   {
-    question: "Can AI help me choose or match tiles for my space?",
-    answer:
-      "Yes! UN Tiles features a Gemini AI-powered Visual Search and Scene Advisor at untiles.com/visual-search. Upload an inspiration photo or a picture of your room, and our AI analyzes lighting, palette, and architectural style to recommend matching tiles from our catalog.",
-  },
-  {
-    question: "Does UN Tiles deliver across Sri Lanka?",
-    answer:
-      "Yes, we offer delivery services across Sri Lanka. Visit our contact page or call us to discuss delivery options for your location and project requirements.",
-  },
-  {
-    question: "What is the difference between porcelain and ceramic tiles?",
-    answer:
-      "Porcelain tiles are denser, more durable, and less porous than ceramic tiles — making them ideal for high-traffic areas and outdoor use. Ceramic tiles are lighter and more affordable, best suited for interior walls and low-traffic floors. Both are available in our collections.",
-  },
-  {
-    question: "Can I visit the UN Tiles showroom?",
+    question: "Can I visit the UN Tiles showroom in Colombo?",
     answer:
       "Yes! Our showroom is located at No. 161/A, Polhengoda Road, Colombo 05. Walk-ins are welcome. You can also reach us online through our contact page.",
   },
@@ -71,35 +76,42 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       
-      {/* ══════ HERO SECTION ══════ */}
-      <Hero10 />
+      {/* ══════ HERO SECTION (KEYWORD OPTIMIZED) ══════ */}
+      <Hero10
+        eyebrowText="Sri Lanka's Trusted Tile Importer & Store • Unicorn Enterprises Since 2004"
+        title={"Buy Premium Tiles in Sri Lanka.\nFloor, Wall & Porcelain Store."}
+        description="Purchase high-grade porcelain floor tiles, wall tiles, and architectural slabs directly from Sri Lanka's trusted importer since 2004. Transparent per-sqft pricing in LKR, showroom in Colombo 05, and islandwide delivery — with smart room planning and AI tile matching to assist your project."
+        primaryText="Buy Tiles Online"
+        primaryHref="/collections"
+        usersText="20+ Years • 500+ Projects Completed in Sri Lanka"
+      />
 
       {/* ══════ TRUST BAR ══════ */}
       <section className="py-5 sm:py-6 border-b ghost-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-16 text-on-surface-variant">
           <div className="flex items-center gap-3">
             <Shield className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Premium Quality</span>
+            <span className="text-sm font-medium tracking-wide">Direct Importer Pricing</span>
           </div>
           <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
           <div className="flex items-center gap-3">
             <Truck className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Nationwide Delivery</span>
+            <span className="text-sm font-medium tracking-wide">Islandwide Delivery Sri Lanka</span>
           </div>
           <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
           <div className="flex items-center gap-3">
             <Award className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">20+ Years Experience</span>
+            <span className="text-sm font-medium tracking-wide">Colombo 05 Showroom</span>
           </div>
           <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
           <div className="flex items-center gap-3">
-            <Gem className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">500+ Projects</span>
+            <Sparkles className="w-5 h-5 text-accent" />
+            <span className="text-sm font-medium tracking-wide">Smart AI Tile Tools</span>
           </div>
         </div>
       </section>
 
-      {/* ══════ ABOUT US (EDITORIAL) ══════ */}
+      {/* ══════ ABOUT US (EDITORIAL & COMMERCIAL INTENT) ══════ */}
       <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-b ghost-border overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
@@ -107,7 +119,7 @@ export default function Home() {
               <div className="aspect-[4/5] md:aspect-square lg:aspect-[4/5] relative rounded-xl overflow-hidden premium-shadow-lg">
                 <Image 
                   src="/images/contact_hero_v6.jpg"
-                  alt="UN Tiles Showroom"
+                  alt="UN Tiles Colombo Showroom - Buy Tiles in Sri Lanka"
                   fill
                   sizes="100vw"
                   className="object-cover"
@@ -122,18 +134,24 @@ export default function Home() {
             <ScrollReveal className="order-1 lg:order-2">
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-4">Our Heritage</p>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-6 md:mb-8 leading-tight">
-                Crafting Spaces Since <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">2004</span>
+                Where to Buy Tiles in Sri Lanka Since <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/60">2004</span>
               </h2>
               <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant mb-6">
-                UN Tiles (Unicorn Enterprises) has been a trusted importer and distributor of premium ceramic tiles in Sri Lanka. Sourcing from leading manufacturers across the globe, we bring world-class quality to your doorstep.
+                UN Tiles (Unicorn Enterprises) is Colombo&apos;s leading tile importer and distributor. We empower homeowners, architects, and contractors to purchase premium porcelain floor tiles, wall tiles, and vitrified slabs with transparent per-sqft pricing in LKR.
               </p>
               <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant mb-8 md:mb-10">
-                With over two decades of experience, we remain committed to delivering unparalleled reliability, competitive pricing, and exceptional service for homes and large-scale projects alike.
+                Whether you prefer to visit our Colombo 05 showroom or purchase tiles online with fast delivery across Sri Lanka, our smart planning tools and AI Tiles Finder make selecting the right tile effortless.
               </p>
-              <Link href="/about" className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white w-full sm:w-auto px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
-                <span>Discover Our Story</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link href="/collections" className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
+                  <span>Buy Tiles Online</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link href="/visual-search" className="inline-flex items-center justify-center space-x-2 border border-outline px-6 py-4 uppercase tracking-widest text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-all rounded-lg">
+                  <Sparkles className="w-4 h-4 text-accent" />
+                  <span>AI Tiles Finder</span>
+                </Link>
+              </div>
             </ScrollReveal>
           </div>
         </div>
@@ -156,11 +174,11 @@ async function HomeBelowFold() {
         <ScrollReveal>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-8 md:mb-12">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Browse by Space</p>
-              <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Curated Collections</h2>
+              <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Buy Tiles by Space</p>
+              <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">Buy Tiles in Sri Lanka — Curated Collections</h2>
             </div>
             <Link href="/collections" className="group flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-on-surface hover:text-accent transition-colors self-start sm:self-auto">
-              <span className="border-b border-transparent group-hover:border-accent pb-0.5 transition-all">View All</span>
+              <span className="border-b border-transparent group-hover:border-accent pb-0.5 transition-all">Buy & Browse All</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -255,44 +273,50 @@ async function HomeBelowFold() {
         </div>
       </section>
 
-      {/* ══════ AI VISUAL MATCH SPOTLIGHT ══════ */}
+      {/* ══════ AI TILES FINDER SPOTLIGHT (SRI LANKA) ══════ */}
       <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 bg-surface-container-low/50 border-y ghost-border overflow-hidden relative">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
             <ScrollReveal className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>AI-Powered Design Hub</span>
+                <span>Sri Lanka&apos;s #1 AI Tiles Finder</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface leading-tight">
-                Match Any Tile or Room in Seconds with <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">Visual AI</span>
+                Sri Lanka&apos;s First <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">AI Tiles Finder</span> & Room Matcher
               </h2>
               <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant">
-                Have an inspiration photo, a pattern swatch, or an existing room you want to upgrade? Our Gemini AI vector search instantly matches your image with our curated tile catalog.
+                Looking for an AI tiles finder in Sri Lanka? UN Tiles brings cutting-edge Gemini AI visual search to your fingertips. Snap a photo of any tile, floor, or room inspiration, and our AI instantly finds matching porcelain and ceramic tiles available in our Sri Lanka warehouse.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-surface-container border border-outline/30">
                   <div className="flex items-center gap-2.5 font-semibold text-sm text-on-surface mb-1">
                     <Layers className="w-4 h-4 text-accent" />
-                    <span>Tile Matcher</span>
+                    <span>AI Tile Texture Matcher</span>
                   </div>
-                  <p className="text-xs text-on-surface-variant">Upload material textures or design crops to find exact catalog matches.</p>
+                  <p className="text-xs text-on-surface-variant">Upload material textures or Pinterest screenshots to find exact catalog matches in Sri Lanka.</p>
                 </div>
                 <div className="p-4 rounded-2xl bg-surface-container border border-outline/30">
                   <div className="flex items-center gap-2.5 font-semibold text-sm text-on-surface mb-1">
                     <Camera className="w-4 h-4 text-accent" />
-                    <span>Scene Advisor</span>
+                    <span>AI Scene Advisor</span>
                   </div>
                   <p className="text-xs text-on-surface-variant">Upload a room photo to get architectural briefs and palette-tailored tile pairings.</p>
                 </div>
               </div>
-              <div className="pt-2">
+              <div className="flex flex-wrap gap-4 pt-2">
                 <Link
                   href="/visual-search"
                   className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg shadow-md"
                 >
-                  <span>Try Visual Match</span>
+                  <span>Launch AI Tiles Finder</span>
                   <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/collections"
+                  className="inline-flex items-center justify-center space-x-2 border border-outline px-6 py-4 uppercase tracking-widest text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-all rounded-lg"
+                >
+                  <span>Buy Matching Tiles</span>
                 </Link>
               </div>
             </ScrollReveal>
@@ -301,7 +325,7 @@ async function HomeBelowFold() {
               <div className="aspect-[4/3] sm:aspect-square relative rounded-3xl overflow-hidden premium-shadow-lg border border-outline/30 bg-surface-container">
                 <Image
                   src="/images/light_luxury_tiles.jpg"
-                  alt="UN Tiles Visual Match AI"
+                  alt="Sri Lanka AI Tiles Finder - UN Tiles Gemini Visual Matching"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
@@ -315,6 +339,62 @@ async function HomeBelowFold() {
                     Dual Gemini Embedding 2 & Flash Vision vector matching.
                   </p>
                 </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════ SMART TILE PLANNER SPOTLIGHT (SITELINKS HUB) ══════ */}
+      <section className="py-14 sm:py-20 md:py-24 px-4 sm:px-6 border-b ghost-border overflow-hidden relative">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
+            <ScrollReveal className="order-2 lg:order-1 relative">
+              <div className="aspect-[4/3] sm:aspect-square relative rounded-3xl overflow-hidden premium-shadow-lg border border-outline/30 bg-surface-container">
+                <Image
+                  src="/images/contact_hero.jpg"
+                  alt="UN Tiles Smart Tile Planner - Room Calculator Sri Lanka"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-8 text-white">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-semibold w-fit mb-2">
+                    <Calculator className="w-3.5 h-3.5 text-accent" />
+                    <span>Free Layout & Waste Calculator</span>
+                  </div>
+                  <p className="text-sm font-medium text-white/90">
+                    Supports rectangle and L-shaped floor plans with automatic 10% cut buffer.
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal className="order-1 lg:order-2 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
+                <Calculator className="w-3.5 h-3.5" />
+                <span>Free Buying Tool</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface leading-tight">
+                Smart Tile Planner — <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">Calculate & Buy</span> with Zero Waste
+              </h2>
+              <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant">
+                Eliminate estimation errors before ordering. Input your room dimensions, choose any tile from our catalog, and our Smart Planner automatically calculates required square footage, box count, and recommended wastage buffer.
+              </p>
+              <div className="flex flex-wrap gap-4 pt-2">
+                <Link
+                  href="/planner"
+                  className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg shadow-md"
+                >
+                  <span>Launch Smart Tile Planner</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center space-x-2 border border-outline px-6 py-4 uppercase tracking-widest text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-all rounded-lg"
+                >
+                  <span>Consult Colombo Showroom</span>
+                </Link>
               </div>
             </ScrollReveal>
           </div>

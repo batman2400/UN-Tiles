@@ -58,18 +58,24 @@ export function ProductCard({
     <div className="group flex h-full min-w-0 flex-col bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500 rounded-2xl overflow-hidden">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-surface-container">
-        <Image
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 1024px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-700"
-          priority={priority}
-        />
+        <Link
+          href={`/collections/${product.id}`}
+          className="absolute inset-0 z-0"
+          aria-label={`Buy ${product.name} tile in Sri Lanka`}
+        >
+          <Image
+            src={product.image}
+            alt={`Buy ${product.name} tile in Sri Lanka`}
+            fill
+            sizes="(max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-700"
+            priority={priority}
+          />
+        </Link>
 
         {/* Low Stock Badge */}
         {isLowStock && (
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-[#9f403d]/90 backdrop-blur-sm px-3 py-1.5">
+          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-[#9f403d]/90 backdrop-blur-sm px-3 py-1.5 pointer-events-none">
             <AlertTriangle className="w-3 h-3 text-white" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-white">
               Low Stock
@@ -79,7 +85,7 @@ export function ProductCard({
 
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
-          <div className="absolute inset-0 z-10 bg-black/40 flex items-center justify-center">
+          <div className="absolute inset-0 z-10 bg-black/40 flex items-center justify-center pointer-events-none">
             <span className="text-xs font-bold uppercase tracking-widest text-white/90 bg-black/50 backdrop-blur-sm px-5 py-2.5">
               Out of Stock
             </span>
@@ -120,7 +126,9 @@ export function ProductCard({
       <div className="flex flex-1 min-w-0 flex-col p-3 sm:p-5 space-y-1.5 sm:space-y-2">
         <p className="text-[10px] sm:text-xs uppercase tracking-widest text-accent truncate">{product.category}</p>
         <h3 className="text-sm sm:text-lg font-display font-semibold text-on-surface line-clamp-2 leading-snug min-h-[2.5rem] sm:min-h-[3.25rem]">
-          {product.name}
+          <Link href={`/collections/${product.id}`} className="hover:text-accent transition-colors">
+            {product.name}
+          </Link>
         </h3>
 
         {/* Metadata row */}

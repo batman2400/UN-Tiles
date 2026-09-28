@@ -6,14 +6,26 @@ import { CollectionsClient } from "./CollectionsClient";
 import CollectionsLoading from "./loading";
 
 export const metadata: Metadata = {
-  title: "Tile Collections",
+  title: "Buy Tiles in Sri Lanka | Floor, Wall & Porcelain Collections",
   description:
-    "Browse our curated collection of premium architectural tiles — floor tiles, wall tiles, porcelain slabs, and ceramic finishes for residential and commercial projects.",
+    "Purchase premium tiles in Sri Lanka at UN Tiles. Browse 50+ curated floor tiles, wall tiles, and porcelain slabs with transparent per-sqft pricing in LKR. Islandwide delivery & Colombo showroom.",
+  keywords: [
+    "buy tiles in sri lanka",
+    "purchase tiles in sri lanka",
+    "buy floor tiles sri lanka",
+    "buy wall tiles sri lanka",
+    "porcelain tiles sri lanka",
+    "tile prices in sri lanka",
+    "tiles shop colombo",
+    "ceramic tiles sri lanka",
+    "order tiles online sri lanka",
+    "vitrified tiles sri lanka",
+  ],
   alternates: { canonical: "/collections" },
   openGraph: {
-    title: "Tile Collections | UN Tiles",
+    title: "Buy Tiles in Sri Lanka | Floor & Wall Collections | UN Tiles",
     description:
-      "Browse premium architectural tiles — floor tiles, wall tiles, porcelain slabs, and ceramic finishes sourced from leading manufacturers.",
+      "Purchase premium floor tiles, wall tiles, and porcelain slabs in Sri Lanka. Wholesale & retail LKR pricing with nationwide delivery.",
     url: "https://www.untiles.com/collections",
   },
 };

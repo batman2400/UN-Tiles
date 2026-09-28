@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "UN Tiles | Premium Architectural Tiles",
+    name: "UN Tiles | Buy Tiles in Sri Lanka - Floor & Wall Tile Store",
     short_name: "UN Tiles",
     description:
-      "High-end tiling with weight, texture, and structural integrity. Browse collections, request quotes, and manage orders.",
+      "Buy tiles in Sri Lanka with UN Tiles (Unicorn Enterprises). Browse 50+ premium floor and wall tiles with transparent LKR pricing, Colombo showroom, and islandwide delivery.",
     start_url: "/",
     scope: "/",
     id: "/",
@@ -36,16 +36,23 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: "Collections",
-        short_name: "Shop",
-        description: "Browse architectural tile collections",
+        name: "Buy Tiles",
+        short_name: "Buy Tiles",
+        description: "Browse and buy floor and wall tiles in Sri Lanka",
         url: "/collections",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
       },
       {
-        name: "Contact",
-        short_name: "Contact",
-        description: "Get in touch with UN Tiles",
+        name: "AI Tiles Finder",
+        short_name: "AI Finder",
+        description: "Upload photo to find matching tiles with AI in Sri Lanka",
+        url: "/visual-search",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+      {
+        name: "Contact Showroom",
+        short_name: "Showroom",
+        description: "Visit our tile showroom in Colombo 05",
         url: "/contact",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
       },

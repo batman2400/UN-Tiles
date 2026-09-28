@@ -8,14 +8,14 @@ import ContactBlock from "@/components/ui/contact-1";
 import ContactSolutionForm from "@/components/ui/contact-4";
 
 export const metadata: Metadata = {
-  title: "Contact Us",
+  title: "Contact Us & Colombo Showroom",
   description:
-    "Visit our showroom at No. 161/A, Polhengoda Road, Colombo 05 or get in touch online. UN Tiles — premium architectural tile solutions for your project.",
+    "Visit our tile showroom at No. 161/A, Polhengoda Road, Colombo 05 or purchase online. UN Tiles — buy premium floor and wall tiles in Sri Lanka with islandwide delivery.",
   alternates: { canonical: "/contact" },
   openGraph: {
-    title: "Contact UN Tiles",
+    title: "Contact UN Tiles | Colombo Showroom & Tile Orders",
     description:
-      "Visit our showroom at Polhengoda Road, Colombo 05 or reach out online for premium tile solutions.",
+      "Visit our showroom at Polhengoda Road, Colombo 05 or order online. Buy premium floor tiles, wall tiles, and porcelain slabs in Sri Lanka.",
     url: "https://www.untiles.com/contact",
   },
 };
@@ -54,12 +54,37 @@ export default function Contact() {
     priceRange: "$$",
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.untiles.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Colombo Showroom & Contact",
+        item: "https://www.untiles.com/contact",
+      },
+    ],
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(localBusinessJsonLd),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd),
         }}
       />
       

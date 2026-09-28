@@ -17,7 +17,6 @@ import {
   Info,
   X,
   Scan,
-  Filter,
 } from "lucide-react";
 import { VisualMatchCard } from "@/components/visual-search/VisualMatchCard";
 import { SceneBriefPanel } from "@/components/visual-search/SceneBriefPanel";
@@ -237,16 +236,16 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Multimodal Visual Search</span>
+            <span>Sri Lanka&apos;s #1 AI Tiles Finder</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-display font-bold tracking-tight text-on-surface">
-            Find Your Perfect Tile Match
+            AI Tiles Finder in Sri Lanka
           </h1>
 
           <p className="text-sm sm:text-lg text-on-surface-variant leading-relaxed">
-            Upload an inspiration photo, material texture, or a picture of your room.
-            Our Gemini AI vector matcher instantly pairs it with our curated catalog.
+            Looking to find and buy tiles in Sri Lanka? Upload an inspiration photo, material texture, or a picture of your room.
+            Our Gemini AI Tiles Finder instantly matches your image with our curated Sri Lanka inventory with per-sqft LKR pricing.
           </p>
         </div>
 
@@ -613,8 +612,44 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           </div>
         )}
 
+        {/* ══════ SEO & HOW IT WORKS GUIDE ══════ */}
+        <div className="border-t border-outline/30 pt-14 sm:pt-20 mt-12 max-w-4xl mx-auto space-y-10">
+          <div className="text-center space-y-3">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-on-surface">
+              How to Find &amp; Buy Tiles in Sri Lanka with AI
+            </h2>
+            <p className="text-sm text-on-surface-variant max-w-xl mx-auto">
+              UN Tiles operates Sri Lanka&apos;s first multimodal AI tile matching engine. Here is how you can find and purchase your perfect tiles in three simple steps:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-surface-container/60 border border-outline/20 space-y-2">
+              <span className="text-xs font-bold text-accent uppercase tracking-widest">Step 1</span>
+              <h3 className="text-base font-bold text-on-surface">Snap or Upload Photo</h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Take a picture of your living room, kitchen, bathroom, or a tile pattern you saw on Pinterest or Instagram.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface-container/60 border border-outline/20 space-y-2">
+              <span className="text-xs font-bold text-accent uppercase tracking-widest">Step 2</span>
+              <h3 className="text-base font-bold text-on-surface">AI Vector Matching</h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Our Gemini AI analyzes texture grain, color contrast, and surface finish to match against our real-time Sri Lanka tile catalog.
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-surface-container/60 border border-outline/20 space-y-2">
+              <span className="text-xs font-bold text-accent uppercase tracking-widest">Step 3</span>
+              <h3 className="text-base font-bold text-on-surface">Plan &amp; Buy Online</h3>
+              <p className="text-xs text-on-surface-variant leading-relaxed">
+                Review per-sqft LKR prices, calculate cuts and waste in our Smart Planner, and order with islandwide delivery across Sri Lanka.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Disclaimer */}
-        <div className="border-t border-outline/30 pt-8 mt-16 max-w-4xl mx-auto text-center space-y-2 text-xs text-on-surface-variant leading-relaxed">
+        <div className="border-t border-outline/30 pt-8 mt-12 max-w-4xl mx-auto text-center space-y-2 text-xs text-on-surface-variant leading-relaxed">
           <p>
             <strong>Note:</strong> AI visual match rankings are generated via Google Gemini multimodal embeddings and provide design inspiration. Because lighting, screen calibration, and glaze finishes vary, we recommend confirming exact tile colors and surface textures at our UN Tiles showroom before placing large orders.
           </p>

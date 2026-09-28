@@ -12,12 +12,11 @@ export function Footer() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: "/", label: "Home" },
-    { href: "/collections", label: "Collections" },
-    { href: "/planner", label: "Planner" },
-    { href: "/visual-search", label: "Visual Match" },
-    { href: "/about", label: "About Us" },
-    { href: "/contact", label: "Contact" },
+    { href: "/collections", label: "Buy Tiles & Collections" },
+    { href: "/planner", label: "Smart Tile Planner" },
+    { href: "/visual-search", label: "AI Tiles Finder" },
+    { href: "/contact", label: "Colombo Showroom & Contact" },
+    { href: "/about", label: "About UN Tiles" },
   ];
 
   const socialLinks = [
@@ -32,8 +31,8 @@ export function Footer() {
     { href: "/privacy", label: "Privacy Policy" },
   ];
 
-  // Only show links that are NOT the current page
-  const displayedLinks = navLinks.filter((link) => link.href !== pathname);
+  // Keep all primary sitelinks visible across all pages for consistent crawler indexing
+  const displayedLinks = navLinks;
 
   return (
     <footer className="w-full px-3 py-6 sm:px-4 sm:py-8 md:px-6 md:py-12 bg-background">
@@ -51,13 +50,16 @@ export function Footer() {
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col items-start lg:col-span-5 xl:col-span-4"
                 >
-                  <div className="mb-6 flex items-center gap-3">
+                  <div className="mb-4 flex items-center gap-3">
                     <span className="font-display text-3xl font-bold tracking-tight text-white">
                       UN TILES
                     </span>
                   </div>
-                  <p className="mb-8 max-w-sm text-base leading-relaxed text-white/80">
-                    Architectural precision in high-end tiling. Materializing your vision with structural integrity and timeless design.
+                  <p className="mb-4 max-w-sm text-sm leading-relaxed text-white/80">
+                    Sri Lanka&apos;s trusted importer of premium ceramic and porcelain tiles since 2004. Explore curated collections with transparent LKR pricing and match any design with Sri Lanka&apos;s #1 AI Tiles Finder.
+                  </p>
+                  <p className="text-xs text-white/60 mb-6 leading-relaxed">
+                    <strong className="text-white/80">Showroom:</strong> No. 161/A, Polhengoda Road, Colombo 05, Sri Lanka. Island-wide delivery available.
                   </p>
                 </motion.div>
 

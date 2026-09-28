@@ -21,31 +21,31 @@ function getStaticRoutes(): MetadataRoute.Sitemap {
       url: `${BASE_URL}/collections`,
       lastModified: now,
       changeFrequency: "daily",
-      priority: 0.9,
+      priority: 0.95,
     },
     {
       url: `${BASE_URL}/planner`,
       lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
+      priority: 0.9,
     },
     {
       url: `${BASE_URL}/visual-search`,
       lastModified: now,
       changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/about`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.9,
     },
     {
       url: `${BASE_URL}/contact`,
       lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
+      url: `${BASE_URL}/about`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.85,
     },
     {
       url: `${BASE_URL}/privacy`,
@@ -63,25 +63,29 @@ function getStaticRoutes(): MetadataRoute.Sitemap {
 }
 
 /**
- * Fetches all published products via the unified catalog layer (which reads live
- * Supabase rows with graceful in-memory caching and fallback json).
- * Products are mapped to /collections?product=[id] URLs.
+ * Fetches all published products via the unified catalog layer.
+ * Products are mapped to permanent canonical /collections/[id] URLs.
  */
 async function getProductRoutes(): Promise<MetadataRoute.Sitemap> {
   try {
-    const { allProducts } = await getCatalogData();
+    const { allProducts, categories } = await getCatalogData();
     const now = new Date();
 
-    if (!allProducts || allProducts.length === 0) {
-      return [];
-    }
-
-    return allProducts.map((product) => ({
-      url: `${BASE_URL}/collections?product=${product.id}`,
+    const productEntries: MetadataRoute.Sitemap = (allProducts || []).map((product) => ({
+      url: `${BASE_URL}/collections/${product.id}`,
       lastModified: now,
       changeFrequency: "weekly" as const,
-      priority: 0.7,
+      priority: 0.8,
     }));
+
+    const categoryEntries: MetadataRoute.Sitemap = (categories || []).map((cat) => ({
+      url: `${BASE_URL}/collections?category=${cat.slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    }));
+
+    return [...categoryEntries, ...productEntries];
   } catch (err) {
     console.error("[sitemap] Failed to fetch product routes:", err);
     return [];

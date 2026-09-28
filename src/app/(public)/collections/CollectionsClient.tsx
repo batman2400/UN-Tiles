@@ -150,18 +150,22 @@ export function CollectionsClient({
             {searchQuery
               ? `Search Results for "${searchQuery}"`
               : activeCategoryObj
-              ? activeCategoryObj.name
-              : "All Collections"}
+              ? `Buy ${activeCategoryObj.name} in Sri Lanka`
+              : "Buy Tiles in Sri Lanka"}
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-white mb-3">
-            {searchQuery ? "Search Results" : "The Collections"}
+            {searchQuery
+              ? `Search Results for "${searchQuery}"`
+              : activeCategoryObj
+              ? `Buy ${activeCategoryObj.name} in Sri Lanka`
+              : "Buy Tiles in Sri Lanka — Collections"}
           </h1>
           <p className="text-white/70 text-sm max-w-2xl">
             {searchQuery
               ? `Found ${filteredProducts.length} matching architectural tile specifications.`
               : activeCategoryObj
-              ? `Exploring ${activeCategoryObj.name}. Refine by dimensions or search terms below.`
-              : "Browse our complete archive of architectural slabs. Refine instantaneously by category, dimension, and finish."}
+              ? `Browse and purchase premium ${activeCategoryObj.name.toLowerCase()} in Sri Lanka. Wholesale & retail LKR pricing with nationwide delivery.`
+              : "Purchase high-quality floor tiles, wall tiles, and porcelain slabs in Sri Lanka. Filter by dimension, finish, or use our AI Tiles Finder to match any photo."}
           </p>
         </div>
       </section>
@@ -392,6 +396,40 @@ export function CollectionsClient({
                 )}
               </>
             )}
+          </div>
+        </div>
+
+        {/* ══════ SEO BUYING GUIDE: BUY TILES IN SRI LANKA ══════ */}
+        <div className="mt-16 sm:mt-24 pt-12 sm:pt-16 border-t border-gray-200 space-y-10">
+          <div className="max-w-3xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-2">Buying Guide</p>
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-zinc-900 mb-4">
+              How to Buy &amp; Purchase Tiles in Sri Lanka
+            </h2>
+            <p className="text-sm text-zinc-600 leading-relaxed">
+              At UN Tiles (Unicorn Enterprises), we make purchasing tiles in Sri Lanka transparent, reliable, and convenient. Whether you are building a new luxury residence in Colombo or renovating a commercial space in Kandy, our direct importing model guarantees world-class porcelain and ceramic tiles at competitive wholesale and retail rates.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-gray-50/80 p-6 rounded-2xl border border-gray-200/80 space-y-2.5">
+              <h3 className="text-base font-bold text-zinc-900">Per-Sqft LKR Pricing</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                All tile prices are listed in Sri Lankan Rupees (LKR) per square foot with transparent stock availability, ensuring accurate budgeting without hidden distributor markups.
+              </p>
+            </div>
+            <div className="bg-gray-50/80 p-6 rounded-2xl border border-gray-200/80 space-y-2.5">
+              <h3 className="text-base font-bold text-zinc-900">Sri Lanka Islandwide Delivery</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                We deliver safely to all districts in Sri Lanka including Colombo, Gampaha, Kalutara, Kandy, Kurunegala, and Galle with professional packaging to prevent transport damage.
+              </p>
+            </div>
+            <div className="bg-gray-50/80 p-6 rounded-2xl border border-gray-200/80 space-y-2.5">
+              <h3 className="text-base font-bold text-zinc-900">AI Visual Match &amp; Smart Planner</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Unsure which tile suits your space? Use Sri Lanka&apos;s #1 AI Tiles Finder to match room photos, then calculate your exact tiles and cut wastage in our free Smart Planner.
+              </p>
+            </div>
           </div>
         </div>
       </div>
