@@ -3,7 +3,7 @@ import type { SceneBrief } from "./types";
 import { sanitizeSceneBrief } from "./scene-filters";
 
 const PRIMARY_MODEL = "gemini-3.5-flash-lite";
-const FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-3.6-flash"];
+const FALLBACK_MODELS = ["gemini-3.8-flash"];
 
 function getVisionClient(): GoogleGenAI {
   const apiKey = process.env.GEMINI_VISION_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim();
