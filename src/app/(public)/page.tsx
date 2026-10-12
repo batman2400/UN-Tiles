@@ -76,37 +76,162 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
       
-      {/* ══════ HERO SECTION (KEYWORD OPTIMIZED) ══════ */}
+      {/* ══════ HERO SECTION (KEYWORD OPTIMIZED & READABLE) ══════ */}
       <Hero10
-        eyebrowText="Sri Lanka's Trusted Tile Importer & Store • Unicorn Enterprises Since 2004"
+        eyebrowText="Sri Lanka's Trusted Tile Importer • Unicorn Enterprises Since 2004"
         title={"Buy Premium Tiles in Sri Lanka.\nFloor, Wall & Porcelain Store."}
-        description="Purchase high-grade porcelain floor tiles, wall tiles, and architectural slabs directly from Sri Lanka's trusted importer since 2004. Transparent per-sqft pricing in LKR, showroom in Colombo 05, and islandwide delivery — with smart room planning and AI tile matching to assist your project."
+        description="Direct importer pricing in LKR with fast islandwide delivery. Explore curated collections, calculate room layouts with zero waste, or match your room inspiration instantly using Gemini AI."
         primaryText="Buy Tiles Online"
         primaryHref="/collections"
         usersText="20+ Years • 500+ Projects Completed in Sri Lanka"
       />
 
-      {/* ══════ TRUST BAR ══════ */}
-      <section className="py-5 sm:py-6 border-b ghost-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-16 text-on-surface-variant">
-          <div className="flex items-center gap-3">
-            <Shield className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Direct Importer Pricing</span>
+      {/* ══════ TRUST BAR (INTERACTIVE & TOOL LINKED) ══════ */}
+      <section className="py-4 sm:py-5 border-b ghost-border bg-surface-container-low/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-10 text-on-surface-variant">
+          <div className="flex items-center gap-2.5">
+            <Shield className="w-4 h-4 text-accent flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium tracking-wide">Direct Importer Pricing</span>
           </div>
-          <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
-          <div className="flex items-center gap-3">
-            <Truck className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Islandwide Delivery Sri Lanka</span>
+          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="flex items-center gap-2.5">
+            <Truck className="w-4 h-4 text-accent flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium tracking-wide">Islandwide Delivery Sri Lanka</span>
           </div>
-          <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
-          <div className="flex items-center gap-3">
-            <Award className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Colombo 05 Showroom</span>
+          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="flex items-center gap-2.5">
+            <Award className="w-4 h-4 text-accent flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-medium tracking-wide">Colombo 05 Showroom</span>
           </div>
-          <div className="hidden md:block w-[1px] h-4 bg-on-surface-variant/20" />
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-accent" />
-            <span className="text-sm font-medium tracking-wide">Smart AI Tile Tools</span>
+          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <Link
+            href="/visual-search"
+            className="flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide text-accent hover:text-accent/80 transition-colors group"
+          >
+            <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+            <span className="underline-offset-4 hover:underline">Sri Lanka&apos;s #1 AI Tile Finder</span>
+          </Link>
+          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <Link
+            href="/planner"
+            className="flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide text-on-surface hover:text-accent transition-colors group"
+          >
+            <Calculator className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+            <span className="underline-offset-4 hover:underline">Smart 2D Tile Planner</span>
+          </Link>
+        </div>
+      </section>
+
+      {/* ══════ DIGITAL STUDIO & SMART TOOLS SUITE (PROMINENT SHOWCASE) ══════ */}
+      <section className="py-14 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-surface via-surface-container-low/60 to-surface border-b ghost-border relative overflow-hidden">
+        {/* Ambient atmospheric glow */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto">
+          <ScrollReveal>
+            <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/25 text-accent text-xs font-semibold uppercase tracking-widest mb-4">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Next-Gen Tile Shopping Studio</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-4">
+                Design Smarter with <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">AI & 2D Tools</span>
+              </h2>
+              <p className="text-base sm:text-lg text-on-surface-variant leading-relaxed">
+                Take the guesswork out of tile selection and quantity estimation. Use our cutting-edge AI visual matcher and interactive 2D floor planner before you buy.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Card 1: AI Tiles Finder */}
+            <ScrollReveal delay={100}>
+              <div className="group relative h-full flex flex-col justify-between rounded-3xl border border-outline/30 bg-surface-container-lowest/80 p-7 sm:p-9 backdrop-blur-md shadow-sm hover:shadow-xl hover:border-accent/40 transition-all duration-500 overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-accent/10 rounded-full blur-2xl group-hover:bg-accent/20 transition-all duration-500 -z-10" />
+
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20 text-accent group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Gemini AI Powered
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-3xl font-display font-bold text-on-surface mb-3 group-hover:text-accent transition-colors">
+                    AI Tiles Finder & Room Matcher
+                  </h3>
+                  <p className="text-on-surface-variant text-sm sm:text-base leading-relaxed mb-6">
+                    Snap or upload any photo — a room corner, Pinterest inspiration, or an existing tile swatch. Our Gemini AI analyzes textures, colors, and aesthetics to find exact available matches in our Sri Lanka warehouse.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {["Photo & Texture Upload", "Gemini Scene Advisor", "Instant Catalog Match", "Islandwide Delivery"].map((tag) => (
+                      <span key={tag} className="text-xs px-3 py-1 rounded-full bg-surface-container border border-outline/20 text-on-surface-variant font-medium">
+                        ✓ {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link
+                    href="/visual-search"
+                    className="inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-7 py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider hover:bg-black group-hover:bg-accent group-hover:text-on-accent transition-all duration-300 shadow-sm"
+                  >
+                    <span>Launch AI Tiles Finder</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            </ScrollReveal>
+
+            {/* Card 2: Smart Tile Planner */}
+            <ScrollReveal delay={200}>
+              <div className="group relative h-full flex flex-col justify-between rounded-3xl border border-outline/30 bg-surface-container-lowest/80 p-7 sm:p-9 backdrop-blur-md shadow-sm hover:shadow-xl hover:border-accent/40 transition-all duration-500 overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all duration-500 -z-10" />
+
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20 text-accent group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <Calculator className="w-6 h-6" />
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-accent/10 text-accent border border-accent/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                      Interactive 2D Studio
+                    </span>
+                  </div>
+
+                  <h3 className="text-2xl sm:text-3xl font-display font-bold text-on-surface mb-3 group-hover:text-accent transition-colors">
+                    Smart Tile & Room Planner
+                  </h3>
+                  <p className="text-on-surface-variant text-sm sm:text-base leading-relaxed mb-6">
+                    Calculate square footage and box requirements with zero guesswork. Enter rectangle or L-shaped room dimensions, test grid or staggered tile orientations, and let our planner calculate the optimal cut buffer.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mb-8">
+                    {["Rect & L-Shaped Plans", "Grid & Staggered Patterns", "10% Wastage Buffer", "1-Click Cart Checkout"].map((tag) => (
+                      <span key={tag} className="text-xs px-3 py-1 rounded-full bg-surface-container border border-outline/20 text-on-surface-variant font-medium">
+                        ✓ {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <Link
+                    href="/planner"
+                    className="inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-7 py-3.5 rounded-xl bg-zinc-900 text-white font-semibold text-xs sm:text-sm uppercase tracking-wider hover:bg-black group-hover:bg-accent group-hover:text-on-accent transition-all duration-300 shadow-sm"
+                  >
+                    <span>Launch Smart Tile Planner</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -142,14 +267,18 @@ export default function Home() {
               <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant mb-8 md:mb-10">
                 Whether you prefer to visit our Colombo 05 showroom or purchase tiles online with fast delivery across Sri Lanka, our smart planning tools and AI Tiles Finder make selecting the right tile effortless.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/collections" className="kinetic-button inline-flex items-center justify-center space-x-3 bg-zinc-900 text-white px-8 py-4 uppercase tracking-widest text-sm font-semibold hover:bg-black transition-all rounded-lg">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3.5">
+                <Link href="/collections" className="kinetic-button inline-flex items-center justify-center space-x-2.5 bg-zinc-900 text-white px-6 sm:px-7 py-3.5 uppercase tracking-widest text-xs sm:text-sm font-semibold hover:bg-black transition-all rounded-xl shadow-sm">
                   <span>Buy Tiles Online</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link href="/visual-search" className="inline-flex items-center justify-center space-x-2 border border-outline px-6 py-4 uppercase tracking-widest text-sm font-semibold text-on-surface hover:bg-surface-container-high transition-all rounded-lg">
+                <Link href="/visual-search" className="inline-flex items-center justify-center space-x-2 border border-outline/40 bg-surface-container-lowest/80 px-5 sm:px-6 py-3.5 uppercase tracking-widest text-xs sm:text-sm font-semibold text-on-surface hover:bg-surface-container-high hover:border-accent transition-all rounded-xl shadow-sm">
                   <Sparkles className="w-4 h-4 text-accent" />
                   <span>AI Tiles Finder</span>
+                </Link>
+                <Link href="/planner" className="inline-flex items-center justify-center space-x-2 border border-outline/40 bg-surface-container-lowest/80 px-5 sm:px-6 py-3.5 uppercase tracking-widest text-xs sm:text-sm font-semibold text-on-surface hover:bg-surface-container-high hover:border-accent transition-all rounded-xl shadow-sm">
+                  <Calculator className="w-4 h-4 text-accent" />
+                  <span>Smart Tile Planner</span>
                 </Link>
               </div>
             </ScrollReveal>
