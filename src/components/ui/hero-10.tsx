@@ -43,10 +43,11 @@ export function Hero10({
   description = "",
   primaryText = "Buy Tiles Online",
   primaryHref = "/collections",
-  secondaryActions,
+  studioText = "Explore AI & Studio Tools",
+  studioHref = "#studio",
   usersText = "500+ Projects Completed",
   backgroundImage = defaultBackground,
-}: Hero10Props) {
+}: Hero10Props & { studioText?: string; studioHref?: string }) {
   return (
     <section
       className="relative isolate min-h-[100svh] w-full overflow-hidden bg-background font-sans text-slate-900 antialiased"
@@ -61,40 +62,36 @@ export function Hero10({
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
 
-      {/* ── Luxury Architectural Scrim Overlay (Clean contrast for text over busy background) ── */}
+      {/* ── Natural luxury overlay (Vibrant, crisp photo without milky haze) ── */}
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(250,248,245,0.88)_0%,rgba(250,248,245,0.72)_45%,rgba(250,248,245,0.48)_100%)]"
-        aria-hidden="true"
-      />
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/50 to-white/75 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(250,248,245,0.42)_0%,rgba(250,248,245,0.18)_35%,rgba(250,248,245,0.05)_65%,rgba(15,23,42,0.12)_100%)]"
         aria-hidden="true"
       />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1440px] flex-col px-4 py-4 sm:px-10 lg:px-[74px]">
-        <div className="mx-auto flex w-full max-w-[820px] flex-1 flex-col items-center justify-start pt-[92px] text-center sm:pt-[100px] lg:pt-[84px]">
+        <div className="mx-auto flex w-full max-w-[780px] flex-1 flex-col items-center justify-start pt-[90px] text-center sm:pt-[98px] lg:pt-[76px]">
           {/* Eyebrow badge */}
-          <div className="inline-flex min-h-7 max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-slate-700/15 bg-white/70 px-3.5 py-1.5 text-[11px] leading-none font-semibold text-slate-700 shadow-sm backdrop-blur-md">
-            <span className="grid size-4 place-items-center rounded-full border border-accent/40 bg-accent/15">
-              <span className="size-2 rounded-full bg-accent shadow-[0_0_6px_rgba(184,134,11,0.6)]" />
+          <div className="inline-flex min-h-7 max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-slate-700/12 bg-white/40 px-3.5 py-1.5 text-[11px] leading-none font-semibold text-slate-700 shadow-sm backdrop-blur-md">
+            <span className="grid size-4 place-items-center rounded-full border border-accent/40 bg-accent/20">
+              <span className="size-2 rounded-full bg-accent" />
             </span>
             <span>{eyebrowText}</span>
           </div>
 
-          {/* Main Title */}
-          <h1 className="mt-5 max-w-5xl font-serif text-[clamp(2.15rem,6.5vw,3.85rem)] leading-[1.14] sm:leading-[1.05] font-semibold tracking-[-0.04em] text-balance whitespace-pre-line text-slate-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">
+          {/* Main Title - Refined, balanced editorial typography */}
+          <h1 className="mt-5 max-w-4xl font-serif text-[clamp(2.15rem,5.5vw,3.5rem)] leading-[1.15] sm:leading-[1.08] font-medium tracking-tight text-balance whitespace-pre-line text-slate-900 drop-shadow-[0_2px_14px_rgba(255,255,255,0.95)]">
             {title}
           </h1>
 
-          {/* Description */}
+          {/* Description - Crisp, clean, readable */}
           {description && (
-            <p className="mt-4 sm:mt-5 max-w-[640px] px-2 text-[0.95rem] leading-[1.6] font-normal text-pretty text-slate-800 sm:text-[1.05rem]">
+            <p className="mt-4 sm:mt-5 max-w-[580px] px-2 text-[0.95rem] leading-[1.55] font-normal text-pretty text-slate-800 sm:text-[1.05rem] drop-shadow-[0_1px_10px_rgba(255,255,255,0.95)]">
               {description}
             </p>
           )}
 
-          {/* ── Multi-Action Studio Cluster (Featured Tools & Shop) ── */}
-          <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4 max-w-3xl">
+          {/* ── Refined Dual Action Buttons ── */}
+          <div className="mt-7 sm:mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             {/* Primary Action: Collections */}
             <motion.a
               href={primaryHref}
@@ -106,31 +103,17 @@ export function Hero10({
               <ArrowRight className="w-4 h-4" />
             </motion.a>
 
-            {/* Quick Tool 1: AI Tile Finder */}
+            {/* Studio Tools Hub Action */}
             <motion.a
-              href="/visual-search"
+              href={studioHref}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-zinc-300/80 bg-white/80 px-5 sm:px-6 text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-900 shadow-sm backdrop-blur-md hover:bg-white hover:border-accent hover:text-accent transition-all group"
+              className="inline-flex h-12 items-center gap-2 rounded-full border border-slate-700/15 bg-white/50 px-6 text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur-md hover:bg-white/80 hover:border-accent transition-all group"
             >
               <Sparkles className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
-              <span>AI Tile Finder</span>
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-500/30">
-                AI
-              </span>
-            </motion.a>
-
-            {/* Quick Tool 2: Smart Tile Planner */}
-            <motion.a
-              href="/planner"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-zinc-300/80 bg-white/80 px-5 sm:px-6 text-xs sm:text-sm font-semibold uppercase tracking-wider text-zinc-900 shadow-sm backdrop-blur-md hover:bg-white hover:border-accent hover:text-accent transition-all group"
-            >
-              <Calculator className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
-              <span>Smart Tile Planner</span>
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent border border-accent/30">
-                2D
+              <span>{studioText}</span>
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
+                AI & 2D
               </span>
             </motion.a>
           </div>
@@ -138,7 +121,7 @@ export function Hero10({
 
         {/* Bottom trust pill */}
         <div className="mb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-center">
-          <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full bg-white/70 px-4 py-1.5 text-xs sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/60">
+          <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full bg-white/50 px-4 py-1.5 text-xs sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/40">
             <span className="grid size-6 place-items-center rounded-full bg-slate-900 text-white">
               <FaArrowRight className="size-2.5 -rotate-45" />
             </span>

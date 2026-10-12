@@ -79,10 +79,12 @@ export default function Home() {
       {/* ══════ HERO SECTION (KEYWORD OPTIMIZED & READABLE) ══════ */}
       <Hero10
         eyebrowText="Sri Lanka's Trusted Tile Importer • Unicorn Enterprises Since 2004"
-        title={"Buy Premium Tiles in Sri Lanka.\nFloor, Wall & Porcelain Store."}
-        description="Direct importer pricing in LKR with fast islandwide delivery. Explore curated collections, calculate room layouts with zero waste, or match your room inspiration instantly using Gemini AI."
+        title={"Buy Premium Tiles in Sri Lanka\nFloor, Wall & Porcelain Store"}
+        description="Direct importer pricing in LKR with fast islandwide delivery. Explore curated collections, or experience our interactive AI & 2D design studio below."
         primaryText="Buy Tiles Online"
         primaryHref="/collections"
+        studioText="Explore AI & Studio Tools"
+        studioHref="#studio"
         usersText="20+ Years • 500+ Projects Completed in Sri Lanka"
       />
 
@@ -123,7 +125,7 @@ export default function Home() {
       </section>
 
       {/* ══════ DIGITAL STUDIO & SMART TOOLS SUITE (PROMINENT SHOWCASE) ══════ */}
-      <section className="py-14 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-surface via-surface-container-low/60 to-surface border-b ghost-border relative overflow-hidden">
+      <section id="studio" className="py-14 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-surface via-surface-container-low/60 to-surface border-b ghost-border relative overflow-hidden">
         {/* Ambient atmospheric glow */}
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-accent/10 rounded-full blur-[120px] pointer-events-none -z-10" />
         <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
