@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { parseCheckoutItems, priceCartItems } from "@/lib/checkoutCart";
 import { getStripeServerClient } from "@/lib/stripe";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function isCurrencyUnsupported(error: unknown): boolean {
   const message = error instanceof Error ? error.message.toLowerCase() : "";
@@ -9,6 +10,19 @@ function isCurrencyUnsupported(error: unknown): boolean {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 10, 60 * 1000, "stripe-intent");
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many payment initialization attempts. Please wait a moment before trying again." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil(rateLimit.resetMs / 1000).toString(),
+        },
+      }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const {

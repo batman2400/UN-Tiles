@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // ── Validation ─────────────────────────────────────────
 
@@ -30,6 +31,19 @@ function isValidContactBody(body: unknown): body is ContactRequestBody {
 // ── Route Handler ──────────────────────────────────────
 
 export async function POST(request: NextRequest) {
+  const rateLimit = checkRateLimit(request, 5, 60 * 1000, "contact");
+  if (!rateLimit.allowed) {
+    return Response.json(
+      { error: "Too many contact inquiries submitted. Please wait a moment before trying again." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": Math.ceil(rateLimit.resetMs / 1000).toString(),
+        },
+      }
+    );
+  }
+
   try {
     // 1. Parse request body
     let body: unknown;

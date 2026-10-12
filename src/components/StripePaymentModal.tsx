@@ -134,7 +134,9 @@ function StripePaymentFormInner({
           await onPaymentSuccess(result.paymentIntent.id);
           setIsSuccess(true);
         } catch (err: unknown) {
-          console.error("Failed to complete order callback after Stripe payment:", err);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Failed to complete order callback after Stripe payment:", err);
+          }
           setErrorMessage(
             err instanceof Error
               ? err.message
@@ -155,7 +157,9 @@ function StripePaymentFormInner({
       setErrorMessage("Payment did not complete. Please try again.");
       setIsProcessing(false);
     } catch (err: unknown) {
-      console.error("Unexpected Stripe confirm error:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Unexpected Stripe confirm error:", err);
+      }
       setErrorMessage("An unexpected error occurred during Stripe confirmation.");
       setIsProcessing(false);
     }

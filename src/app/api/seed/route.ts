@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import catalogSeed from "@/data/catalog.json";
 
-export async function GET() {
+export async function POST() {
   try {
     const supabase = await createClient();
 
@@ -94,4 +94,11 @@ export async function GET() {
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { error: "Method Not Allowed. Database seeding requires a POST request with admin credentials." },
+    { status: 405, headers: { Allow: "POST" } }
+  );
 }

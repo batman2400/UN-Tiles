@@ -86,7 +86,9 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       setMatches(null);
       setSceneBrief(null);
     } catch (err: unknown) {
-      console.error("[VisualSearch] Compression error:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[VisualSearch] Compression error:", err);
+      }
       setError("Could not process this photo. Please try another image.");
     } finally {
       setIsCompressing(false);

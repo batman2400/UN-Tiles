@@ -213,7 +213,9 @@ function CartPageContent() {
         addressId: fulfillment === "delivery" ? addressId : null,
       });
     } catch (err: unknown) {
-      console.error("Payment order saving error:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Payment order saving error:", err);
+      }
       const msg = err instanceof Error ? err.message : "Failed to record order.";
       setCheckoutError(msg);
       throw err;

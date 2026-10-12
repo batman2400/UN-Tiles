@@ -127,10 +127,14 @@ export default function ContactSolutionForm(
 
         const web3Data = await web3FormsRes.json().catch(() => null);
         if (!web3FormsRes.ok || !web3Data?.success) {
-          console.error("Web3Forms submission failed", web3Data);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Web3Forms submission failed", web3Data);
+          }
         }
       } else {
-        console.error("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is not set");
+        if (process.env.NODE_ENV === "development") {
+          console.warn("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is not set");
+        }
       }
 
       // Save to our database
@@ -232,7 +236,7 @@ export default function ContactSolutionForm(
                     </Label>
                     <Input
                       id="name"
-                      placeholder="Alex Rivera"
+                      placeholder="Kasun Perera"
                       value={form.name}
                       onChange={(e) => handleChange("name", e.target.value)}
                       className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
@@ -266,7 +270,7 @@ export default function ContactSolutionForm(
                     <Input
                       id="email"
                       type="email"
-                      placeholder="alex@company.com"
+                      placeholder="kasun@example.com"
                       value={form.email}
                       onChange={(e) => handleChange("email", e.target.value)}
                       className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
