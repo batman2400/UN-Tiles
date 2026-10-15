@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+export const revalidate = 86400; // Cache robots.txt for 24 hours
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {

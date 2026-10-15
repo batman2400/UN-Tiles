@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { getCatalogData } from "@/data/products";
 
+export const revalidate = 86400; // Cache sitemap for 24 hours
+
 const BASE_URL = "https://www.untiles.com";
 
 /**

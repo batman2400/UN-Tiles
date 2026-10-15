@@ -69,7 +69,7 @@ type CatalogLoadOptions = {
 const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.jpg";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
 export const CATALOG_CACHE_TAG = "catalog";
-const LIVE_CATALOG_TTL_MS = 30_000;
+const LIVE_CATALOG_TTL_MS = 300_000; // 5 minutes in-memory lambda cache
 
 let catalogSupabase: ReturnType<typeof createClient> | null = null;
 let liveCatalogMemory: { payload: RawCatalogPayload; expiresAt: number } | null = null;
@@ -309,7 +309,7 @@ async function loadCatalogViewModel(): Promise<CatalogViewModel> {
 
 export const getCatalogData = cache(
   unstable_cache(loadCatalogViewModel, ["catalog-view-model"], {
-    revalidate: 60,
+    revalidate: 86400, // 24 hours fallback; real-time updates triggered on-demand via CATALOG_CACHE_TAG
     tags: [CATALOG_CACHE_TAG],
   })
 );
