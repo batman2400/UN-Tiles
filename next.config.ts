@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["sharp"],
+  experimental: {
+    staleTimes: {
+      static: 86400,
+    },
+  },
   async redirects() {
     return [
       {

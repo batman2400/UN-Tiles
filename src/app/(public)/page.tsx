@@ -10,6 +10,8 @@ import { StatsCounter } from "@/components/StatsCounter";
 import { ProductCard } from "@/components/ProductCard";
 import { Hero10 } from "@/components/ui/hero-10";
 
+export const revalidate = 86400; // Cache home page for 24 hours
+
 const faqItems = [
   {
     question: "Where can I buy tiles in Sri Lanka?",

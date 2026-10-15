@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import { preload } from "react-dom";
 import type { Metadata } from "next";
 import { getCatalogData } from "@/data/products";
 import { PlannerClient } from "./PlannerClient";
+
+export const revalidate = 86400; // Cache planner statically for 24 hours
 
 export const metadata: Metadata = {
   title: "Smart Tile Planner",
@@ -16,13 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function PlannerPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ product?: string }>;
-}) {
+export default async function PlannerPage() {
   preload("/images/contact_hero_v6.jpg", { as: "image", fetchPriority: "high" });
-  const [{ allProducts }, params] = await Promise.all([getCatalogData(), searchParams]);
+  const { allProducts } = await getCatalogData();
 
   const howToJsonLd = {
     "@context": "https://schema.org",
@@ -93,7 +92,9 @@ export default async function PlannerPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <PlannerClient products={allProducts} initialProductId={params.product} />
+      <Suspense fallback={<div className="min-h-screen bg-background" />}>
+        <PlannerClient products={allProducts} />
+      </Suspense>
     </>
   );
 }

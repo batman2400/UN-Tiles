@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { Product } from "@/data/products";
 import { useCart } from "@/context/CartContext";
@@ -42,13 +43,14 @@ export function PlannerClient({
   initialProductId?: string;
 }) {
   const { addToCart, items } = useCart();
+  const searchParams = useSearchParams();
 
   const plannable = useMemo(
     () => products.filter((p) => productHasParsableSize(p.dimensions)),
     [products]
   );
 
-  const urlProduct = initialProductId || "";
+  const urlProduct = initialProductId || searchParams.get("product") || "";
   const defaultId =
     (urlProduct && plannable.some((p) => p.id === urlProduct) ? urlProduct : null) ??
     plannable[0]?.id ??

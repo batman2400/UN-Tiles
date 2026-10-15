@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // Cache visual search shell statically for 24 hours
 
 export default function VisualSearchPage() {
   const webAppJsonLd = {
