@@ -80,7 +80,6 @@ export default function Home() {
       <Hero10
         eyebrowText="Sri Lanka's Trusted Tile Importer • Unicorn Enterprises Since 2004"
         title={"Buy Premium Tiles in Sri Lanka\nFloor, Wall & Porcelain Store"}
-        description="Direct importer pricing in LKR with fast islandwide delivery. Explore curated collections, or experience our interactive AI & 2D design studio below."
         primaryText="Buy Tiles Online"
         primaryHref="/collections"
         studioText="Explore AI & Studio Tools"
