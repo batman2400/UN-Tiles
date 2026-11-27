@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/visual-search/rate-limit";
-import { processImageInput } from "@/lib/visual-search/image-input";
+import {
+  ImageValidationError,
+  MAX_IMAGE_SIZE_BYTES,
+  processImageInput,
+} from "@/lib/visual-search/image-input";
 import { embedQueryImage } from "@/lib/visual-search/gemini-embeddings";
 import { computeColorHistogram } from "@/lib/visual-search/color-histogram";
 import { retrieveCatalogMatches } from "@/lib/visual-search/retrieve";
@@ -14,7 +18,7 @@ export const runtime = "nodejs";
 export async function POST(req: NextRequest) {
   const startTime = Date.now();
 
-  const rateLimit = checkRateLimit(req, 30, 60 * 1000);
+  const rateLimit = checkRateLimit(req, 10, 60 * 1000);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
@@ -37,23 +41,47 @@ export async function POST(req: NextRequest) {
     const contentType = req.headers.get("content-type") || "";
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const file = (formData.get("image") || formData.get("file")) as File | null;
-      requestedCategory = formData.get("category")?.toString() || "all";
-      if (!file) {
+      const rawEntry = formData.get("image") || formData.get("file");
+      const rawCategory = formData.get("category");
+      requestedCategory = typeof rawCategory === "string" ? rawCategory : "all";
+      if (!(rawEntry instanceof File)) {
         return NextResponse.json(
           { success: false, error: "No image file provided in request." },
           { status: 400 }
         );
       }
-      const arrayBuf = await file.arrayBuffer();
+      if (rawEntry.size > MAX_IMAGE_SIZE_BYTES) {
+        return NextResponse.json(
+          { success: false, error: "Image exceeds the 4.5MB size limit." },
+          { status: 413 }
+        );
+      }
+      const arrayBuf = await rawEntry.arrayBuffer();
       fileBuffer = Buffer.from(arrayBuf);
     } else if (contentType.includes("application/json")) {
-      const body = await req.json();
-      requestedCategory = body.category || "all";
-      if (body.image || body.base64) {
-        const rawBase64 = (body.image || body.base64).replace(/^data:image\/\w+;base64,/, "");
-        fileBuffer = Buffer.from(rawBase64, "base64");
+      const body = await req.json().catch(() => null);
+      if (!body || typeof body !== "object") {
+        return NextResponse.json(
+          { success: false, error: "Invalid JSON payload." },
+          { status: 400 }
+        );
       }
+      requestedCategory = typeof body.category === "string" ? body.category : "all";
+      const rawImage = body.image ?? body.base64;
+      if (typeof rawImage !== "string") {
+        return NextResponse.json(
+          { success: false, error: "Invalid or missing image payload." },
+          { status: 400 }
+        );
+      }
+      const rawBase64 = rawImage.replace(/^data:image\/\w+;base64,/, "");
+      if (rawBase64.length > Math.ceil(MAX_IMAGE_SIZE_BYTES * 1.4)) {
+        return NextResponse.json(
+          { success: false, error: "Image exceeds the 4.5MB size limit." },
+          { status: 413 }
+        );
+      }
+      fileBuffer = Buffer.from(rawBase64, "base64");
     }
 
     if (!fileBuffer || fileBuffer.length === 0) {
@@ -109,6 +137,12 @@ export async function POST(req: NextRequest) {
       queryTimeMs,
     });
   } catch (err: unknown) {
+    if (err instanceof ImageValidationError) {
+      return NextResponse.json(
+        { success: false, error: err.message },
+        { status: err.status }
+      );
+    }
     console.error("[Visual Match API] Error:", err);
     return NextResponse.json(
       {

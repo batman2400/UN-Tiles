@@ -6,7 +6,7 @@ import { checkRateLimit as checkScopedRateLimit } from "@/lib/rate-limit";
  */
 export function checkRateLimit(
   req: NextRequest,
-  limit: number = 30,
+  limit: number = 10,
   windowMs: number = 60 * 1000
 ) {
   return checkScopedRateLimit(req, limit, windowMs, "visual-search");

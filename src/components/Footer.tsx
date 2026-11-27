@@ -4,12 +4,10 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import React from "react";
 import { FaInstagram, FaFacebookF, FaWhatsapp, FaEnvelope } from "react-icons/fa";
 
 export function Footer() {
-  const pathname = usePathname();
 
   const navLinks = [
     { href: "/collections", label: "Buy Tiles & Collections" },

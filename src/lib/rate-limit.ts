@@ -4,6 +4,7 @@ interface RateLimitRecord {
   timestamps: number[];
 }
 
+const MAX_BUCKETS = 5_000;
 const bucketMap = new Map<string, RateLimitRecord>();
 
 // Cleanup stale entries every 5 minutes
@@ -27,13 +28,27 @@ function cleanup() {
   }
 }
 
+function resolveClientIp(req: NextRequest): string {
+  const vercelForwarded = req.headers.get("x-vercel-forwarded-for");
+  if (vercelForwarded) {
+    const first = vercelForwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+
+  const realIp = req.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim();
+    if (first) return first;
+  }
+
+  return "anonymous-client";
+}
+
 /**
  * Checks if the request from a given client IP is within rate limits for a given scope.
- *
- * @param req NextRequest
- * @param limit Max requests allowed within windowMs (e.g. 10)
- * @param windowMs Time window in milliseconds (default: 60,000ms / 1 minute)
- * @param scope Namespace for the rate limit (e.g. "checkout", "contact", "stripe")
  */
 export function checkRateLimit(
   req: NextRequest,
@@ -48,17 +63,19 @@ export function checkRateLimit(
 
   cleanup();
 
-  const forwarded = req.headers.get("x-forwarded-for");
-  const ip = forwarded
-    ? forwarded.split(",")[0].trim()
-    : req.headers.get("x-real-ip") || "anonymous-client";
-
+  const ip = resolveClientIp(req);
   const key = `${scope}:${ip}`;
   const now = Date.now();
   const windowStart = now - windowMs;
 
   let record = bucketMap.get(key);
   if (!record) {
+    if (bucketMap.size >= MAX_BUCKETS) {
+      const oldestKey = bucketMap.keys().next().value;
+      if (oldestKey !== undefined) {
+        bucketMap.delete(oldestKey);
+      }
+    }
     record = { timestamps: [] };
     bucketMap.set(key, record);
   }

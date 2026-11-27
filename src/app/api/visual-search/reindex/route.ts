@@ -39,19 +39,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Locate product image from catalog or db
-    const { allProducts } = await getCatalogData();
-    const product = allProducts.find((p) => p.id === productId);
+    // 3. Locate product image from live database first, falling back to cached catalog
+    const { data: dbProduct } = await supabase
+      .from("products")
+      .select("image")
+      .eq("id", productId)
+      .maybeSingle();
 
-    let imageUrl = product?.image;
+    let imageUrl = dbProduct?.image;
     if (!imageUrl) {
-      // Fallback: lookup in db
-      const { data: dbProduct } = await supabase
-        .from("products")
-        .select("image")
-        .eq("id", productId)
-        .single();
-      imageUrl = dbProduct?.image;
+      const { allProducts } = await getCatalogData();
+      imageUrl = allProducts.find((p) => p.id === productId)?.image;
     }
 
     if (!imageUrl) {

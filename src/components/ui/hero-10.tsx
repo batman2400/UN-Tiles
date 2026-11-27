@@ -2,9 +2,8 @@
 
 import { motion } from "motion/react";
 import Image from "next/image";
-import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa6";
-import { Sparkles, Calculator, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 export interface HeroAction {
   label: string;

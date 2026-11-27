@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/visual-search/rate-limit";
-import { processImageInput } from "@/lib/visual-search/image-input";
+import {
+  ImageValidationError,
+  MAX_IMAGE_SIZE_BYTES,
+  processImageInput,
+} from "@/lib/visual-search/image-input";
 import { analyzeScene, isVisionConfigured } from "@/lib/visual-search/gemini-scene";
 import { embedQueryText } from "@/lib/visual-search/gemini-embeddings";
 import { histogramFromPalette } from "@/lib/visual-search/color-histogram";
@@ -28,8 +32,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // 1. IP Rate Limiting (~30 req/min)
-  const rateLimit = checkRateLimit(req, 30, 60 * 1000);
+  // 1. IP Rate Limiting (10 req/min)
+  const rateLimit = checkRateLimit(req, 10, 60 * 1000);
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
@@ -52,21 +56,44 @@ export async function POST(req: NextRequest) {
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
-      const file = (formData.get("image") || formData.get("file")) as File | null;
-      if (!file) {
+      const rawEntry = formData.get("image") || formData.get("file");
+      if (!(rawEntry instanceof File)) {
         return NextResponse.json(
           { success: false, error: "No room photo provided in request." },
           { status: 400 }
         );
       }
-      const arrayBuf = await file.arrayBuffer();
+      if (rawEntry.size > MAX_IMAGE_SIZE_BYTES) {
+        return NextResponse.json(
+          { success: false, error: "Image exceeds the 4.5MB size limit." },
+          { status: 413 }
+        );
+      }
+      const arrayBuf = await rawEntry.arrayBuffer();
       fileBuffer = Buffer.from(arrayBuf);
     } else if (contentType.includes("application/json")) {
-      const body = await req.json();
-      if (body.image || body.base64) {
-        const rawBase64 = (body.image || body.base64).replace(/^data:image\/\w+;base64,/, "");
-        fileBuffer = Buffer.from(rawBase64, "base64");
+      const body = await req.json().catch(() => null);
+      if (!body || typeof body !== "object") {
+        return NextResponse.json(
+          { success: false, error: "Invalid JSON payload." },
+          { status: 400 }
+        );
       }
+      const rawImage = body.image ?? body.base64;
+      if (typeof rawImage !== "string") {
+        return NextResponse.json(
+          { success: false, error: "Invalid or missing room image." },
+          { status: 400 }
+        );
+      }
+      const rawBase64 = rawImage.replace(/^data:image\/\w+;base64,/, "");
+      if (rawBase64.length > Math.ceil(MAX_IMAGE_SIZE_BYTES * 1.4)) {
+        return NextResponse.json(
+          { success: false, error: "Image exceeds the 4.5MB size limit." },
+          { status: 413 }
+        );
+      }
+      fileBuffer = Buffer.from(rawBase64, "base64");
     }
 
     if (!fileBuffer || fileBuffer.length === 0) {
@@ -118,6 +145,12 @@ export async function POST(req: NextRequest) {
       queryTimeMs,
     });
   } catch (err: unknown) {
+    if (err instanceof ImageValidationError) {
+      return NextResponse.json(
+        { success: false, error: err.message },
+        { status: err.status }
+      );
+    }
     console.error("[Scene Advisor API] Error:", err);
     return NextResponse.json(
       {

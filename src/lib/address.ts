@@ -14,6 +14,12 @@ export type SavedAddress = {
   country: string | null;
 };
 
+export const DELIVERY_METHODS = ["Cash on Delivery", "Island-wide Delivery"] as const;
+
+export function isDeliveryMethod(method: string | null | undefined): boolean {
+  return method === "Cash on Delivery" || method === "Island-wide Delivery";
+}
+
 export function formatAddressSnapshot(addr: AddressSnapshot | null | undefined): string {
   if (!addr) return "";
   return [addr.label, addr.line1, addr.line2, addr.country]

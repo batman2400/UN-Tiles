@@ -190,7 +190,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           throw new Error("Image payload too large. Please select a smaller photo.");
         } else {
           throw new Error(
-            "The AI matcher encountered a server error. Please ensure GEMINI_EMBED_API_KEY and SUPABASE_SERVICE_ROLE_KEY are configured in your Vercel Project Settings."
+            "The AI matcher encountered a temporary server error. Please try again shortly."
           );
         }
       }

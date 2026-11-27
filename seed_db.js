@@ -1,9 +1,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
+require('dotenv').config({ path: '.env.local' });
 
-const supabaseUrl = 'https://jnihpfdrqrdmxebbabmj.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpuaWhwZmRycXJkbXhlYmJhYm1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyNjg1OTQsImV4cCI6MjA5Mjg0NDU5NH0.lpoiw2zhhcubzkpRwdPmmlOYBrglfVv8vFV_VRs4Ij0';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or Supabase key in .env.local');
+}
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {

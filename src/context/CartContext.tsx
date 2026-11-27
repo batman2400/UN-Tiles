@@ -49,7 +49,9 @@ function readStorage(key: string): CartItem[] {
         typeof item === "object" &&
         item !== null &&
         typeof (item as CartItem).id === "string" &&
-        typeof (item as CartItem).cartQuantitySqft === "number"
+        typeof (item as CartItem).cartQuantitySqft === "number" &&
+        Number.isFinite((item as CartItem).cartQuantitySqft) &&
+        (item as CartItem).cartQuantitySqft > 0
     );
   } catch {
     return [];
@@ -85,9 +87,19 @@ function mergeCarts(primary: CartItem[], incoming: CartItem[]): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const storageKey = `${BASE_STORAGE_KEY}-${user?.id || "guest"}`;
-  const loadedKeyRef = useRef<string | null>(null);
 
-  const [items, setItems] = useState<CartItem[]>([]);
+  // Store the owning storageKey alongside items so an account switch never
+  // flushes the previous user's items into the new user's storageKey.
+  const [cartState, setCartState] = useState<{ key: string | null; items: CartItem[] }>({
+    key: null,
+    items: [],
+  });
+  const itemsRef = useRef<CartItem[]>([]);
+  const items = cartState.items;
+
+  useEffect(() => {
+    itemsRef.current = cartState.items;
+  }, [cartState.items]);
 
   useEffect(() => {
     let nextItems = readStorage(storageKey);
@@ -105,62 +117,82 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    itemsRef.current = nextItems;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setItems(nextItems);
-    loadedKeyRef.current = storageKey;
+    setCartState({ key: storageKey, items: nextItems });
   }, [storageKey, user?.id]);
 
   useEffect(() => {
-    if (loadedKeyRef.current !== storageKey) return;
-    writeStorage(storageKey, items);
-  }, [items, storageKey]);
+    if (cartState.key !== storageKey) return;
+    writeStorage(storageKey, cartState.items);
+  }, [cartState, storageKey]);
 
   const addToCart = useCallback(
     (product: Omit<CartItem, "cartQuantitySqft">, sqft: number): boolean => {
-      if (sqft <= 0) return false;
+      if (!Number.isFinite(sqft) || sqft <= 0) return false;
+      const normalizedSqft = Math.floor(sqft);
+      if (normalizedSqft <= 0) return false;
 
       const maxStock = product.stockSqft ?? Infinity;
-      if (sqft > maxStock) return false;
+      if (normalizedSqft > maxStock) return false;
 
-      let added = false;
-      setItems((prev) => {
-        const existing = prev.find((item) => item.id === product.id);
-        if (existing) {
-          const newTotal = existing.cartQuantitySqft + sqft;
-          if (newTotal > maxStock) return prev;
-          added = true;
-          return prev.map((item) =>
-            item.id === product.id
-              ? { ...item, cartQuantitySqft: newTotal }
-              : item
-          );
-        }
-        added = true;
-        return [...prev, { ...product, cartQuantitySqft: Math.min(sqft, maxStock) }];
-      });
-      return added;
+      // Compute synchronously against itemsRef so React 19 concurrent batching
+      // never causes addToCart to return a stale `false`.
+      const current = itemsRef.current;
+      const existing = current.find((item) => item.id === product.id);
+      let nextItems: CartItem[];
+
+      if (existing) {
+        const newTotal = existing.cartQuantitySqft + normalizedSqft;
+        if (newTotal > maxStock) return false;
+        nextItems = current.map((item) =>
+          item.id === product.id
+            ? { ...item, stockSqft: product.stockSqft ?? item.stockSqft, cartQuantitySqft: newTotal }
+            : item
+        );
+      } else {
+        nextItems = [
+          ...current,
+          { ...product, cartQuantitySqft: Math.min(normalizedSqft, maxStock) },
+        ];
+      }
+
+      itemsRef.current = nextItems;
+      setCartState((prev) => ({ key: prev.key ?? storageKey, items: nextItems }));
+      return true;
     },
-    []
+    [storageKey]
   );
 
   const removeFromCart = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== productId));
+    const nextItems = itemsRef.current.filter((item) => item.id !== productId);
+    itemsRef.current = nextItems;
+    setCartState((prev) => ({ ...prev, items: nextItems }));
   }, []);
 
   const updateQuantity = useCallback((productId: string, sqft: number) => {
-    if (sqft <= 0) {
-      setItems((prev) => prev.filter((item) => item.id !== productId));
+    if (!Number.isFinite(sqft)) return;
+    const normalized = Math.floor(sqft);
+    if (normalized <= 0) {
+      const nextItems = itemsRef.current.filter((item) => item.id !== productId);
+      itemsRef.current = nextItems;
+      setCartState((prev) => ({ ...prev, items: nextItems }));
       return;
     }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, cartQuantitySqft: sqft } : item
-      )
-    );
+
+    const nextItems = itemsRef.current.map((item) => {
+      if (item.id !== productId) return item;
+      const maxStock = item.stockSqft ?? Infinity;
+      const clamped = Math.min(normalized, maxStock);
+      return { ...item, cartQuantitySqft: Math.max(1, clamped) };
+    });
+    itemsRef.current = nextItems;
+    setCartState((prev) => ({ ...prev, items: nextItems }));
   }, []);
 
   const clearCart = useCallback(() => {
-    setItems([]);
+    itemsRef.current = [];
+    setCartState((prev) => ({ ...prev, items: [] }));
   }, []);
 
   const cartCount = items.length;

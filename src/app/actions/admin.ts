@@ -2,12 +2,16 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
-import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
+import { CATALOG_CACHE_TAG } from "@/data/products";
 import { z } from "zod";
 import { logAdminAction } from "@/lib/auditLog";
 import { indexProduct } from "@/lib/visual-search/indexProduct";
+import { getStripeServerClient } from "@/lib/stripe";
+
+const DEFAULT_TILE_IMAGE = "/tiles/floor_agaria.jpg";
 
 // ── Zod Schemas ────────────────────────────────────────
 
@@ -17,7 +21,7 @@ const categorySchema = z.object({
     .min(1, "Slug is required")
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens only"),
-  image: z.string().max(500).optional().default("/images/tiles/floor_porcelain.png"),
+  image: z.string().max(500).optional(),
 });
 
 const productSchema = z.object({
@@ -26,7 +30,7 @@ const productSchema = z.object({
   category_slug: z.string().min(1, "Category is required"),
   dimensions: z.string().min(1, "Dimensions are required").max(50),
   price_per_sqft: z.number().positive("Price must be a positive number").finite(),
-  image: z.string().max(500).optional().default("/images/tiles/floor_porcelain.png"),
+  image: z.string().max(500).optional(),
   finish: z.string().max(50).optional().default(""),
   application: z.string().max(50).optional().default(""),
   stock_sqft: z.number().min(0, "Stock cannot be negative").finite(),
@@ -84,12 +88,48 @@ async function requireAdmin(supabase: SupabaseClient) {
   return user;
 }
 
-function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections", "/"]) {
-  invalidateLocalCatalogCache();
+function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections", "/", "/planner"]) {
   updateTag(CATALOG_CACHE_TAG);
   for (const path of paths) {
     revalidatePath(path);
   }
+  revalidatePath("/collections/[id]", "page");
+}
+
+async function processStripeRefundOnCancel(
+  orderId: string,
+  paymentDetails: Record<string, unknown> | null | undefined
+): Promise<{ paymentStatus: "Refunded" | "Refund Pending"; paymentDetails: Record<string, unknown> }> {
+  const existing = paymentDetails ?? {};
+  const txnId = typeof existing.transaction_id === "string" ? existing.transaction_id : null;
+
+  if (txnId && txnId.startsWith("pi_")) {
+    const stripe = getStripeServerClient();
+    if (stripe) {
+      try {
+        const refund = await stripe.refunds.create(
+          { payment_intent: txnId },
+          { idempotencyKey: `refund-${orderId}` }
+        );
+        return {
+          paymentStatus: "Refunded",
+          paymentDetails: {
+            ...existing,
+            refund_id: refund.id,
+            refund_status: refund.status,
+            refunded_at: new Date().toISOString(),
+          },
+        };
+      } catch (refundErr) {
+        console.error(`[Admin Action] Stripe refund failed for ${orderId}:`, refundErr);
+      }
+    }
+  }
+
+  return {
+    paymentStatus: "Refund Pending",
+    paymentDetails: existing,
+  };
 }
 
 // ── Server Actions ─────────────────────────────────────
@@ -100,6 +140,7 @@ export async function createCategory(rawData: { name: string; slug: string; imag
     return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
   }
   const data = parsed.data;
+  const resolvedImage = data.image?.trim() || DEFAULT_TILE_IMAGE;
 
   const supabase = await createClient();
   const admin = await requireAdmin(supabase);
@@ -109,7 +150,7 @@ export async function createCategory(rawData: { name: string; slug: string; imag
     .insert({
       name: data.name,
       slug: data.slug,
-      image: data.image?.trim() || "/images/tiles/floor_porcelain.png",
+      image: resolvedImage,
     });
 
   if (error) {
@@ -125,7 +166,7 @@ export async function createCategory(rawData: { name: string; slug: string; imag
     details: { name: data.name },
   });
 
-  revalidateCatalog(["/admin/inventory", "/collections"]);
+  revalidateCatalog(["/admin/inventory", "/collections", "/", "/planner"]);
   return { success: true };
 }
 
@@ -135,7 +176,7 @@ export async function createProduct(rawData: {
   category_slug: string;
   dimensions: string;
   price_per_sqft: number;
-  image: string;
+  image?: string;
   finish: string;
   application: string;
   stock_sqft: number;
@@ -145,6 +186,7 @@ export async function createProduct(rawData: {
     return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
   }
   const data = parsed.data;
+  const resolvedImage = data.image?.trim() || DEFAULT_TILE_IMAGE;
 
   const supabase = await createClient();
   const admin = await requireAdmin(supabase);
@@ -174,7 +216,7 @@ export async function createProduct(rawData: {
       category_slug: data.category_slug,
       dimensions: data.dimensions,
       price_per_sqft: data.price_per_sqft,
-      image: data.image,
+      image: resolvedImage,
       finish: data.finish,
       application: data.application,
       stock_sqft: data.stock_sqft,
@@ -195,11 +237,11 @@ export async function createProduct(rawData: {
   });
 
   // Non-blocking background embedding index via after()
-  if (data.image) {
+  if (resolvedImage) {
     try {
       after(async () => {
         try {
-          await indexProduct(id, data.image);
+          await indexProduct(id, resolvedImage);
         } catch (embedErr) {
           console.warn(`[Admin Action] Background indexProduct failed for ${id}:`, embedErr);
         }
@@ -240,13 +282,21 @@ export async function adjustProductStock(rawData: { productId: string; amount: n
   const previousStock = Number(product.stock_sqft);
   const newStock = Math.max(0, previousStock + amount);
 
-  const { error: updateError } = await supabase
+  const { data: updatedRows, error: updateError } = await supabase
     .from("products")
     .update({ stock_sqft: newStock })
-    .eq("id", productId);
+    .eq("id", productId)
+    .eq("stock_sqft", previousStock)
+    .select("id");
 
   if (updateError) {
     return { success: false as const, error: updateError.message };
+  }
+  if (!updatedRows || updatedRows.length === 0) {
+    return {
+      success: false as const,
+      error: "Stock changed concurrently. Refresh and try again.",
+    };
   }
 
   await logAdminAction(supabase, {
@@ -292,13 +342,19 @@ export async function bulkAdjustProductStock(rawData: { productIds: string[]; am
   for (const product of products ?? []) {
     const previousStock = Number(product.stock_sqft);
     const newStock = Math.max(0, previousStock + amount);
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from("products")
       .update({ stock_sqft: newStock })
-      .eq("id", product.id);
+      .eq("id", product.id)
+      .eq("stock_sqft", previousStock)
+      .select("id");
 
     if (updateError) {
       failed.push({ id: product.id, error: updateError.message });
+      continue;
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      failed.push({ id: product.id, error: "Stock changed concurrently." });
       continue;
     }
 
@@ -380,7 +436,7 @@ export async function updateOrderStatus(rawData: {
 
   const { data: order, error: readError } = await supabase
     .from("orders")
-    .select("id, status, status_history")
+    .select("id, status, status_history, payment_status, payment_details")
     .eq("id", orderId)
     .single();
 
@@ -389,6 +445,13 @@ export async function updateOrderStatus(rawData: {
   }
 
   const previousStatus = order.status;
+  if (previousStatus === "Delivered" && newStatus === "Cancelled") {
+    return {
+      success: false as const,
+      error: "Delivered orders cannot be cancelled.",
+    };
+  }
+
   const now = new Date().toISOString();
 
   // Format existing history and append new transition entry
@@ -401,7 +464,7 @@ export async function updateOrderStatus(rawData: {
   };
   const updatedHistory = [...existingHistory, historyEntry];
 
-  const { error: updateError } = await supabase
+  const { data: updatedRows, error: updateError } = await supabase
     .from("orders")
     .update({
       status: newStatus,
@@ -409,10 +472,44 @@ export async function updateOrderStatus(rawData: {
       status_history: updatedHistory,
       status_updated_at: now,
     })
-    .eq("id", orderId);
+    .eq("id", orderId)
+    .eq("status", previousStatus)
+    .select("id");
 
   if (updateError) {
     return { success: false as const, error: updateError.message };
+  }
+  if (!updatedRows || updatedRows.length === 0) {
+    return {
+      success: false as const,
+      error: "Order status changed concurrently. Refresh and try again.",
+    };
+  }
+
+  let nextPaymentStatus = order.payment_status as string | null;
+  if (
+    previousStatus !== "Cancelled" &&
+    newStatus === "Cancelled" &&
+    order.payment_status === "Paid"
+  ) {
+    try {
+      const refundOutcome = await processStripeRefundOnCancel(
+        orderId,
+        order.payment_details as Record<string, unknown> | null
+      );
+      nextPaymentStatus = refundOutcome.paymentStatus;
+      const adminClient = createAdminClient();
+      await adminClient
+        .from("orders")
+        .update({
+          payment_status: refundOutcome.paymentStatus,
+          payment_details: refundOutcome.paymentDetails,
+        })
+        .eq("id", orderId);
+    } catch (refundErr) {
+      console.error(`[Admin Action] Refund update failed for ${orderId}:`, refundErr);
+      nextPaymentStatus = "Refund Pending";
+    }
   }
 
   await logAdminAction(supabase, {
@@ -425,6 +522,7 @@ export async function updateOrderStatus(rawData: {
       from: previousStatus,
       to: newStatus,
       description: cleanDescription,
+      payment_status: nextPaymentStatus,
     },
   });
 
@@ -434,6 +532,7 @@ export async function updateOrderStatus(rawData: {
 
   return {
     success: true as const,
+    paymentStatus: nextPaymentStatus,
     statusDescription: cleanDescription,
     statusHistory: updatedHistory,
     statusUpdatedAt: now,
@@ -457,7 +556,7 @@ export async function bulkUpdateOrderStatus(rawData: {
 
   const { data: orders, error: readError } = await supabase
     .from("orders")
-    .select("id, status, status_history")
+    .select("id, status, status_history, payment_status, payment_details")
     .in("id", orderIds);
 
   if (readError) {
@@ -470,6 +569,11 @@ export async function bulkUpdateOrderStatus(rawData: {
   const now = new Date().toISOString();
 
   for (const order of orders ?? []) {
+    if (order.status === "Delivered" && newStatus === "Cancelled") {
+      failed.push({ id: order.id, error: "Delivered orders cannot be cancelled." });
+      continue;
+    }
+
     const existingHistory = Array.isArray(order.status_history) ? order.status_history : [];
     const historyEntry = {
       status: newStatus,
@@ -479,7 +583,7 @@ export async function bulkUpdateOrderStatus(rawData: {
     };
     const updatedHistory = [...existingHistory, historyEntry];
 
-    const { error: updateError } = await supabase
+    const { data: updatedRows, error: updateError } = await supabase
       .from("orders")
       .update({
         status: newStatus,
@@ -487,11 +591,40 @@ export async function bulkUpdateOrderStatus(rawData: {
         status_history: updatedHistory,
         status_updated_at: now,
       })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("status", order.status)
+      .select("id");
 
     if (updateError) {
       failed.push({ id: order.id, error: updateError.message });
       continue;
+    }
+    if (!updatedRows || updatedRows.length === 0) {
+      failed.push({ id: order.id, error: "Order status changed concurrently." });
+      continue;
+    }
+
+    if (
+      order.status !== "Cancelled" &&
+      newStatus === "Cancelled" &&
+      order.payment_status === "Paid"
+    ) {
+      try {
+        const refundOutcome = await processStripeRefundOnCancel(
+          order.id,
+          order.payment_details as Record<string, unknown> | null
+        );
+        const adminClient = createAdminClient();
+        await adminClient
+          .from("orders")
+          .update({
+            payment_status: refundOutcome.paymentStatus,
+            payment_details: refundOutcome.paymentDetails,
+          })
+          .eq("id", order.id);
+      } catch (refundErr) {
+        console.error(`[Admin Action] Bulk refund update failed for ${order.id}:`, refundErr);
+      }
     }
 
     if (order.status === "Cancelled" || newStatus === "Cancelled") {
@@ -526,17 +659,15 @@ export async function bulkUpdateOrderStatus(rawData: {
 // ── Profile Update (server-side with field whitelisting) ───
 
 const profileSchema = z.object({
-  firstName: z.string().max(100).optional().default(""),
-  lastName: z.string().max(100).optional().default(""),
-  phone: z.string().max(30).optional().default(""),
-  email: z.string().email("Invalid email").max(255),
+  firstName: z.string().trim().max(100).optional().default(""),
+  lastName: z.string().trim().max(100).optional().default(""),
+  phone: z.string().trim().max(30).optional().default(""),
 });
 
 export async function updateUserProfile(rawData: {
   firstName: string;
   lastName: string;
   phone: string;
-  email: string;
 }) {
   const parsed = profileSchema.safeParse(rawData);
   if (!parsed.success) {
@@ -551,16 +682,15 @@ export async function updateUserProfile(rawData: {
     return { success: false, error: "Not logged in" };
   }
 
-  // Whitelist only safe columns — role is NEVER included
+  // Whitelist only safe mutable columns — role and email are NEVER updated here
   const { error } = await supabase
-    .from('profiles')
-    .upsert({
-      id: user.id,
+    .from("profiles")
+    .update({
       first_name: data.firstName,
       last_name: data.lastName,
       phone: data.phone,
-      email: data.email,
-    });
+    })
+    .eq("id", user.id);
 
   if (error) {
     return { success: false, error: error.message };

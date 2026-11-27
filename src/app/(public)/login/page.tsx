@@ -20,13 +20,13 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = getSafeNextPath(searchParams.get("next"));
+  const authErrorParam = searchParams.get("error");
   const { login, loginWithGoogle, user, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(authErrorParam || "");
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -64,14 +64,6 @@ function LoginForm() {
             </h1>
             <p className="text-sm text-on-surface-variant">
               Sign in to your account
-            </p>
-          </div>
-
-          {/* Demo Account Hint (Supabase auth setup required) */}
-          <div className="mb-8 bg-primary/5 px-5 py-4 border-l-2 border-primary">
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">Testing Note</p>
-            <p className="text-sm text-on-surface-variant">
-              Please use your registered Supabase credentials or create a new account to sign in.
             </p>
           </div>
 
@@ -141,25 +133,6 @@ function LoginForm() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <label htmlFor="remember-me" className="flex items-center gap-2.5 cursor-pointer group">
-                <div className="relative">
-                  <input id="remember-me" type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="sr-only peer" />
-                  <div className="w-4 h-4 border border-outline peer-checked:bg-primary peer-checked:border-primary transition-all flex items-center justify-center">
-                    {rememberMe && (
-                      <svg className="w-2.5 h-2.5 text-on-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="square" strokeLinejoin="miter" d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me</span>
-              </label>
-              <Link href="#" className="kinetic-link text-sm text-primary hover:text-primary-dim transition-colors">
-                Forgot password?
-              </Link>
             </div>
 
             <button

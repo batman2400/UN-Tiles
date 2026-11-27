@@ -9,12 +9,10 @@ import {
   MapPin, 
   LogOut, 
   CheckCircle, 
-  Camera, 
   FileText, 
   ChevronRight, 
   Plus, 
   Trash2, 
-  Edit3, 
   Star, 
   ShoppingBag,
   Calendar,
@@ -31,7 +29,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
-import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
+import { formatAddressSnapshot, isDeliveryMethod, type AddressSnapshot } from "@/lib/address";
 import { deleteAddress, listAddresses } from "@/app/actions/addresses";
 import { AddAddressModal } from "@/components/AddAddressModal";
 import { CancelOrderModal } from "@/components/CancelOrderModal";
@@ -149,6 +147,7 @@ function ProfileContent() {
   const [cancelFeedback, setCancelFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
   const supabase = createClient();
@@ -251,6 +250,7 @@ function ProfileContent() {
     e.preventDefault();
     setIsUpdating(true);
     setUpdateSuccess(false);
+    setUpdateError(null);
 
     const result = await updateProfile(formValues);
     setIsUpdating(false);
@@ -259,6 +259,8 @@ function ProfileContent() {
       setProfileEdits({});
       setUpdateSuccess(true);
       setTimeout(() => setUpdateSuccess(false), 3000);
+    } else {
+      setUpdateError(result.error || "Could not update profile. Please try again.");
     }
   };
 
@@ -319,7 +321,7 @@ function ProfileContent() {
           <div className="bg-white/90 backdrop-blur-md p-6 rounded-2xl shadow-lg border border-gray-100">
             <div className="flex items-center gap-4 mb-6">
               {/* User Avatar with Gold Ring */}
-              <div className="relative group">
+              <div className="relative">
                 <div className="w-14 h-14 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 p-0.5 rounded-full shadow-md">
                   <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden relative">
                     {user.avatarUrl ? (
@@ -328,9 +330,6 @@ function ProfileContent() {
                       <span className="text-lg font-display font-bold text-yellow-400 tracking-wider">{initials}</span>
                     )}
                   </div>
-                </div>
-                <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-zinc-950 p-1.5 rounded-full shadow-sm">
-                  <Camera className="w-3 h-3" />
                 </div>
               </div>
               <div>
@@ -375,8 +374,8 @@ function ProfileContent() {
               
               {/* User Profile Card Header */}
               <div className="p-8 text-center border-b border-gray-100/80 bg-gradient-to-b from-gray-50/50 to-transparent">
-                <div className="relative inline-block mb-4 group cursor-pointer">
-                  <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 p-0.5 rounded-full shadow-md group-hover:scale-105 transition-transform duration-300">
+                <div className="relative inline-block mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-tr from-amber-500 via-yellow-400 to-amber-200 p-0.5 rounded-full shadow-md">
                     <div className="w-full h-full bg-zinc-900 rounded-full flex items-center justify-center overflow-hidden relative">
                       {user.avatarUrl ? (
                         <Image src={user.avatarUrl} alt="Profile" fill sizes="80px" unoptimized className="object-cover" />
@@ -384,9 +383,6 @@ function ProfileContent() {
                         <span className="text-2xl font-display font-bold text-yellow-400 tracking-wider">{initials}</span>
                       )}
                     </div>
-                  </div>
-                  <div className="absolute bottom-0 right-0 bg-yellow-500 text-zinc-950 p-1.5 rounded-full shadow-md border-2 border-white hover:bg-yellow-400 transition-colors">
-                    <Camera className="w-3.5 h-3.5" />
                   </div>
                 </div>
                 <h2 className="font-display font-bold text-zinc-900 text-lg">{displayName}</h2>
@@ -448,6 +444,13 @@ function ProfileContent() {
                   </div>
                 )}
 
+                {updateError && (
+                  <div className="mb-8 bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3 text-red-800 motion-fade-up shadow-sm">
+                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-xs font-semibold">{updateError}</p>
+                  </div>
+                )}
+
                 <form onSubmit={handleProfileUpdate} className="space-y-6 max-w-2xl">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     
@@ -482,7 +485,7 @@ function ProfileContent() {
                     </div>
                   </div>
 
-                  {/* Email Address Input Card */}
+                  {/* Email Address Input Card (read-only — tied to verified auth account) */}
                   <div className="space-y-2">
                     <label htmlFor="profile-email" className="block text-xs font-bold uppercase tracking-wider text-gray-500">
                       Email Address
@@ -490,11 +493,12 @@ function ProfileContent() {
                     <input 
                       id="profile-email" 
                       type="email" 
-                      value={formValues.email} 
-                      onChange={(e) => updateFormField("email", e.target.value)}
-                      className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-zinc-900 outline-none focus:bg-white focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500 transition-all font-medium placeholder:text-gray-400" 
-                      placeholder="john.doe@example.com"
+                      value={user.email} 
+                      readOnly
+                      disabled
+                      className="w-full bg-gray-100/80 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-500 cursor-not-allowed font-medium" 
                     />
+                    <p className="text-[11px] text-gray-400">Your email is tied to your verified login account and cannot be edited here.</p>
                   </div>
 
                   {/* Phone Number Input Card */}
@@ -578,6 +582,7 @@ function ProfileContent() {
                     orders.map((order) => {
                       const badgeStyle = getStatusBadgeStyle(order.status);
                       const isCancelled = order.status.toLowerCase() === "cancelled";
+                      const isDelivery = isDeliveryMethod(order.delivery_method);
                       const isCOD = order.delivery_method === "Cash on Delivery";
                       
                       const steps = ["Pending", "Processing", "Shipped", "Delivered"];
@@ -601,6 +606,14 @@ function ProfileContent() {
                                 {order.payment_status === "Paid" ? (
                                   <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
                                     <ShieldCheck className="w-3 h-3" /> {order.payment_method?.includes("Stripe") ? "Paid (Stripe)" : "Paid"}
+                                  </span>
+                                ) : order.payment_status === "Refunded" ? (
+                                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 flex items-center gap-1">
+                                    <ShieldCheck className="w-3 h-3" /> Refunded
+                                  </span>
+                                ) : order.payment_status === "Refund Pending" ? (
+                                  <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200/60 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" /> Refund Pending
                                   </span>
                                 ) : (
                                   <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center gap-1">
@@ -713,16 +726,19 @@ function ProfileContent() {
                             {/* Delivery Context Block */}
                             {order.delivery_method && !isCancelled && (
                               <div className={`p-4 rounded-xl flex items-start gap-3 w-full md:w-auto border ${
-                                isCOD ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-blue-50 border-blue-100 text-blue-800"
+                                isDelivery ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-blue-50 border-blue-100 text-blue-800"
                               }`}>
-                                {isCOD ? <Truck className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <Store className="w-5 h-5 flex-shrink-0 mt-0.5" />}
+                                {isDelivery ? <Truck className="w-5 h-5 flex-shrink-0 mt-0.5" /> : <Store className="w-5 h-5 flex-shrink-0 mt-0.5" />}
                                 <div>
                                   <span className="text-xs font-bold uppercase tracking-widest block mb-1">
                                     {order.delivery_method}
                                   </span>
                                   <p className="text-xs font-medium opacity-80 max-w-[220px]">
-                                    {isCOD
-                                      ? (formatAddressSnapshot(order.delivery_address) || "Please prepare exact change for collection upon delivery.")
+                                    {isDelivery
+                                      ? (formatAddressSnapshot(order.delivery_address) ||
+                                        (isCOD
+                                          ? "Please prepare exact change for collection upon delivery."
+                                          : "Scheduled for direct island-wide delivery to your saved address."))
                                       : "Please visit our flagship showroom with your Order ID for collection."}
                                   </p>
                                 </div>
@@ -833,12 +849,10 @@ function ProfileContent() {
 
                         {/* Action Buttons */}
                         <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
-                          <button className="p-2 text-gray-400 hover:text-zinc-900 hover:bg-gray-100 rounded-lg transition-colors">
-                            <Edit3 className="w-4 h-4" />
-                          </button>
                           <button
                             type="button"
                             onClick={() => void handleDeleteAddress(addr.id)}
+                            aria-label={`Delete ${addr.label || "address"}`}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1053,7 +1067,7 @@ function ProfileContent() {
                     {viewOrder.delivery_method || "Pickup at Showroom"}
                   </p>
                 </div>
-                {viewOrder.delivery_method === "Cash on Delivery" && (
+                {isDeliveryMethod(viewOrder.delivery_method) && (
                   <div className="flex flex-col gap-1">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Delivery Address</span>
                     <p className="text-sm font-medium text-gray-700">

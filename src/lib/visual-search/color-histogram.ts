@@ -1,5 +1,6 @@
 import { HISTOGRAM_BINS, HUE_BINS, SAT_BINS, VAL_BINS } from "./constants";
 import { normalizeVector } from "./cosine";
+import { loadSafeCatalogImage } from "./load-catalog-image";
 
 function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   const rn = r / 255;
@@ -116,17 +117,7 @@ export async function histogramForImageUrl(imageUrl: string): Promise<number[] |
   if (cached) return cached;
 
   try {
-    let raw: Buffer;
-    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-      const response = await fetch(imageUrl);
-      if (!response.ok) return null;
-      raw = Buffer.from(await response.arrayBuffer());
-    } else {
-      const fs = await import("fs/promises");
-      const path = await import("path");
-      const cleanPath = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
-      raw = await fs.readFile(path.join(process.cwd(), "public", cleanPath));
-    }
+    const raw = await loadSafeCatalogImage(imageUrl);
     const histogram = await computeColorHistogram(raw);
     histogramCache.set(imageUrl, histogram);
     return histogram;

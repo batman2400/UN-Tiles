@@ -1,10 +1,9 @@
-import fs from "fs/promises";
-import path from "path";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { getRawCatalogPayload } from "@/data/products";
+import { getRawCatalogPayload, type RawCatalogPayload } from "@/data/products";
 import { processImageInput } from "./image-input";
 import { embedCatalogDocument } from "./gemini-embeddings";
 import { computeColorHistogram } from "./color-histogram";
+import { loadSafeCatalogImage } from "./load-catalog-image";
 import { EMBEDDING_VERSION } from "./constants";
 import type { IndexProductResult } from "./types";
 
@@ -30,9 +29,12 @@ function categoryUseCaseText(slug: string): string {
   }
 }
 
-async function resolveDocumentCaption(productId: string): Promise<{ title: string; text: string }> {
+async function resolveDocumentCaption(
+  productId: string,
+  preloadedCatalog?: RawCatalogPayload
+): Promise<{ title: string; text: string }> {
   try {
-    const payload = await getRawCatalogPayload();
+    const payload = preloadedCatalog ?? (await getRawCatalogPayload());
     const product = payload.products.find((p) => p.id === productId);
     if (!product) {
       return { title: productId, text: "ceramic tile" };
@@ -65,7 +67,8 @@ async function resolveDocumentCaption(productId: string): Promise<{ title: strin
 export async function indexProduct(
   productId: string,
   imageUrl: string,
-  force = false
+  force = false,
+  preloadedCatalog?: RawCatalogPayload
 ): Promise<IndexProductResult> {
   if (!productId || !imageUrl) {
     return {
@@ -101,21 +104,10 @@ export async function indexProduct(
     }
   }
 
-  // 2. Fetch or load image buffer
+  // 2. Fetch or load image buffer via SSRF & path-traversal guarded loader
   let rawBuffer: Buffer;
   try {
-    if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch remote image: HTTP ${response.status} ${response.statusText}`);
-      }
-      const arrayBuffer = await response.arrayBuffer();
-      rawBuffer = Buffer.from(arrayBuffer);
-    } else {
-      const cleanPath = imageUrl.startsWith("/") ? imageUrl.slice(1) : imageUrl;
-      const fullPath = path.join(process.cwd(), "public", cleanPath);
-      rawBuffer = await fs.readFile(fullPath);
-    }
+    rawBuffer = await loadSafeCatalogImage(imageUrl);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "File read error";
     return {
@@ -140,7 +132,7 @@ export async function indexProduct(
     };
   }
 
-  const caption = await resolveDocumentCaption(productId);
+  const caption = await resolveDocumentCaption(productId, preloadedCatalog);
 
   // 4. Generate 768-d Gemini document embedding (title + text + image)
   let embedding: number[];

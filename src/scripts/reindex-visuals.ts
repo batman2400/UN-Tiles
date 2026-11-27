@@ -55,7 +55,7 @@ async function main() {
     process.stdout.write(`${indexStr} ${product.name} (${product.id})... `);
 
     try {
-      const result = await indexProduct(product.id, product.image, force);
+      const result = await indexProduct(product.id, product.image, force, payload);
 
       if (result.status === "indexed") {
         console.log(`✅ INDEXED`);

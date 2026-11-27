@@ -103,6 +103,20 @@ export default function ContactSolutionForm(
     setErrorMsg("");
 
     try {
+      // Validate, rate-limit, and persist to our database BEFORE emailing via Web3Forms
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setErrorMsg(data.error || "Something went wrong. Please try again.");
+        return;
+      }
+
       // Web3Forms free plan requires a client-side submit (server proxy returns 403).
       const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
       if (accessKey) {
@@ -135,20 +149,6 @@ export default function ContactSolutionForm(
         if (process.env.NODE_ENV === "development") {
           console.warn("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is not set");
         }
-      }
-
-      // Save to our database
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrorMsg(data.error || "Something went wrong. Please try again.");
-        return;
       }
 
       // Clear form & show success

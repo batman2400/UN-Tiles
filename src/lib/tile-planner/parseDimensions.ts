@@ -11,6 +11,7 @@ export function parseDimensions(raw: string): TileSizeMm | null {
   if (typeof raw !== "string") return null;
   const text = raw.trim();
   if (!text) return null;
+  if (/-\s*\d/.test(text)) return null;
 
   const match = text.match(SIZE_RE);
   if (!match) return null;

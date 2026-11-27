@@ -46,20 +46,34 @@ export function InventoryTable({
   const [bulkRestockAmount, setBulkRestockAmount] = useState("");
   const [isBulkRestocking, setIsBulkRestocking] = useState(false);
 
-  // Subscribe to real-time inventory updates
+  // Sync local table state whenever Server Action revalidation delivers fresh initialProducts
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
+
+  // Subscribe to real-time inventory inserts, updates, and deletes
   useEffect(() => {
     const channel = supabase
       .channel("admin-products-realtime")
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "products" },
+        { event: "*", schema: "public", table: "products" },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
-          setProducts((prev) =>
-            prev.map((p) =>
-              p.id === payload.new.id ? { ...p, stock_sqft: payload.new.stock_sqft } : p
-            )
-          );
+          if (payload.eventType === "INSERT") {
+            const incoming = payload.new as AdminProduct;
+            setProducts((prev) =>
+              prev.some((p) => p.id === incoming.id) ? prev : [incoming, ...prev]
+            );
+          } else if (payload.eventType === "UPDATE") {
+            setProducts((prev) =>
+              prev.map((p) =>
+                p.id === payload.new.id ? { ...p, ...payload.new } : p
+              )
+            );
+          } else if (payload.eventType === "DELETE") {
+            setProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
+          }
         }
       )
       .subscribe();

@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/utils/supabase/admin";
-import { getCatalogDataUncached, type Product } from "@/data/products";
+import { getCatalogData, type Product } from "@/data/products";
 import { histogramForImageUrl, isHistogram } from "./color-histogram";
 import { MATCH_CANDIDATE_COUNT, MATCH_RESULT_COUNT } from "./constants";
 import { rerankByColor } from "./rerank";
@@ -142,7 +142,7 @@ export async function retrieveCatalogMatches(
     throw new Error(`Database matching query failed: ${rpcError.message}`);
   }
 
-  const { allProducts } = await getCatalogDataUncached();
+  const { allProducts } = await getCatalogData();
   const productMap = new Map(allProducts.map((p) => [p.id, p]));
 
   let hits = ((rpcRows || []) as RpcRow[]).map((row) => ({

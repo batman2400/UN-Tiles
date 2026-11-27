@@ -1,12 +1,28 @@
 import type { NextConfig } from "next";
 
+function getSupabaseImagePatterns() {
+  const hostnames = new Set<string>(["jnihpfdrqrdmxebbabmj.supabase.co"]);
+  const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (rawUrl) {
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.hostname) hostnames.add(parsed.hostname);
+    } catch {
+      // Ignore invalid env URL at config load time
+    }
+  }
+  return Array.from(hostnames).map((hostname) => ({
+    protocol: "https" as const,
+    hostname,
+    pathname: "/storage/v1/object/public/**",
+  }));
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ["sharp"],
-  experimental: {
-    staleTimes: {
-      static: 86400,
-    },
+  images: {
+    remotePatterns: getSupabaseImagePatterns(),
   },
   async redirects() {
     return [

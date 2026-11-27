@@ -734,7 +734,7 @@ function CartPageContent() {
               {/* Action Button */}
               <button
                 onClick={handleCheckoutInitiation}
-                disabled={isCheckingOut || (fulfillmentMethod === "delivery" && !selectedAddressId)}
+                disabled={isCheckingOut || (Boolean(user) && fulfillmentMethod === "delivery" && !selectedAddressId)}
                 className="bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-4 w-full shadow-lg transition-all duration-300 text-center uppercase tracking-wider disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
                 {isCheckingOut ? (

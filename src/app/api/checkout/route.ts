@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import { CATALOG_CACHE_TAG, invalidateLocalCatalogCache } from "@/data/products";
+import { createAdminClient } from "@/utils/supabase/admin";
+import { CATALOG_CACHE_TAG } from "@/data/products";
 import { parseCheckoutItems, priceCartItems } from "@/lib/checkoutCart";
 import { getStripeServerClient } from "@/lib/stripe";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { isDeliveryMethod } from "@/lib/address";
 
 interface CheckoutRequestBody {
   items: unknown;
@@ -33,6 +35,29 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PAYMENT_INTENT_ID_RE = /^pi_[a-zA-Z0-9]+$/;
 
+function defaultPaymentMethod(deliveryMethod: string): string {
+  if (deliveryMethod === "Cash on Delivery") return "Cash on Delivery";
+  if (deliveryMethod === "Island-wide Delivery") return "Stripe (Test Mode)";
+  return "Pickup from Store";
+}
+
+function isValidDeliveryPaymentPair(deliveryMethod: string, paymentMethod: string): boolean {
+  if (deliveryMethod === "Island-wide Delivery") {
+    return STRIPE_PAYMENT_METHODS.has(paymentMethod);
+  }
+  if (deliveryMethod === "Cash on Delivery") {
+    return paymentMethod === "Cash on Delivery";
+  }
+  if (deliveryMethod === "Pickup from Store") {
+    return (
+      STRIPE_PAYMENT_METHODS.has(paymentMethod) ||
+      paymentMethod === "Pickup from Store" ||
+      paymentMethod === "Pay at Showroom"
+    );
+  }
+  return false;
+}
+
 function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
   if (typeof body !== "object" || body === null) return false;
   const candidate = body as Record<string, unknown>;
@@ -46,14 +71,17 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
     return false;
   }
 
-  if (candidate.deliveryMethod === "Cash on Delivery" || candidate.deliveryMethod === "Island-wide Delivery") {
+  if (isDeliveryMethod(candidate.deliveryMethod)) {
     if (typeof candidate.addressId !== "string" || !UUID_RE.test(candidate.addressId)) {
       return false;
     }
   }
 
   if (candidate.paymentMethod !== undefined) {
-    if (typeof candidate.paymentMethod !== "string" || !VALID_PAYMENT_METHODS.includes(candidate.paymentMethod)) {
+    if (
+      typeof candidate.paymentMethod !== "string" ||
+      !VALID_PAYMENT_METHODS.includes(candidate.paymentMethod)
+    ) {
       return false;
     }
   }
@@ -62,6 +90,15 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
     if (typeof candidate.paymentIntentId !== "string" || !PAYMENT_INTENT_ID_RE.test(candidate.paymentIntentId)) {
       return false;
     }
+  }
+
+  const effectivePaymentMethod =
+    typeof candidate.paymentMethod === "string"
+      ? candidate.paymentMethod
+      : defaultPaymentMethod(candidate.deliveryMethod);
+
+  if (!isValidDeliveryPaymentPair(candidate.deliveryMethod, effectivePaymentMethod)) {
+    return false;
   }
 
   return true;
@@ -81,6 +118,12 @@ function checkoutErrorResponse(message: string): NextResponse {
   }
   if (lower.includes("insufficient stock")) {
     return NextResponse.json({ error: message }, { status: 409 });
+  }
+  if (lower.includes("already been used") || lower.includes("orders_unique_payment_txn_idx")) {
+    return NextResponse.json(
+      { error: "This Stripe payment has already been used for an order." },
+      { status: 409 }
+    );
   }
   if (lower.includes("not found")) {
     return NextResponse.json({ error: message }, { status: 404 });
@@ -104,11 +147,7 @@ function checkoutErrorResponse(message: string): NextResponse {
     return NextResponse.json({ error: message }, { status: 400 });
   }
 
-  return NextResponse.json({ error: message }, { status: 500 });
-}
-
-function defaultPaymentMethod(deliveryMethod: string): string {
-  return deliveryMethod === "Cash on Delivery" ? "Cash on Delivery" : "Pickup from Store";
+  return NextResponse.json({ error: "Checkout failed. Please try again." }, { status: 500 });
 }
 
 export async function POST(request: NextRequest) {
@@ -126,6 +165,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        { error: "Checkout is temporarily unavailable. Please try again shortly." },
+        { status: 503 }
+      );
+    }
+
     const supabase = await createClient();
 
     const {
@@ -152,7 +198,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidCheckoutBody(body)) {
       return NextResponse.json(
-        { error: "Invalid cart or checkout data. Delivery requires a saved delivery address." },
+        { error: "Invalid cart, payment, or delivery selection. Delivery requires a saved delivery address." },
         { status: 400 }
       );
     }
@@ -165,13 +211,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isDelivery = body.deliveryMethod === "Cash on Delivery" || body.deliveryMethod === "Island-wide Delivery";
+    const isDelivery = isDeliveryMethod(body.deliveryMethod);
     const requestedMethod = body.paymentMethod || defaultPaymentMethod(body.deliveryMethod);
     const isStripeCheckout = STRIPE_PAYMENT_METHODS.has(requestedMethod);
 
     let paymentMethod = requestedMethod;
     let paymentStatus = "Pending";
     let paymentDetails: Record<string, unknown> = {};
+
+    const adminClient = createAdminClient();
 
     if (isStripeCheckout) {
       const priced = await priceCartItems(supabase, mappedItems);
@@ -182,7 +230,7 @@ export async function POST(request: NextRequest) {
       const stripe = getStripeServerClient();
       if (!stripe) {
         return NextResponse.json(
-          { error: "Stripe is not configured. Online payment is unavailable." },
+          { error: "Online payment is currently unavailable." },
           { status: 503 }
         );
       }
@@ -233,31 +281,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (paymentIntent.metadata.cartFingerprint && paymentIntent.metadata.cartFingerprint !== priced.cart.fingerprint) {
+      if (
+        !paymentIntent.metadata.cartFingerprint ||
+        paymentIntent.metadata.cartFingerprint !== priced.cart.fingerprint
+      ) {
         return NextResponse.json(
           { error: "Your cart changed after payment started. Please pay again." },
-          { status: 409 }
-        );
-      }
-
-      const { data: existingOrders, error: existingError } = await supabase
-        .from("orders")
-        .select("id")
-        .eq("user_id", user.id)
-        .filter("payment_details->>transaction_id", "eq", paymentIntent.id)
-        .limit(1);
-
-      if (existingError) {
-        console.error("PaymentIntent reuse lookup failed:", existingError);
-        return NextResponse.json(
-          { error: "Could not verify payment uniqueness. Please try again." },
-          { status: 500 }
-        );
-      }
-
-      if (existingOrders && existingOrders.length > 0) {
-        return NextResponse.json(
-          { error: "This Stripe payment has already been used for an order." },
           { status: 409 }
         );
       }
@@ -278,7 +307,7 @@ export async function POST(request: NextRequest) {
       paymentDetails = {};
     }
 
-    const { data, error } = await supabase.rpc("process_checkout", {
+    const rpcParams = {
       p_user_id: user.id,
       p_items: mappedItems,
       p_delivery_method: body.deliveryMethod,
@@ -286,7 +315,39 @@ export async function POST(request: NextRequest) {
       p_payment_method: paymentMethod,
       p_payment_status: paymentStatus,
       p_payment_details: paymentDetails,
-    });
+    };
+
+    // Call hardened service_role RPC (migration 023a); fall back to legacy RPC only
+    // while 023a has not yet been applied in the database.
+    let { data, error } = await adminClient.rpc("process_checkout_v2", rpcParams);
+
+    if (
+      error &&
+      (error.code === "PGRST202" ||
+        error.message?.toLowerCase().includes("could not find the function"))
+    ) {
+      if (isStripeCheckout && typeof paymentDetails.transaction_id === "string") {
+        const { data: existingOrders } = await adminClient
+          .from("orders")
+          .select("id")
+          .filter("payment_details->>transaction_id", "eq", paymentDetails.transaction_id)
+          .limit(1);
+
+        if (existingOrders && existingOrders.length > 0) {
+          return NextResponse.json(
+            { error: "This Stripe payment has already been used for an order." },
+            { status: 409 }
+          );
+        }
+      }
+
+      console.warn(
+        "[checkout] process_checkout_v2 not found; falling back to legacy process_checkout until migration 023a is applied."
+      );
+      const fallback = await supabase.rpc("process_checkout", rpcParams);
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
       console.error("Checkout RPC error:", error);
@@ -301,10 +362,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    invalidateLocalCatalogCache();
-    revalidateTag(CATALOG_CACHE_TAG, "max");
+    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
     revalidatePath("/");
     revalidatePath("/collections");
+    revalidatePath("/collections/[id]", "page");
+    revalidatePath("/planner");
 
     return NextResponse.json({
       success: true,

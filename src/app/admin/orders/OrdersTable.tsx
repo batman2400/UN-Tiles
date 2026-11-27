@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
-import { formatAddressSnapshot, type AddressSnapshot } from "@/lib/address";
+import { formatAddressSnapshot, isDeliveryMethod, type AddressSnapshot } from "@/lib/address";
 import { updateOrderStatus, bulkUpdateOrderStatus } from "@/app/actions/admin";
 
 export interface StatusHistoryItem {
@@ -126,7 +126,23 @@ export function OrdersTable({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload: any) => {
           if (payload.eventType === "INSERT") {
-            setOrders((prev) => [payload.new as AdminOrder, ...prev]);
+            const incoming = payload.new as AdminOrder & { user_id?: string };
+            setOrders((prev) =>
+              prev.some((o) => o.id === incoming.id) ? prev : [incoming, ...prev]
+            );
+            if (incoming.user_id) {
+              void supabase
+                .from("profiles")
+                .select("first_name, last_name, email, phone")
+                .eq("id", incoming.user_id)
+                .maybeSingle()
+                .then(({ data: profile }: { data: AdminOrder["profiles"] }) => {
+                  if (!profile) return;
+                  setOrders((prev) =>
+                    prev.map((o) => (o.id === incoming.id ? { ...o, profiles: profile } : o))
+                  );
+                });
+            }
           } else if (payload.eventType === "UPDATE") {
             setOrders((prev) =>
               prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
@@ -224,6 +240,7 @@ export function OrdersTable({
         return {
           ...o,
           status: targetStatus,
+          payment_status: result.paymentStatus ?? o.payment_status,
           status_description: result.statusDescription ?? null,
           status_history: result.statusHistory ?? o.status_history,
           status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
@@ -240,6 +257,7 @@ export function OrdersTable({
           ? {
               ...prev,
               status: targetStatus,
+              payment_status: result.paymentStatus ?? prev.payment_status,
               status_description: result.statusDescription ?? null,
               status_history: result.statusHistory ?? prev.status_history,
               status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
@@ -420,6 +438,7 @@ export function OrdersTable({
             }}
           >
             <option value="All">All Delivery Methods</option>
+            <option value="Island-wide Delivery">Island-wide Delivery</option>
             <option value="Cash on Delivery">Cash on Delivery</option>
             <option value="Pickup from Store">Pickup from Store</option>
           </select>
@@ -551,7 +570,7 @@ export function OrdersTable({
                   </td>
                   <td className="px-6 py-3 text-left">
                     <div className="flex items-center gap-2">
-                      {order.delivery_method === "Cash on Delivery" ? (
+                      {isDeliveryMethod(order.delivery_method) ? (
                         <Truck className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
                       ) : (
                         <Store className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
@@ -560,7 +579,7 @@ export function OrdersTable({
                         {order.delivery_method || "Pickup"}
                       </span>
                     </div>
-                    {order.delivery_method === "Cash on Delivery" && order.delivery_address && (
+                    {isDeliveryMethod(order.delivery_method) && order.delivery_address && (
                       <p className="text-[11px] text-gray-500 mt-1 max-w-[180px] truncate" title={formatAddressSnapshot(order.delivery_address)}>
                         {formatAddressSnapshot(order.delivery_address)}
                       </p>
@@ -595,7 +614,15 @@ export function OrdersTable({
                     </span>
                     {order.payment_status === "Paid" ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-200/60 mt-1">
-                        <ShieldCheck className="w-3 h-3" /> Paid (Sandbox)
+                        <ShieldCheck className="w-3 h-3" /> Paid
+                      </span>
+                    ) : order.payment_status === "Refunded" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold border border-blue-200/60 mt-1">
+                        <ShieldCheck className="w-3 h-3" /> Refunded
+                      </span>
+                    ) : order.payment_status === "Refund Pending" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 text-orange-700 text-[10px] font-bold border border-orange-200/60 mt-1">
+                        <Clock className="w-3 h-3" /> Refund Pending
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 text-[10px] font-bold border border-amber-200/60 mt-1">
@@ -1058,13 +1085,13 @@ export function OrdersTable({
                     {new Date(viewOrder.date).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
                   </p>
                   <p className="flex items-center gap-2">
-                    {viewOrder.delivery_method === "Cash on Delivery" ? <Truck className="w-3.5 h-3.5 text-gray-400" /> : <Store className="w-3.5 h-3.5 text-gray-400" />}
+                    {isDeliveryMethod(viewOrder.delivery_method) ? <Truck className="w-3.5 h-3.5 text-gray-400" /> : <Store className="w-3.5 h-3.5 text-gray-400" />}
                     {viewOrder.delivery_method || "Pickup from Store"}
                   </p>
                 </div>
               </div>
 
-              {viewOrder.delivery_method === "Cash on Delivery" && (
+              {isDeliveryMethod(viewOrder.delivery_method) && (
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Delivery Address</p>
                   <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-700">

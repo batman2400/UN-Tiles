@@ -5,6 +5,13 @@ import { Plus, X, Loader2 } from "lucide-react";
 import { createCategory } from "@/app/actions/admin";
 import { createClient } from "@/utils/supabase/client";
 
+const ALLOWED_UPLOAD_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+
 export function AddCategoryModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +35,18 @@ export function AddCategoryModal() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!ALLOWED_UPLOAD_TYPES[file.type]) {
+        setError("Please select a JPEG, PNG, or WebP image.");
+        e.target.value = "";
+        return;
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        setError("Image must be 5 MB or smaller.");
+        e.target.value = "";
+        return;
+      }
+      setError(null);
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -55,16 +74,22 @@ export function AddCategoryModal() {
     setError(null);
 
     let finalImageUrl = image.trim();
+    let uploadedFilePath: string | null = null;
 
     if (imageFile) {
+      const ext = ALLOWED_UPLOAD_TYPES[imageFile.type];
+      if (!ext || imageFile.size > MAX_UPLOAD_BYTES) {
+        setError("Please upload a valid JPEG, PNG, or WebP image under 5 MB.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const supabase = createClient();
-      const fileExt = imageFile.name.split(".").pop() || "jpg";
-      const fileName = `category-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      const filePath = `category-${crypto.randomUUID()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("products")
-        .upload(filePath, imageFile);
+        .upload(filePath, imageFile, { contentType: imageFile.type });
 
       if (uploadError) {
         setError(`Image upload failed: ${uploadError.message}`);
@@ -72,6 +97,7 @@ export function AddCategoryModal() {
         return;
       }
 
+      uploadedFilePath = filePath;
       const { data: publicUrlData } = supabase.storage
         .from("products")
         .getPublicUrl(filePath);
@@ -86,6 +112,10 @@ export function AddCategoryModal() {
     });
 
     if (!res.success) {
+      if (uploadedFilePath) {
+        const supabase = createClient();
+        await supabase.storage.from("products").remove([uploadedFilePath]).catch(() => {});
+      }
       setError(res.error || "Failed to create category");
       setIsSubmitting(false);
     } else {
@@ -172,7 +202,7 @@ export function AddCategoryModal() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleImageChange}
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:bg-white focus:border-accent outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-900 file:text-white hover:file:bg-accent hover:file:text-black cursor-pointer"
             />

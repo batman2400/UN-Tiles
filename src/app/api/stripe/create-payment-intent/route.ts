@@ -37,11 +37,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json(
+        { error: "Checkout is temporarily unavailable. Please try again shortly." },
+        { status: 503 }
+      );
+    }
+
     const stripe = getStripeServerClient();
     if (!stripe) {
       return NextResponse.json(
         {
-          error: "Stripe Test Mode keys are not configured. Please add STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY to your .env.local file.",
+          error: "Online card payment is currently unavailable. Please choose Cash on Delivery or Showroom Pickup.",
           notConfigured: true,
         },
         { status: 503 }

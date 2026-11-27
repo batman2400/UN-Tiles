@@ -1,11 +1,17 @@
 /**
  * Minimal client-side CSV export helper — no external dependency required.
- * Escapes values per RFC 4180 (quotes doubled, wrapped when containing
- * commas/quotes/newlines) and triggers a browser download.
+ * Neutralizes spreadsheet formula injection (=, +, -, @, tab, CR) and
+ * escapes values per RFC 4180 (quotes doubled, wrapped when containing
+ * commas/quotes/newlines) before triggering a browser download.
  */
-function escapeCsvValue(value: unknown): string {
-  const str = value === null || value === undefined ? "" : String(value);
-  if (/[",\n]/.test(str)) {
+const FORMULA_PREFIX_RE = /^[=+\-@\t\r]/;
+
+export function escapeCsvValue(value: unknown): string {
+  let str = value === null || value === undefined ? "" : String(value);
+  if (FORMULA_PREFIX_RE.test(str)) {
+    str = `'${str}`;
+  }
+  if (/[",\r\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;

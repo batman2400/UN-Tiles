@@ -19,7 +19,9 @@ export function ProductCard({
 }) {
   const { addToCart } = useCart();
   const [justAdded, setJustAdded] = useState(false);
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(() =>
+    product.stockSqft > 0 ? Math.min(10, product.stockSqft) : 1
+  );
 
   const isOutOfStock = product.stockSqft === 0;
   const isLowStock = product.stockSqft > 0 && product.stockSqft <= 100;
@@ -64,7 +66,7 @@ export function ProductCard({
           aria-label={`Buy ${product.name} tile in Sri Lanka`}
         >
           <Image
-            src={product.image}
+            src={product.image || "/tiles/floor_agaria.jpg"}
             alt={`Buy ${product.name} tile in Sri Lanka`}
             fill
             sizes="(max-width: 1024px) 50vw, 33vw"

@@ -7,7 +7,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/api/", "/auth/", "/admin/", "/checkout/"],
+      disallow: ["/api/", "/auth/", "/admin/", "/checkout/", "/profile", "/cart"],
     },
     sitemap: "https://www.untiles.com/sitemap.xml",
   };

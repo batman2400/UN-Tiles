@@ -12,8 +12,7 @@ import {
   ArrowRight, 
   Copy, 
   Check, 
-  KeyRound, 
-  ExternalLink 
+  KeyRound 
 } from "lucide-react";
 import { 
   Elements, 
@@ -464,25 +463,10 @@ export function StripePaymentModal({
               <div className="p-5 bg-[#faf8f5] border border-yellow-200 rounded-2xl space-y-3">
                 <div className="flex items-center gap-2 text-zinc-900 font-bold text-sm">
                   <KeyRound className="w-4 h-4 text-yellow-600" />
-                  <span>Configure Stripe test keys</span>
+                  <span>Online card payment unavailable</span>
                 </div>
                 <p className="text-xs text-gray-600 leading-relaxed">
-                  Add test API keys to <code className="text-yellow-800 bg-yellow-50 px-1.5 py-0.5 rounded border border-yellow-200">.env.local</code> and the same names in Vercel if you deploy.
-                </p>
-                <div className="p-3 bg-white rounded-xl border border-gray-200 font-mono text-[11px] text-zinc-700 space-y-1 overflow-x-auto">
-                  <p>NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...</p>
-                  <p>STRIPE_SECRET_KEY=sk_test_...</p>
-                </div>
-                <p className="text-[11px] text-gray-500">
-                  Copy keys from the{" "}
-                  <a
-                    href="https://dashboard.stripe.com/test/apikeys"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-yellow-700 hover:text-yellow-800 underline inline-flex items-center gap-1"
-                  >
-                    Stripe Dashboard <ExternalLink className="w-3 h-3 inline" />
-                  </a>.
+                  Online card payments are currently unavailable. Please choose Cash on Delivery or Showroom Pickup, or contact our showroom for assistance.
                 </p>
               </div>
 

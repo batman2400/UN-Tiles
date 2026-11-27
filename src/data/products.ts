@@ -69,14 +69,8 @@ type CatalogLoadOptions = {
 const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.jpg";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
 export const CATALOG_CACHE_TAG = "catalog";
-const LIVE_CATALOG_TTL_MS = 300_000; // 5 minutes in-memory lambda cache
 
 let catalogSupabase: ReturnType<typeof createClient> | null = null;
-let liveCatalogMemory: { payload: RawCatalogPayload; expiresAt: number } | null = null;
-
-export function invalidateLocalCatalogCache() {
-  liveCatalogMemory = null;
-}
 
 function getCatalogSupabase() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -162,10 +156,6 @@ function humanizeSlug(slug: string): string {
  * transaction engine to accurately validate stock before deduction.
  */
 async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
-  if (liveCatalogMemory && Date.now() < liveCatalogMemory.expiresAt) {
-    return liveCatalogMemory.payload;
-  }
-
   try {
     // During Vercel build-time prerendering, env vars may not be available.
     // Gracefully return null so getCatalogData falls back to the static seed.
@@ -214,11 +204,6 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
         application: row.application,
         stockSqFt: row.stock_sqft,
       })),
-    };
-
-    liveCatalogMemory = {
-      payload,
-      expiresAt: Date.now() + LIVE_CATALOG_TTL_MS,
     };
 
     return payload;
@@ -302,19 +287,35 @@ function toCatalogViewModel(payload: RawCatalogPayload): CatalogViewModel {
   };
 }
 
-async function loadCatalogViewModel(): Promise<CatalogViewModel> {
-  const payload = await getRawCatalogPayload();
-  return toCatalogViewModel(payload);
+async function loadLiveCatalogViewModel(): Promise<CatalogViewModel> {
+  const liveCatalog = await fetchLiveSupabaseCatalog();
+  if (!liveCatalog) {
+    // Throw inside unstable_cache so a transient Supabase outage never poisons
+    // the 24-hour cache with static seed data.
+    throw new Error("Live catalog unavailable");
+  }
+  return toCatalogViewModel(liveCatalog);
 }
 
-export const getCatalogData = cache(
-  unstable_cache(loadCatalogViewModel, ["catalog-view-model"], {
+const getCachedLiveCatalogData = unstable_cache(
+  loadLiveCatalogViewModel,
+  ["catalog-view-model"],
+  {
     revalidate: 86400, // 24 hours fallback; real-time updates triggered on-demand via CATALOG_CACHE_TAG
     tags: [CATALOG_CACHE_TAG],
-  })
+  }
 );
+
+export const getCatalogData = cache(async (): Promise<CatalogViewModel> => {
+  try {
+    return await getCachedLiveCatalogData();
+  } catch {
+    return toCatalogViewModel(FALLBACK_CATALOG);
+  }
+});
 
 /** Same catalog as getCatalogData, without Next.js request cache (safe in CLI and route handlers). */
 export async function getCatalogDataUncached(): Promise<CatalogViewModel> {
-  return loadCatalogViewModel();
+  const payload = await getRawCatalogPayload();
+  return toCatalogViewModel(payload);
 }

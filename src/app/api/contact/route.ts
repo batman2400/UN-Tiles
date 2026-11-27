@@ -1,32 +1,19 @@
 import { NextRequest } from "next/server";
+import { z } from "zod";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 // ── Validation ─────────────────────────────────────────
 
-interface ContactRequestBody {
-  name: string;
-  email: string;
-  message: string;
-  company?: string;
-  phone?: string;
-  projectType?: string;
-}
-
-function isValidContactBody(body: unknown): body is ContactRequestBody {
-  if (typeof body !== "object" || body === null) return false;
-  const candidate = body as Record<string, unknown>;
-
-  return (
-    typeof candidate.name === "string" &&
-    candidate.name.trim().length > 0 &&
-    typeof candidate.email === "string" &&
-    candidate.email.trim().length > 0 &&
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate.email) &&
-    typeof candidate.message === "string" &&
-    candidate.message.trim().length > 0
-  );
-}
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(120, "Name is too long"),
+  email: z.string().trim().email("Please provide a valid email address").max(255),
+  message: z.string().trim().min(1, "Message is required").max(5000, "Message is too long"),
+  company: z.string().trim().max(150).optional().default(""),
+  phone: z.string().trim().max(40).optional().default(""),
+  projectType: z.string().trim().max(100).optional().default(""),
+});
 
 // ── Route Handler ──────────────────────────────────────
 
@@ -45,7 +32,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // 1. Parse request body
     let body: unknown;
     try {
       body = await request.json();
@@ -56,29 +42,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Validate required fields
-    if (!isValidContactBody(body)) {
+    const parsed = contactSchema.safeParse(body);
+    if (!parsed.success) {
       return Response.json(
         {
           error:
+            parsed.error.issues[0]?.message ||
             "Please provide a valid name, email address, and message.",
         },
         { status: 400 }
       );
     }
 
-    // 3. Initialize Supabase client & save to database
-    const supabase = await createClient();
+    const data = parsed.data;
+    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createAdminClient()
+      : await createClient();
 
     const { error: insertError } = await supabase
       .from("inquiries")
       .insert({
-        name: body.name.trim(),
-        email: body.email.trim(),
-        message: body.message.trim(),
-        company: body.company?.trim(),
-        phone: body.phone?.trim(),
-        project_type: body.projectType?.trim(),
+        name: data.name,
+        email: data.email,
+        message: data.message,
+        company: data.company || null,
+        phone: data.phone || null,
+        project_type: data.projectType || null,
       });
 
     if (insertError) {
@@ -89,7 +78,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Success
     return Response.json({
       success: true,
       message: "Your inquiry has been received.",
