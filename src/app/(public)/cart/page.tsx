@@ -241,6 +241,7 @@ function CartPageContent() {
     stripeReturnHandled.current = true;
 
     const finishStripeReturn = async () => {
+      setIsCheckingOut(true);
       setCheckoutError(null);
       try {
         await handleOnlineCheckout(paymentIntentId, "Stripe (Test Mode)", {
@@ -251,6 +252,8 @@ function CartPageContent() {
       } catch {
         stripeReturnHandled.current = false;
         router.replace("/cart");
+      } finally {
+        setIsCheckingOut(false);
       }
     };
 
@@ -330,7 +333,7 @@ function CartPageContent() {
                     <div className="flex items-center gap-3 sm:gap-5 mb-4 md:mb-0 min-w-0">
                       <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner">
                         <Image
-                          src={item.image}
+                          src={item.image || "/tiles/floor_agaria.jpg"}
                           alt={item.name}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"

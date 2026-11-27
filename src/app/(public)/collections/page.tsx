@@ -57,9 +57,9 @@ async function CollectionsContent() {
         "@type": "Product",
         name: product.name,
         description: `${product.name} — ${product.dimensions}, ${product.finish} finish. ${product.category} tile.`,
-        image: product.image.startsWith("http")
+        image: (product.image || "/tiles/floor_agaria.jpg").startsWith("http")
           ? product.image
-          : `https://www.untiles.com${product.image}`,
+          : `https://www.untiles.com${product.image || "/tiles/floor_agaria.jpg"}`,
         category: product.category,
         offers: {
           "@type": "Offer",
@@ -102,11 +102,11 @@ async function CollectionsContent() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd).replace(/</g, "\\u003c") }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
       <CollectionsClient
         allProducts={allProducts}

@@ -68,7 +68,7 @@ export function ProductPicker({
           <>
             <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container">
               <Image
-                src={selected.image}
+                src={selected.image || "/tiles/floor_agaria.jpg"}
                 alt=""
                 fill
                 sizes="40px"
@@ -124,7 +124,7 @@ export function ProductPicker({
                   >
                     <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-surface-container">
                       <Image
-                        src={product.image}
+                        src={product.image || "/tiles/floor_agaria.jpg"}
                         alt=""
                         fill
                         sizes="40px"

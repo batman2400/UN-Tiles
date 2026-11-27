@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import type { Product } from "@/data/products";
@@ -57,6 +57,14 @@ export function PlannerClient({
     null;
 
   const [selectedId, setSelectedId] = useState<string | null>(defaultId);
+
+  const queryProduct = searchParams.get("product");
+  useEffect(() => {
+    if (queryProduct && plannable.some((p) => p.id === queryProduct)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedId(queryProduct);
+    }
+  }, [queryProduct, plannable]);
   const [shape, setShape] = useState<RoomShape>("rectangle");
   const [unit, setUnit] = useState<LengthUnit>("ft");
   const [roomWidth, setRoomWidth] = useState(10);
@@ -194,7 +202,7 @@ export function PlannerClient({
       {
         id: selected.id,
         name: selected.name,
-        image: selected.image,
+        image: selected.image || "/tiles/floor_agaria.jpg",
         category: selected.category,
         price_per_sqft: selected.pricePerSqft,
         stockSqft: selected.stockSqft,

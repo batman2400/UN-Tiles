@@ -3,9 +3,8 @@
 import { z } from "zod";
 import { revalidatePath, updateTag } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { CATALOG_CACHE_TAG } from "@/data/products";
-import { getStripeServerClient } from "@/lib/stripe";
+import { refundPaidOrder } from "@/lib/orderRefund";
 
 const cancelOrderSchema = z.object({
   orderId: z.string().trim().min(1, "Order ID is required"),
@@ -25,49 +24,6 @@ export interface CancelOrderResult {
   }>;
   statusUpdatedAt?: string;
   error?: string;
-}
-
-async function refundPaidStripeOrder(
-  orderId: string,
-  paymentDetails: Record<string, unknown> | null | undefined
-): Promise<"Refunded" | "Refund Pending"> {
-  const txnId =
-    paymentDetails && typeof paymentDetails.transaction_id === "string"
-      ? paymentDetails.transaction_id
-      : null;
-
-  const admin = createAdminClient();
-
-  if (txnId && txnId.startsWith("pi_")) {
-    const stripe = getStripeServerClient();
-    if (stripe) {
-      try {
-        const refund = await stripe.refunds.create(
-          { payment_intent: txnId },
-          { idempotencyKey: `refund-${orderId}` }
-        );
-        const nextDetails = {
-          ...(paymentDetails ?? {}),
-          refund_id: refund.id,
-          refund_status: refund.status,
-          refunded_at: new Date().toISOString(),
-        };
-        await admin
-          .from("orders")
-          .update({ payment_status: "Refunded", payment_details: nextDetails })
-          .eq("id", orderId);
-        return "Refunded";
-      } catch (refundErr) {
-        console.error(`[orders] Stripe refund failed for ${orderId}:`, refundErr);
-      }
-    }
-  }
-
-  await admin
-    .from("orders")
-    .update({ payment_status: "Refund Pending" })
-    .eq("id", orderId);
-  return "Refund Pending";
 }
 
 export async function cancelCustomerOrder(rawInput: {
@@ -97,7 +53,6 @@ export async function cancelCustomerOrder(rawInput: {
     };
   }
 
-  // Inspect current payment state before cancellation so paid Stripe orders trigger a refund
   const { data: existingOrder } = await supabase
     .from("orders")
     .select("payment_status, payment_details")
@@ -119,18 +74,13 @@ export async function cancelCustomerOrder(rawInput: {
 
   let nextPaymentStatus: string | undefined;
   if (existingOrder?.payment_status === "Paid") {
-    try {
-      nextPaymentStatus = await refundPaidStripeOrder(
-        orderId,
-        existingOrder.payment_details as Record<string, unknown> | null
-      );
-    } catch (refundErr) {
-      console.error("[orders] Failed to record refund status:", refundErr);
-      nextPaymentStatus = "Refund Pending";
-    }
+    const refundOutcome = await refundPaidOrder(
+      orderId,
+      existingOrder.payment_details as Record<string, unknown> | null
+    );
+    nextPaymentStatus = refundOutcome.paymentStatus;
   }
 
-  // Immediately expire cached catalog inventory and revalidate storefront + admin views
   try {
     updateTag(CATALOG_CACHE_TAG);
     revalidatePath("/");
@@ -138,6 +88,7 @@ export async function cancelCustomerOrder(rawInput: {
     revalidatePath("/collections/[id]", "page");
     revalidatePath("/planner");
     revalidatePath("/profile");
+    revalidatePath("/admin");
     revalidatePath("/admin/orders");
     revalidatePath("/admin/inventory");
   } catch (err) {

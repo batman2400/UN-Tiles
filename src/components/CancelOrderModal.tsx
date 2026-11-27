@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import { cancelCustomerOrder } from "@/app/actions/orders";
 
@@ -37,13 +37,23 @@ export function CancelOrderModal({
       timestamp: string;
       updated_by?: string | null;
     }>,
-    statusUpdatedAt?: string
+    statusUpdatedAt?: string,
+    paymentStatus?: string
   ) => void;
 }) {
   const [selectedReason, setSelectedReason] = useState(COMMON_REASONS[0]);
   const [customReason, setCustomReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setSelectedReason(COMMON_REASONS[0]);
+      setCustomReason("");
+      setError(null);
+      setCancelling(false);
+    }
+  }, [open, order?.id]);
 
   if (!open || !order) return null;
 
@@ -65,25 +75,30 @@ export function CancelOrderModal({
     setCancelling(true);
     setError(null);
 
-    const result = await cancelCustomerOrder({
-      orderId: order.id,
-      reason: finalReason,
-    });
+    try {
+      const result = await cancelCustomerOrder({
+        orderId: order.id,
+        reason: finalReason,
+      });
 
-    setCancelling(false);
+      if (!result.success) {
+        setError(result.error || "Could not cancel the order. Please contact support.");
+        return;
+      }
 
-    if (!result.success) {
-      setError(result.error || "Could not cancel the order. Please contact support.");
-      return;
+      onCancelled(
+        order.id,
+        result.statusDescription || finalReason,
+        result.statusHistory,
+        result.statusUpdatedAt,
+        result.paymentStatus
+      );
+      onClose();
+    } catch {
+      setError("Network or server error while cancelling. Please try again.");
+    } finally {
+      setCancelling(false);
     }
-
-    onCancelled(
-      order.id,
-      result.statusDescription || finalReason,
-      result.statusHistory,
-      result.statusUpdatedAt
-    );
-    onClose();
   };
 
   return (

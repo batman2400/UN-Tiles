@@ -238,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user?.id) return { success: false, error: "Not logged in" };
     try {
       // Use server-side action with field whitelisting — role and email are never modified here
-      const { updateUserProfile } = await import('@/app/actions/admin');
+      const { updateUserProfile } = await import('@/app/actions/profile');
       const result = await updateUserProfile({
         firstName: data.firstName,
         lastName: data.lastName,

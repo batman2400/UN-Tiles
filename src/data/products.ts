@@ -67,6 +67,7 @@ type CatalogLoadOptions = {
 };
 
 const UNKNOWN_CATEGORY_IMAGE = "/images/landing_hero.jpg";
+const DEFAULT_PRODUCT_IMAGE = "/tiles/floor_agaria.jpg";
 const FALLBACK_CATALOG = catalogSeed as RawCatalogPayload;
 export const CATALOG_CACHE_TAG = "catalog";
 
@@ -87,50 +88,6 @@ function getCatalogSupabase() {
   return catalogSupabase;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function isRawCatalogCategory(value: unknown): value is RawCatalogCategory {
-  return (
-    isRecord(value) &&
-    typeof value.slug === "string" &&
-    typeof value.name === "string" &&
-    typeof value.image === "string"
-  );
-}
-
-function isRawCatalogProduct(value: unknown): value is RawCatalogProduct {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.sku === "string" &&
-    typeof value.name === "string" &&
-    typeof value.dimensions === "string" &&
-    typeof value.pricePerSqFt === "number" &&
-    typeof value.image === "string" &&
-    typeof value.categorySlug === "string" &&
-    typeof value.featured === "boolean" &&
-    typeof value.finish === "string" &&
-    typeof value.application === "string" &&
-    typeof value.stockSqFt === "number"
-  );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function isRawCatalogPayload(value: unknown): value is RawCatalogPayload {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    Array.isArray(value.categories) &&
-    value.categories.every(isRawCatalogCategory) &&
-    Array.isArray(value.products) &&
-    value.products.every(isRawCatalogProduct)
-  );
-}
-
 function formatPrice(pricePerSqFt: number): string {
   return new Intl.NumberFormat("en-LK", {
     style: "currency",
@@ -140,7 +97,7 @@ function formatPrice(pricePerSqFt: number): string {
   }).format(pricePerSqFt);
 }
 
-function humanizeSlug(slug: string): string {
+export function humanizeSlug(slug: string): string {
   return slug
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -188,7 +145,7 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
       categories: categoriesRes.data.map((row: any) => ({
         slug: row.slug,
         name: row.name,
-        image: row.image,
+        image: row.image || UNKNOWN_CATEGORY_IMAGE,
       })),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       products: productsRes.data.map((row: any) => ({
@@ -197,7 +154,7 @@ async function fetchLiveSupabaseCatalog(): Promise<RawCatalogPayload | null> {
         name: row.name,
         dimensions: row.dimensions,
         pricePerSqFt: row.price_per_sqft,
-        image: row.image,
+        image: row.image || DEFAULT_PRODUCT_IMAGE,
         categorySlug: row.category_slug,
         featured: row.featured,
         finish: row.finish,
@@ -235,41 +192,24 @@ function toCatalogViewModel(payload: RawCatalogPayload): CatalogViewModel {
     payload.categories.map((category) => [category.slug, category])
   );
 
-  const allProducts = payload.products.map((product) => {
+  const mapProduct = (product: RawCatalogProduct): Product => {
     const category = categoryLookup.get(product.categorySlug);
-
     return {
       id: product.id,
       name: product.name,
       dimensions: product.dimensions,
       price: formatPrice(product.pricePerSqFt),
-      image: product.image,
+      image: product.image || DEFAULT_PRODUCT_IMAGE,
       category: category?.name ?? humanizeSlug(product.categorySlug),
       categorySlug: product.categorySlug,
       pricePerSqft: product.pricePerSqFt,
       finish: product.finish,
       stockSqft: product.stockSqFt,
     };
-  });
+  };
 
-  const featuredProducts = payload.products
-    .filter((product) => product.featured)
-    .map((product) => {
-      const category = categoryLookup.get(product.categorySlug);
-
-      return {
-        id: product.id,
-        name: product.name,
-        dimensions: product.dimensions,
-        price: formatPrice(product.pricePerSqFt),
-        image: product.image,
-        category: category?.name ?? humanizeSlug(product.categorySlug),
-        categorySlug: product.categorySlug,
-        pricePerSqft: product.pricePerSqFt,
-        finish: product.finish,
-        stockSqft: product.stockSqFt,
-      };
-    });
+  const allProducts = payload.products.map(mapProduct);
+  const featuredProducts = payload.products.filter((p) => p.featured).map(mapProduct);
 
   const categories = payload.categories.map((category) => ({
     name: category.name,

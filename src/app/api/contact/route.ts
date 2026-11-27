@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { createClient } from "@/utils/supabase/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 // ── Validation ─────────────────────────────────────────
@@ -54,10 +53,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return Response.json(
+        { error: "Contact submissions are temporarily unavailable. Please try again shortly." },
+        { status: 503 }
+      );
+    }
+
     const data = parsed.data;
-    const supabase = process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? createAdminClient()
-      : await createClient();
+    const supabase = createAdminClient();
 
     const { error: insertError } = await supabase
       .from("inquiries")

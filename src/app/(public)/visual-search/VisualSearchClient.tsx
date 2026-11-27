@@ -50,12 +50,14 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const activePreviewUrlRef = useRef<string | null>(null);
+  const searchAbortRef = useRef<AbortController | null>(null);
 
   const advisorLocked = mode === "advisor" && !visionEnabled;
 
-  // Cleanup object URLs on unmount to prevent mobile Safari memory leaks
+  // Cleanup object URLs and abort pending searches on unmount
   useEffect(() => {
     return () => {
+      searchAbortRef.current?.abort();
       if (activePreviewUrlRef.current) {
         URL.revokeObjectURL(activePreviewUrlRef.current);
       }
@@ -120,6 +122,9 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
   };
 
   const handleReset = () => {
+    searchAbortRef.current?.abort();
+    searchAbortRef.current = null;
+    setIsLoading(false);
     setSelectedFile(null);
     if (activePreviewUrlRef.current) {
       URL.revokeObjectURL(activePreviewUrlRef.current);
@@ -166,10 +171,15 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         ? "/api/visual-search/match"
         : "/api/visual-search/scene";
 
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
       const raw = await response.text();
@@ -209,10 +219,16 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         setQueryTimeMs(data.queryTimeMs);
       }
     } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        return;
+      }
       const message = err instanceof Error ? err.message : "An unexpected error occurred during visual matching.";
       setError(message);
     } finally {
-      setIsLoading(false);
+      if (searchAbortRef.current === controller) {
+        searchAbortRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
@@ -256,13 +272,15 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           <div className="inline-flex p-1 sm:p-1.5 rounded-2xl bg-surface-container border border-outline/30 premium-shadow max-w-full">
             <button
               type="button"
+              disabled={isLoading}
               onClick={() => {
+                searchAbortRef.current?.abort();
                 setMode("matcher");
                 setMatches(null);
                 setSceneBrief(null);
                 setError(null);
               }}
-              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 disabled:opacity-60 ${
                 mode === "matcher"
                   ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:text-on-surface"
@@ -277,13 +295,15 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
 
             <button
               type="button"
+              disabled={isLoading}
               onClick={() => {
+                searchAbortRef.current?.abort();
                 setMode("advisor");
                 setMatches(null);
                 setSceneBrief(null);
                 setError(null);
               }}
-              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 disabled:opacity-60 ${
                 mode === "advisor"
                   ? "bg-primary text-on-primary shadow-md"
                   : "text-on-surface-variant hover:text-on-surface"

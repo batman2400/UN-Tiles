@@ -1,18 +1,11 @@
 import { createAdminClient } from "@/utils/supabase/admin";
-import { getRawCatalogPayload, type RawCatalogPayload } from "@/data/products";
+import { getRawCatalogPayload, humanizeSlug, type RawCatalogPayload } from "@/data/products";
 import { processImageInput } from "./image-input";
 import { embedCatalogDocument } from "./gemini-embeddings";
 import { computeColorHistogram } from "./color-histogram";
 import { loadSafeCatalogImage } from "./load-catalog-image";
 import { EMBEDDING_VERSION } from "./constants";
 import type { IndexProductResult } from "./types";
-
-function humanizeSlug(slug: string): string {
-  return slug
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
 
 function categoryUseCaseText(slug: string): string {
   switch (slug) {

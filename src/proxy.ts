@@ -3,8 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
   // ── Permanent Ban on vercel.app Indexing ──
-  const host = request.headers.get("host") || "";
-  if (host.includes("vercel.app")) {
+  const rawHost = request.headers.get("host") || "";
+  const host = rawHost.split(":")[0].toLowerCase();
+  if (host === "vercel.app" || host.endsWith(".vercel.app")) {
     // If search crawler checks robots.txt on vercel.app, forbid all crawling
     if (request.nextUrl.pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", {

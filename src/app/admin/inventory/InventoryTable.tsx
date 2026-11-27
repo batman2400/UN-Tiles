@@ -45,6 +45,7 @@ export function InventoryTable({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkRestockAmount, setBulkRestockAmount] = useState("");
   const [isBulkRestocking, setIsBulkRestocking] = useState(false);
+  const [bulkFeedback, setBulkFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Sync local table state whenever Server Action revalidation delivers fresh initialProducts
   useEffect(() => {
@@ -111,10 +112,11 @@ export function InventoryTable({
   }, [products, searchQuery, sortConfig]);
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
   const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
+    const start = (safePage - 1) * PAGE_SIZE;
     return filteredProducts.slice(start, start + PAGE_SIZE);
-  }, [filteredProducts, currentPage]);
+  }, [filteredProducts, safePage]);
 
   const handleSort = (key: SortKey) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -168,29 +170,36 @@ export function InventoryTable({
 
     updateRowState(product.id, { isUpdating: true, feedback: null });
 
-    const result = await adjustProductStock({ productId: product.id, amount });
+    try {
+      const result = await adjustProductStock({ productId: product.id, amount });
 
-    if (!result.success) {
+      if (!result.success) {
+        updateRowState(product.id, {
+          isUpdating: false,
+          feedback: { type: "error", message: result.error },
+        });
+        return;
+      }
+
+      setProducts((prev) =>
+        prev.map((p) => (p.id === product.id ? { ...p, stock_sqft: result.newStock } : p))
+      );
+
       updateRowState(product.id, {
         isUpdating: false,
-        feedback: { type: "error", message: result.error },
+        editValue: "",
+        feedback: { type: "success", message: `Added ${amount > 0 ? "+" : ""}${amount} → ${result.newStock.toLocaleString()} sq ft` },
       });
-      return;
+
+      setTimeout(() => {
+        updateRowState(product.id, { feedback: null });
+      }, 3000);
+    } catch {
+      updateRowState(product.id, {
+        isUpdating: false,
+        feedback: { type: "error", message: "Session expired or network error." },
+      });
     }
-
-    setProducts((prev) =>
-      prev.map((p) => (p.id === product.id ? { ...p, stock_sqft: result.newStock } : p))
-    );
-
-    updateRowState(product.id, {
-      isUpdating: false,
-      editValue: "",
-      feedback: { type: "success", message: `Added ${amount > 0 ? "+" : ""}${amount} → ${result.newStock.toLocaleString()} sq ft` },
-    });
-
-    setTimeout(() => {
-      updateRowState(product.id, { feedback: null });
-    }, 3000);
   };
 
   const handleDelete = async (productId: string, productName: string) => {
@@ -198,23 +207,30 @@ export function InventoryTable({
 
     updateRowState(productId, { isUpdating: true, feedback: null });
 
-    const result = await deleteProduct({ productId });
+    try {
+      const result = await deleteProduct({ productId });
 
-    if (!result.success) {
+      if (!result.success) {
+        updateRowState(productId, {
+          isUpdating: false,
+          feedback: { type: "error", message: result.error },
+        });
+        return;
+      }
+
+      setProducts((prev) => prev.filter((p) => p.id !== productId));
+
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    } catch {
       updateRowState(productId, {
         isUpdating: false,
-        feedback: { type: "error", message: result.error },
+        feedback: { type: "error", message: "Session expired or network error." },
       });
-      return;
     }
-
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
-
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(productId);
-      return next;
-    });
   };
 
   const toggleSelected = (id: string) => {
@@ -244,29 +260,50 @@ export function InventoryTable({
     const amount = parseFloat(bulkRestockAmount);
     if (selectedIds.size === 0 || isNaN(amount) || amount === 0) return;
     setIsBulkRestocking(true);
+    setBulkFeedback(null);
 
-    const result = await bulkAdjustProductStock({
-      productIds: Array.from(selectedIds),
-      amount,
-    });
+    try {
+      const result = await bulkAdjustProductStock({
+        productIds: Array.from(selectedIds),
+        amount,
+      });
 
-    if (!result.success) {
+      if (!result.success) {
+        setBulkFeedback({ type: "error", message: result.error });
+        return;
+      }
+
+      const newStockById = new Map(result.updates.map((u) => [u.id, u.newStock]));
+      const failedIds = new Set(result.failed.map((f) => f.id));
+
+      setProducts((prev) =>
+        prev.map((p) =>
+          newStockById.has(p.id) ? { ...p, stock_sqft: newStockById.get(p.id)! } : p
+        )
+      );
+
+      setSelectedIds(failedIds);
+      setBulkRestockAmount("");
+
+      if (result.failed.length > 0) {
+        setBulkFeedback({
+          type: "error",
+          message: `Updated ${result.updates.length} products; ${result.failed.length} failed (${result.failed[0]?.error}).`,
+        });
+      } else {
+        setBulkFeedback({
+          type: "success",
+          message: `Updated stock on ${result.updates.length} products.`,
+        });
+      }
+    } catch {
+      setBulkFeedback({
+        type: "error",
+        message: "Session expired or network error while restocking.",
+      });
+    } finally {
       setIsBulkRestocking(false);
-      return;
     }
-
-    const newStockById = new Map(result.updates.map((u) => [u.id, u.newStock]));
-    const failedIds = new Set(result.failed.map((f) => f.id));
-
-    setProducts((prev) =>
-      prev.map((p) =>
-        newStockById.has(p.id) ? { ...p, stock_sqft: newStockById.get(p.id)! } : p
-      )
-    );
-
-    setSelectedIds(failedIds);
-    setBulkRestockAmount("");
-    setIsBulkRestocking(false);
   };
 
   const handleExportCsv = () => {
@@ -311,6 +348,18 @@ export function InventoryTable({
           className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm text-sm text-gray-900 rounded-lg outline-none border border-gray-100 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
         />
       </div>
+
+      {bulkFeedback && (
+        <div
+          className={`mb-4 rounded-xl px-4 py-3 text-xs font-semibold border ${
+            bulkFeedback.type === "error"
+              ? "bg-red-50 border-red-200 text-red-700"
+              : "bg-emerald-50 border-emerald-200 text-emerald-700"
+          }`}
+        >
+          {bulkFeedback.message}
+        </div>
+      )}
 
       {selectedIds.size > 0 && (
         <div className="mb-4 flex flex-col sm:flex-row items-center gap-3 bg-zinc-900 text-white rounded-xl px-5 py-3 motion-fade-up">
@@ -522,25 +571,25 @@ export function InventoryTable({
 
       <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
-          Showing {paginatedProducts.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
+          Showing {paginatedProducts.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}
           {"–"}
-          {Math.min(currentPage * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length}{" "}
+          {Math.min(safePage * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length}{" "}
           {filteredProducts.length === 1 ? "product" : "products"}
         </p>
         <div className="flex gap-1">
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage <= 1}
+            disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
-            {currentPage}
+            {safePage}
           </span>
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage >= totalPages}
+            disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
             <ChevronRight className="w-4 h-4" />

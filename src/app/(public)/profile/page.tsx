@@ -148,6 +148,7 @@ function ProfileContent() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
   const supabase = createClient();
@@ -171,7 +172,10 @@ function ProfileContent() {
         listAddresses(),
       ]);
 
-      if (ordersRes.data) {
+      if (ordersRes.error) {
+        setOrdersError(ordersRes.error.message || "Could not load your orders.");
+      } else if (ordersRes.data) {
+        setOrdersError(null);
         setOrders(ordersRes.data as OrderRecord[]);
       }
       if (addressesRes.success) {
@@ -543,6 +547,12 @@ function ProfileContent() {
                     {orders.length} Total {orders.length === 1 ? "Order" : "Orders"}
                   </span>
                 </div>
+
+                {ordersError && (
+                  <div className="mb-6 p-4 rounded-xl text-xs font-medium bg-red-50 border border-red-200 text-red-800">
+                    {ordersError}
+                  </div>
+                )}
 
                 {cancelFeedback && (
                   <div
@@ -1010,12 +1020,26 @@ function ProfileContent() {
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 ${
                       viewOrder.payment_status === "Paid"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : viewOrder.payment_status === "Refunded"
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : viewOrder.payment_status === "Refund Pending"
+                        ? "bg-orange-50 text-orange-700 border border-orange-200"
                         : "bg-amber-50 text-amber-700 border border-amber-200"
                     }`}>
                       {viewOrder.payment_status === "Paid" ? (
                         <>
                           <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Paid (Online Sandbox)</span>
+                          <span>{viewOrder.payment_method?.includes("Stripe") ? "Paid (Stripe)" : "Paid"}</span>
+                        </>
+                      ) : viewOrder.payment_status === "Refunded" ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Refunded</span>
+                        </>
+                      ) : viewOrder.payment_status === "Refund Pending" ? (
+                        <>
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Refund Pending</span>
                         </>
                       ) : (
                         <>
@@ -1119,7 +1143,7 @@ function ProfileContent() {
         open={!!orderToCancel}
         order={orderToCancel}
         onClose={() => setOrderToCancel(null)}
-        onCancelled={(orderId, statusDescription, statusHistory, statusUpdatedAt) => {
+        onCancelled={(orderId, statusDescription, statusHistory, statusUpdatedAt, paymentStatus) => {
           const now = statusUpdatedAt || new Date().toISOString();
           const cleanDesc = statusDescription || "Order cancelled by customer.";
           const newHistoryItem: StatusHistoryItem = {
@@ -1135,6 +1159,7 @@ function ProfileContent() {
                 ? {
                     ...o,
                     status: "Cancelled",
+                    payment_status: paymentStatus ?? o.payment_status,
                     status_description: cleanDesc,
                     status_history: statusHistory || [...(o.status_history || []), newHistoryItem],
                     status_updated_at: now,
@@ -1148,6 +1173,7 @@ function ProfileContent() {
               ? {
                   ...prev,
                   status: "Cancelled",
+                  payment_status: paymentStatus ?? prev.payment_status,
                   status_description: cleanDesc,
                   status_history: statusHistory || [...(prev.status_history || []), newHistoryItem],
                   status_updated_at: now,
@@ -1159,9 +1185,16 @@ function ProfileContent() {
             ? orderId.toUpperCase()
             : `UN-2026-${orderId.substring(0, 8).toUpperCase()}`;
 
+          const refundSuffix =
+            paymentStatus === "Refunded"
+              ? " Your Stripe refund has been initiated."
+              : paymentStatus === "Refund Pending"
+              ? " Your refund is queued for processing."
+              : "";
+
           setCancelFeedback({
             type: "success",
-            message: `Order #${formattedId} was successfully cancelled. Reserved stock has been restored to inventory.`,
+            message: `Order #${formattedId} was successfully cancelled. Reserved stock has been restored to inventory.${refundSuffix}`,
           });
         }}
       />

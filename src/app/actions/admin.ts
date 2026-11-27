@@ -1,27 +1,60 @@
 "use server";
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/utils/supabase/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { CATALOG_CACHE_TAG } from "@/data/products";
 import { z } from "zod";
 import { logAdminAction } from "@/lib/auditLog";
 import { indexProduct } from "@/lib/visual-search/indexProduct";
-import { getStripeServerClient } from "@/lib/stripe";
+import { refundPaidOrder } from "@/lib/orderRefund";
 
 const DEFAULT_TILE_IMAGE = "/tiles/floor_agaria.jpg";
+
+function isAllowedCatalogImage(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return true;
+  if (trimmed.startsWith("/tiles/") || trimmed.startsWith("/images/")) {
+    return !trimmed.includes("..") && !trimmed.includes("\\");
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:") return false;
+    const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    let allowedHost = "jnihpfdrqrdmxebbabmj.supabase.co";
+    if (configuredUrl) {
+      try {
+        allowedHost = new URL(configuredUrl).hostname;
+      } catch {
+        // Keep fallback host
+      }
+    }
+    return (
+      parsed.hostname === allowedHost &&
+      parsed.pathname.startsWith("/storage/v1/object/public/")
+    );
+  } catch {
+    return false;
+  }
+}
+
+const imageFieldSchema = z
+  .string()
+  .max(500)
+  .refine(isAllowedCatalogImage, "Image must be a local /tiles/ or /images/ asset or a Supabase Storage URL")
+  .optional();
 
 // ── Zod Schemas ────────────────────────────────────────
 
 const categorySchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
-  slug: z.string()
+  slug: z
+    .string()
     .min(1, "Slug is required")
     .max(100)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Slug must be lowercase with hyphens only"),
-  image: z.string().max(500).optional(),
+  image: imageFieldSchema,
 });
 
 const productSchema = z.object({
@@ -30,7 +63,7 @@ const productSchema = z.object({
   category_slug: z.string().min(1, "Category is required"),
   dimensions: z.string().min(1, "Dimensions are required").max(50),
   price_per_sqft: z.number().positive("Price must be a positive number").finite(),
-  image: z.string().max(500).optional(),
+  image: imageFieldSchema,
   finish: z.string().max(50).optional().default(""),
   application: z.string().max(50).optional().default(""),
   stock_sqft: z.number().min(0, "Stock cannot be negative").finite(),
@@ -38,12 +71,12 @@ const productSchema = z.object({
 
 const stockAdjustSchema = z.object({
   productId: z.string().min(1, "Product is required"),
-  amount: z.number().finite("Amount must be a number"),
+  amount: z.number().int("Amount must be a whole number (sq ft)").finite(),
 });
 
 const bulkStockAdjustSchema = z.object({
   productIds: z.array(z.string().min(1)).min(1, "Select at least one product"),
-  amount: z.number().finite("Amount must be a number"),
+  amount: z.number().int("Amount must be a whole number (sq ft)").finite(),
 });
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] as const;
@@ -51,13 +84,21 @@ const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancel
 const orderStatusSchema = z.object({
   orderId: z.string().min(1, "Order is required"),
   newStatus: z.enum(ORDER_STATUSES),
-  statusDescription: z.string().max(500, "Description cannot exceed 500 characters").optional().nullable(),
+  statusDescription: z
+    .string()
+    .max(500, "Description cannot exceed 500 characters")
+    .optional()
+    .nullable(),
 });
 
 const bulkOrderStatusSchema = z.object({
   orderIds: z.array(z.string().min(1)).min(1, "Select at least one order"),
   newStatus: z.enum(ORDER_STATUSES),
-  statusDescription: z.string().max(500, "Description cannot exceed 500 characters").optional().nullable(),
+  statusDescription: z
+    .string()
+    .max(500, "Description cannot exceed 500 characters")
+    .optional()
+    .nullable(),
 });
 
 const deleteProductSchema = z.object({
@@ -66,29 +107,50 @@ const deleteProductSchema = z.object({
 
 // ── Auth Guard ─────────────────────────────────────────
 
-/**
- * Ensures the currently authenticated user is an admin.
- */
-async function requireAdmin(supabase: SupabaseClient) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error("Unauthorized");
+async function requireAdminSafe(
+  supabase: SupabaseClient
+): Promise<{ ok: true; user: { id: string; email?: string } } | { ok: false; error: string }> {
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return { ok: false, error: "Session expired. Please sign in again." };
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile || profile.role !== "admin") {
+      return { ok: false, error: "Forbidden: Admin access required." };
+    }
+
+    return { ok: true, user: { id: user.id, email: user.email } };
+  } catch {
+    return { ok: false, error: "Authentication check failed. Please sign in again." };
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile || profile.role !== "admin") {
-    throw new Error("Forbidden: Admin access required");
-  }
-
-  return user;
 }
 
-function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections", "/", "/planner"]) {
+function validateOrderTransition(currentStatus: string, nextStatus: string): string | null {
+  if (currentStatus === "Cancelled" && nextStatus !== "Cancelled") {
+    return "Cancelled orders cannot be reopened.";
+  }
+  if (currentStatus === "Delivered" && nextStatus === "Cancelled") {
+    return "Delivered orders cannot be cancelled.";
+  }
+  if (currentStatus === "Shipped" && nextStatus === "Cancelled") {
+    return "Shipped orders cannot be cancelled online.";
+  }
+  return null;
+}
+
+function revalidateCatalog(
+  paths: string[] = ["/admin", "/admin/inventory", "/collections", "/", "/planner", "/sitemap.xml"]
+) {
   updateTag(CATALOG_CACHE_TAG);
   for (const path of paths) {
     revalidatePath(path);
@@ -96,40 +158,10 @@ function revalidateCatalog(paths: string[] = ["/admin/inventory", "/collections"
   revalidatePath("/collections/[id]", "page");
 }
 
-async function processStripeRefundOnCancel(
-  orderId: string,
-  paymentDetails: Record<string, unknown> | null | undefined
-): Promise<{ paymentStatus: "Refunded" | "Refund Pending"; paymentDetails: Record<string, unknown> }> {
-  const existing = paymentDetails ?? {};
-  const txnId = typeof existing.transaction_id === "string" ? existing.transaction_id : null;
-
-  if (txnId && txnId.startsWith("pi_")) {
-    const stripe = getStripeServerClient();
-    if (stripe) {
-      try {
-        const refund = await stripe.refunds.create(
-          { payment_intent: txnId },
-          { idempotencyKey: `refund-${orderId}` }
-        );
-        return {
-          paymentStatus: "Refunded",
-          paymentDetails: {
-            ...existing,
-            refund_id: refund.id,
-            refund_status: refund.status,
-            refunded_at: new Date().toISOString(),
-          },
-        };
-      } catch (refundErr) {
-        console.error(`[Admin Action] Stripe refund failed for ${orderId}:`, refundErr);
-      }
-    }
-  }
-
-  return {
-    paymentStatus: "Refund Pending",
-    paymentDetails: existing,
-  };
+function revalidateOrderViews() {
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  revalidatePath("/profile");
 }
 
 // ── Server Actions ─────────────────────────────────────
@@ -143,30 +175,29 @@ export async function createCategory(rawData: { name: string; slug: string; imag
   const resolvedImage = data.image?.trim() || DEFAULT_TILE_IMAGE;
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false, error: auth.error };
 
-  const { error } = await supabase
-    .from("categories")
-    .insert({
-      name: data.name,
-      slug: data.slug,
-      image: resolvedImage,
-    });
+  const { error } = await supabase.from("categories").insert({
+    name: data.name,
+    slug: data.slug,
+    image: resolvedImage,
+  });
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   await logAdminAction(supabase, {
-    adminId: admin.id,
-    adminEmail: admin.email,
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
     action: "category.created",
     entityType: "category",
     entityId: data.slug,
     details: { name: data.name },
   });
 
-  revalidateCatalog(["/admin/inventory", "/collections", "/", "/planner"]);
+  revalidateCatalog(["/admin", "/admin/inventory", "/collections", "/", "/planner", "/sitemap.xml"]);
   return { success: true };
 }
 
@@ -189,7 +220,8 @@ export async function createProduct(rawData: {
   const resolvedImage = data.image?.trim() || DEFAULT_TILE_IMAGE;
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false, error: auth.error };
 
   const { data: existingSku } = await supabase
     .from("products")
@@ -207,36 +239,33 @@ export async function createProduct(rawData: {
 
   const id = "tile-" + crypto.randomUUID().split("-")[0];
 
-  const { error } = await supabase
-    .from("products")
-    .insert({
-      id: id,
-      sku: data.sku,
-      name: data.name,
-      category_slug: data.category_slug,
-      dimensions: data.dimensions,
-      price_per_sqft: data.price_per_sqft,
-      image: resolvedImage,
-      finish: data.finish,
-      application: data.application,
-      stock_sqft: data.stock_sqft,
-      featured: false
-    });
+  const { error } = await supabase.from("products").insert({
+    id,
+    sku: data.sku,
+    name: data.name,
+    category_slug: data.category_slug,
+    dimensions: data.dimensions,
+    price_per_sqft: data.price_per_sqft,
+    image: resolvedImage,
+    finish: data.finish,
+    application: data.application,
+    stock_sqft: data.stock_sqft,
+    featured: false,
+  });
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   await logAdminAction(supabase, {
-    adminId: admin.id,
-    adminEmail: admin.email,
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
     action: "product.created",
     entityType: "product",
     entityId: id,
     details: { sku: data.sku, name: data.name, stock_sqft: data.stock_sqft },
   });
 
-  // Non-blocking background embedding index via after()
   if (resolvedImage) {
     try {
       after(async () => {
@@ -267,7 +296,8 @@ export async function adjustProductStock(rawData: { productId: string; amount: n
   }
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
 
   const { data: product, error: readError } = await supabase
     .from("products")
@@ -300,8 +330,8 @@ export async function adjustProductStock(rawData: { productId: string; amount: n
   }
 
   await logAdminAction(supabase, {
-    adminId: admin.id,
-    adminEmail: admin.email,
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
     action: "product.stock_updated",
     entityType: "product",
     entityId: productId,
@@ -324,7 +354,8 @@ export async function bulkAdjustProductStock(rawData: { productIds: string[]; am
   }
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
 
   const { data: products, error: readError } = await supabase
     .from("products")
@@ -364,8 +395,8 @@ export async function bulkAdjustProductStock(rawData: { productIds: string[]; am
 
   if (succeededIds.length > 0) {
     await logAdminAction(supabase, {
-      adminId: admin.id,
-      adminEmail: admin.email,
+      adminId: auth.user.id,
+      adminEmail: auth.user.email,
       action: "product.bulk_restock",
       entityType: "product",
       entityId: succeededIds.join(","),
@@ -385,7 +416,8 @@ export async function deleteProduct(rawData: { productId: string }) {
   const { productId } = parsed.data;
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
 
   const { data: product, error: readError } = await supabase
     .from("products")
@@ -397,18 +429,15 @@ export async function deleteProduct(rawData: { productId: string }) {
     return { success: false as const, error: readError?.message || "Product not found." };
   }
 
-  const { error: deleteError } = await supabase
-    .from("products")
-    .delete()
-    .eq("id", productId);
+  const { error: deleteError } = await supabase.from("products").delete().eq("id", productId);
 
   if (deleteError) {
     return { success: false as const, error: deleteError.message };
   }
 
   await logAdminAction(supabase, {
-    adminId: admin.id,
-    adminEmail: admin.email,
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
     action: "product.deleted",
     entityType: "product",
     entityId: productId,
@@ -432,7 +461,8 @@ export async function updateOrderStatus(rawData: {
   const cleanDescription = statusDescription?.trim() || null;
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
 
   const { data: order, error: readError } = await supabase
     .from("orders")
@@ -445,22 +475,18 @@ export async function updateOrderStatus(rawData: {
   }
 
   const previousStatus = order.status;
-  if (previousStatus === "Delivered" && newStatus === "Cancelled") {
-    return {
-      success: false as const,
-      error: "Delivered orders cannot be cancelled.",
-    };
+  const transitionError = validateOrderTransition(previousStatus, newStatus);
+  if (transitionError) {
+    return { success: false as const, error: transitionError };
   }
 
   const now = new Date().toISOString();
-
-  // Format existing history and append new transition entry
   const existingHistory = Array.isArray(order.status_history) ? order.status_history : [];
   const historyEntry = {
     status: newStatus,
     description: cleanDescription,
     timestamp: now,
-    updated_by: admin.email || "Admin",
+    updated_by: auth.user.email || "Admin",
   };
   const updatedHistory = [...existingHistory, historyEntry];
 
@@ -487,34 +513,17 @@ export async function updateOrderStatus(rawData: {
   }
 
   let nextPaymentStatus = order.payment_status as string | null;
-  if (
-    previousStatus !== "Cancelled" &&
-    newStatus === "Cancelled" &&
-    order.payment_status === "Paid"
-  ) {
-    try {
-      const refundOutcome = await processStripeRefundOnCancel(
-        orderId,
-        order.payment_details as Record<string, unknown> | null
-      );
-      nextPaymentStatus = refundOutcome.paymentStatus;
-      const adminClient = createAdminClient();
-      await adminClient
-        .from("orders")
-        .update({
-          payment_status: refundOutcome.paymentStatus,
-          payment_details: refundOutcome.paymentDetails,
-        })
-        .eq("id", orderId);
-    } catch (refundErr) {
-      console.error(`[Admin Action] Refund update failed for ${orderId}:`, refundErr);
-      nextPaymentStatus = "Refund Pending";
-    }
+  if (previousStatus !== "Cancelled" && newStatus === "Cancelled" && order.payment_status === "Paid") {
+    const refundOutcome = await refundPaidOrder(
+      orderId,
+      order.payment_details as Record<string, unknown> | null
+    );
+    nextPaymentStatus = refundOutcome.paymentStatus;
   }
 
   await logAdminAction(supabase, {
-    adminId: admin.id,
-    adminEmail: admin.email,
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
     action: "order.status_updated",
     entityType: "order",
     entityId: orderId,
@@ -529,6 +538,7 @@ export async function updateOrderStatus(rawData: {
   if (previousStatus === "Cancelled" || newStatus === "Cancelled") {
     revalidateCatalog();
   }
+  revalidateOrderViews();
 
   return {
     success: true as const,
@@ -552,7 +562,8 @@ export async function bulkUpdateOrderStatus(rawData: {
   const cleanDescription = statusDescription?.trim() || null;
 
   const supabase = await createClient();
-  const admin = await requireAdmin(supabase);
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
 
   const { data: orders, error: readError } = await supabase
     .from("orders")
@@ -564,13 +575,15 @@ export async function bulkUpdateOrderStatus(rawData: {
   }
 
   const succeededIds: string[] = [];
+  const paymentStatusById: Record<string, string> = {};
   const failed: { id: string; error: string }[] = [];
   let touchedStock = false;
   const now = new Date().toISOString();
 
   for (const order of orders ?? []) {
-    if (order.status === "Delivered" && newStatus === "Cancelled") {
-      failed.push({ id: order.id, error: "Delivered orders cannot be cancelled." });
+    const transitionError = validateOrderTransition(order.status, newStatus);
+    if (transitionError) {
+      failed.push({ id: order.id, error: transitionError });
       continue;
     }
 
@@ -579,7 +592,7 @@ export async function bulkUpdateOrderStatus(rawData: {
       status: newStatus,
       description: cleanDescription,
       timestamp: now,
-      updated_by: admin.email || "Admin",
+      updated_by: auth.user.email || "Admin",
     };
     const updatedHistory = [...existingHistory, historyEntry];
 
@@ -604,27 +617,12 @@ export async function bulkUpdateOrderStatus(rawData: {
       continue;
     }
 
-    if (
-      order.status !== "Cancelled" &&
-      newStatus === "Cancelled" &&
-      order.payment_status === "Paid"
-    ) {
-      try {
-        const refundOutcome = await processStripeRefundOnCancel(
-          order.id,
-          order.payment_details as Record<string, unknown> | null
-        );
-        const adminClient = createAdminClient();
-        await adminClient
-          .from("orders")
-          .update({
-            payment_status: refundOutcome.paymentStatus,
-            payment_details: refundOutcome.paymentDetails,
-          })
-          .eq("id", order.id);
-      } catch (refundErr) {
-        console.error(`[Admin Action] Bulk refund update failed for ${order.id}:`, refundErr);
-      }
+    if (order.status !== "Cancelled" && newStatus === "Cancelled" && order.payment_status === "Paid") {
+      const refundOutcome = await refundPaidOrder(
+        order.id,
+        order.payment_details as Record<string, unknown> | null
+      );
+      paymentStatusById[order.id] = refundOutcome.paymentStatus;
     }
 
     if (order.status === "Cancelled" || newStatus === "Cancelled") {
@@ -635,8 +633,8 @@ export async function bulkUpdateOrderStatus(rawData: {
 
   if (succeededIds.length > 0) {
     await logAdminAction(supabase, {
-      adminId: admin.id,
-      adminEmail: admin.email,
+      adminId: auth.user.id,
+      adminEmail: auth.user.email,
       action: "order.bulk_status_updated",
       entityType: "order",
       entityId: succeededIds.join(","),
@@ -647,54 +645,12 @@ export async function bulkUpdateOrderStatus(rawData: {
         orderIds: succeededIds,
       },
     });
+    revalidateOrderViews();
   }
 
   if (touchedStock) {
     revalidateCatalog();
   }
 
-  return { success: true as const, succeededIds, failed };
-}
-
-// ── Profile Update (server-side with field whitelisting) ───
-
-const profileSchema = z.object({
-  firstName: z.string().trim().max(100).optional().default(""),
-  lastName: z.string().trim().max(100).optional().default(""),
-  phone: z.string().trim().max(30).optional().default(""),
-});
-
-export async function updateUserProfile(rawData: {
-  firstName: string;
-  lastName: string;
-  phone: string;
-}) {
-  const parsed = profileSchema.safeParse(rawData);
-  if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message || "Validation failed" };
-  }
-  const data = parsed.data;
-
-  const supabase = await createClient();
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { success: false, error: "Not logged in" };
-  }
-
-  // Whitelist only safe mutable columns — role and email are NEVER updated here
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      first_name: data.firstName,
-      last_name: data.lastName,
-      phone: data.phone,
-    })
-    .eq("id", user.id);
-
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  return { success: true };
+  return { success: true as const, succeededIds, paymentStatusById, failed };
 }

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import catalogSeed from "@/data/catalog.json";
+import { CATALOG_CACHE_TAG } from "@/data/products";
+import { logAdminAction } from "@/lib/auditLog";
 
 export async function POST() {
   try {
@@ -78,6 +81,24 @@ export async function POST() {
         productsCount++;
       }
     }
+
+    await logAdminAction(supabase, {
+      adminId: user.id,
+      adminEmail: user.email,
+      action: "catalog.seeded",
+      entityType: "product",
+      entityId: "seed",
+      details: { categories: categoriesCount, products: productsCount, errorsCount: errors.length },
+    });
+
+    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
+    revalidatePath("/");
+    revalidatePath("/collections");
+    revalidatePath("/collections/[id]", "page");
+    revalidatePath("/planner");
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/admin");
+    revalidatePath("/admin/inventory");
 
     return NextResponse.json({
       success: true,

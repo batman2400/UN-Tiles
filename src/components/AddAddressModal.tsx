@@ -34,31 +34,35 @@ export function AddAddressModal({
     setSaving(true);
     setError(null);
 
-    const result = await createAddress({
-      label,
-      line1,
-      line2,
-    });
+    try {
+      const result = await createAddress({
+        label,
+        line1,
+        line2,
+      });
 
-    setSaving(false);
+      if (!result.success || !result.address) {
+        setError(result.error || "Could not save the address.");
+        return;
+      }
 
-    if (!result.success || !result.address) {
-      setError(result.error || "Could not save the address.");
-      return;
+      setLabel("Home");
+      setLine1("");
+      setLine2("");
+      onSaved(result.address);
+      onClose();
+    } catch {
+      setError("Failed to save the address. Please try again.");
+    } finally {
+      setSaving(false);
     }
-
-    setLabel("Home");
-    setLine1("");
-    setLine2("");
-    onSaved(result.address);
-    onClose();
   };
 
   return (
     <>
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220]"
-        onClick={onClose}
+        onClick={saving ? undefined : onClose}
       />
       <div className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6">
         <div className="flex items-center justify-between mb-5">
@@ -68,8 +72,9 @@ export function AddAddressModal({
           </div>
           <button
             type="button"
+            disabled={saving}
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-zinc-900 rounded-md"
+            className="p-1 text-gray-400 hover:text-zinc-900 rounded-md disabled:opacity-50"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

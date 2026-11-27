@@ -105,63 +105,68 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
 
     let imageUrl = formData.image.trim();
     let uploadedFilePath: string | null = null;
-    if (imageFile) {
-      const ext = ALLOWED_UPLOAD_TYPES[imageFile.type];
-      if (!ext || imageFile.size > MAX_UPLOAD_BYTES) {
-        setError("Please upload a valid JPEG, PNG, or WebP image under 5 MB.");
-        setIsSubmitting(false);
-        return;
+    try {
+      if (imageFile) {
+        const ext = ALLOWED_UPLOAD_TYPES[imageFile.type];
+        if (!ext || imageFile.size > MAX_UPLOAD_BYTES) {
+          setError("Please upload a valid JPEG, PNG, or WebP image under 5 MB.");
+          return;
+        }
+
+        const supabase = createClient();
+        const filePath = `product-${crypto.randomUUID()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, imageFile, { contentType: imageFile.type });
+
+        if (uploadError) {
+          setError(`Image upload failed: ${uploadError.message}`);
+          return;
+        }
+
+        uploadedFilePath = filePath;
+        const { data: publicUrlData } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrlData.publicUrl;
       }
 
-      const supabase = createClient();
-      const filePath = `product-${crypto.randomUUID()}.${ext}`;
+      const res = await createProduct({
+        ...data,
+        image: imageUrl || undefined,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(filePath, imageFile, { contentType: imageFile.type });
-
-      if (uploadError) {
-        setError(`Image upload failed: ${uploadError.message}`);
-        setIsSubmitting(false);
-        return;
+      if (!res.success) {
+        if (uploadedFilePath) {
+          const supabase = createClient();
+          await supabase.storage.from("products").remove([uploadedFilePath]).catch(() => {});
+        }
+        setError(res.error || "Failed to create product");
+      } else {
+        setIsOpen(false);
+        const defaultCategory = categories.length > 0 ? categories[0].slug : "";
+        setFormData({
+          sku: defaultCategory ? generateSku(defaultCategory) : "",
+          name: "",
+          category_slug: defaultCategory,
+          dimensions: "60x60 cm",
+          price_per_sqft: "",
+          image: "",
+          finish: "Matte",
+          application: "Interior",
+          stock_sqft: "0",
+        });
+        handleRemoveImage();
       }
-
-      uploadedFilePath = filePath;
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(filePath);
-
-      imageUrl = publicUrlData.publicUrl;
-    }
-
-    const res = await createProduct({
-      ...data,
-      image: imageUrl || undefined,
-    });
-
-    if (!res.success) {
+    } catch {
       if (uploadedFilePath) {
         const supabase = createClient();
         await supabase.storage.from("products").remove([uploadedFilePath]).catch(() => {});
       }
-      setError(res.error || "Failed to create product");
-      setIsSubmitting(false);
-    } else {
-      setIsOpen(false);
-      // Reset form with a fresh generated SKU for the default category
-      const defaultCategory = categories.length > 0 ? categories[0].slug : "";
-      setFormData({
-        sku: defaultCategory ? generateSku(defaultCategory) : "",
-        name: "",
-        category_slug: defaultCategory,
-        dimensions: "60x60 cm",
-        price_per_sqft: "",
-        image: "",
-        finish: "Matte",
-        application: "Interior",
-        stock_sqft: "0",
-      });
-      handleRemoveImage();
+      setError("Could not create product. Please check your session and try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -195,14 +200,19 @@ export function AddProductModal({ categories }: { categories: { name: string, sl
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-[fade-in_0.2s_ease-out]"
-        onClick={() => setIsOpen(false)}
+        onClick={() => { if (!isSubmitting) setIsOpen(false); }}
       />
 
       {/* Modal */}
       <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-2xl bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
           <h3 className="font-bold text-gray-900">Add New Product</h3>
-          <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors">
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => setIsOpen(false)}
+            className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors disabled:opacity-50"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

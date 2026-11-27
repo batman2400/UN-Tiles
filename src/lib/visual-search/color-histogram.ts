@@ -72,7 +72,7 @@ function parseHex(hex: string): [number, number, number] | null {
  */
 export async function computeColorHistogram(imageBuffer: Buffer): Promise<number[]> {
   const sharp = (await import("sharp")).default;
-  const { data, info } = await sharp(imageBuffer)
+  const { data, info } = await sharp(imageBuffer, { limitInputPixels: 40_000_000 })
     .rotate()
     .resize(64, 64, { fit: "cover" })
     .removeAlpha()
@@ -106,6 +106,7 @@ export function isHistogram(value: unknown): value is number[] {
   return Array.isArray(value) && value.length === HISTOGRAM_BINS && value.every((n) => typeof n === "number");
 }
 
+const MAX_HISTOGRAM_CACHE = 200;
 const histogramCache = new Map<string, number[]>();
 
 /**
@@ -119,6 +120,10 @@ export async function histogramForImageUrl(imageUrl: string): Promise<number[] |
   try {
     const raw = await loadSafeCatalogImage(imageUrl);
     const histogram = await computeColorHistogram(raw);
+    if (histogramCache.size >= MAX_HISTOGRAM_CACHE) {
+      const oldest = histogramCache.keys().next().value;
+      if (oldest !== undefined) histogramCache.delete(oldest);
+    }
     histogramCache.set(imageUrl, histogram);
     return histogram;
   } catch (err) {

@@ -9,7 +9,9 @@ import { productHasParsableSize } from "@/lib/tile-planner";
 
 export function ProductDetailActions({ product }: { product: Product }) {
   const { addToCart } = useCart();
-  const [qty, setQty] = useState(10);
+  const [qty, setQty] = useState(() =>
+    product.stockSqft > 0 ? Math.min(10, product.stockSqft) : 1
+  );
   const [justAdded, setJustAdded] = useState(false);
 
   const isOutOfStock = product.stockSqft === 0;
@@ -27,7 +29,7 @@ export function ProductDetailActions({ product }: { product: Product }) {
       {
         id: product.id,
         name: product.name,
-        image: product.image,
+        image: product.image || "/tiles/floor_agaria.jpg",
         category: product.category,
         price_per_sqft: product.pricePerSqft,
         stockSqft: product.stockSqft,

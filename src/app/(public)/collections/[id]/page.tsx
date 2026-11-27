@@ -30,6 +30,11 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const title = `Buy ${product.name} Tile in Sri Lanka (${product.dimensions}) | UN Tiles`;
   const description = `Purchase ${product.name} ${product.dimensions} ${product.category} tile in Sri Lanka at UN Tiles. LKR ${product.pricePerSqft}/sq ft. ${product.finish} finish with islandwide delivery or Colombo 05 showroom pickup.`;
 
+  const safeImage = product.image || "/tiles/floor_agaria.jpg";
+  const absoluteImage = safeImage.startsWith("http")
+    ? safeImage
+    : `https://www.untiles.com${safeImage}`;
+
   return {
     title,
     description,
@@ -51,9 +56,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
       url: `https://www.untiles.com/collections/${product.id}`,
       images: [
         {
-          url: product.image.startsWith("http")
-            ? product.image
-            : `https://www.untiles.com${product.image}`,
+          url: absoluteImage,
           alt: `${product.name} Tile - Buy in Sri Lanka`,
         },
       ],
@@ -70,6 +73,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const safeImage = product.image || "/tiles/floor_agaria.jpg";
   const relatedProducts = allProducts
     .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
     .slice(0, 4);
@@ -78,9 +82,9 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    image: product.image.startsWith("http")
-      ? product.image
-      : `https://www.untiles.com${product.image}`,
+    image: safeImage.startsWith("http")
+      ? safeImage
+      : `https://www.untiles.com${safeImage}`,
     description: `Buy ${product.name} ${product.finish} ${product.category} tile in Sri Lanka. Dimensions: ${product.dimensions}. Available at UN Tiles showroom and online store with islandwide delivery.`,
     sku: product.id,
     brand: {
@@ -140,11 +144,11 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
     <div className="min-h-screen bg-background text-on-surface pt-24 sm:pt-28 pb-20 px-4 sm:px-6 lg:px-8">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c") }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
 
       <div className="max-w-7xl mx-auto space-y-12">
@@ -169,7 +173,7 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
           {/* Left: Tile Image Preview */}
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-surface-container border border-outline/30 premium-shadow-lg">
             <Image
-              src={product.image}
+              src={safeImage}
               alt={`Buy ${product.name} ${product.category} tile in Sri Lanka`}
               fill
               priority

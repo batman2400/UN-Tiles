@@ -38,7 +38,16 @@ function isBlockedHostname(hostname: string): boolean {
   }
   if (ipVersion === 6) {
     if (lower === "::" || lower === "::1") return true;
-    if (lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80")) {
+    // ULA fc00::/7, link-local fe80::/10, NAT64 64:ff9b::, Teredo 2001::/32, 6to4 2002::/16, multicast ff00::/8
+    if (
+      lower.startsWith("fc") ||
+      lower.startsWith("fd") ||
+      /^fe[89ab][0-9a-f]/i.test(lower) ||
+      lower.startsWith("64:ff9b:") ||
+      lower.startsWith("2001:") ||
+      lower.startsWith("2002:") ||
+      lower.startsWith("ff")
+    ) {
       return true;
     }
     if (lower.startsWith("::ffff:")) {

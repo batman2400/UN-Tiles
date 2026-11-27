@@ -41,7 +41,7 @@ function CandidateRow({
     >
       <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gray-100">
         <Image
-          src={candidate.image}
+          src={candidate.image || "/tiles/floor_agaria.jpg"}
           alt=""
           fill
           sizes="48px"

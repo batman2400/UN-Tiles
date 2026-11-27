@@ -64,6 +64,7 @@ export function AddCategoryModal() {
   };
 
   const handleClose = () => {
+    if (isSubmitting) return;
     setIsOpen(false);
     setError(null);
   };
@@ -76,54 +77,60 @@ export function AddCategoryModal() {
     let finalImageUrl = image.trim();
     let uploadedFilePath: string | null = null;
 
-    if (imageFile) {
-      const ext = ALLOWED_UPLOAD_TYPES[imageFile.type];
-      if (!ext || imageFile.size > MAX_UPLOAD_BYTES) {
-        setError("Please upload a valid JPEG, PNG, or WebP image under 5 MB.");
-        setIsSubmitting(false);
-        return;
+    try {
+      if (imageFile) {
+        const ext = ALLOWED_UPLOAD_TYPES[imageFile.type];
+        if (!ext || imageFile.size > MAX_UPLOAD_BYTES) {
+          setError("Please upload a valid JPEG, PNG, or WebP image under 5 MB.");
+          return;
+        }
+
+        const supabase = createClient();
+        const filePath = `category-${crypto.randomUUID()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(filePath, imageFile, { contentType: imageFile.type });
+
+        if (uploadError) {
+          setError(`Image upload failed: ${uploadError.message}`);
+          return;
+        }
+
+        uploadedFilePath = filePath;
+        const { data: publicUrlData } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
+
+        finalImageUrl = publicUrlData.publicUrl;
       }
 
-      const supabase = createClient();
-      const filePath = `category-${crypto.randomUUID()}.${ext}`;
+      const res = await createCategory({
+        name,
+        slug,
+        image: finalImageUrl || undefined,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from("products")
-        .upload(filePath, imageFile, { contentType: imageFile.type });
-
-      if (uploadError) {
-        setError(`Image upload failed: ${uploadError.message}`);
-        setIsSubmitting(false);
-        return;
+      if (!res.success) {
+        if (uploadedFilePath) {
+          const supabase = createClient();
+          await supabase.storage.from("products").remove([uploadedFilePath]).catch(() => {});
+        }
+        setError(res.error || "Failed to create category");
+      } else {
+        setIsOpen(false);
+        setName("");
+        setSlug("");
+        setImage("");
+        handleRemoveImage();
       }
-
-      uploadedFilePath = filePath;
-      const { data: publicUrlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(filePath);
-
-      finalImageUrl = publicUrlData.publicUrl;
-    }
-
-    const res = await createCategory({
-      name,
-      slug,
-      image: finalImageUrl || undefined,
-    });
-
-    if (!res.success) {
+    } catch {
       if (uploadedFilePath) {
         const supabase = createClient();
         await supabase.storage.from("products").remove([uploadedFilePath]).catch(() => {});
       }
-      setError(res.error || "Failed to create category");
-      setIsSubmitting(false);
-    } else {
-      setIsOpen(false);
-      setName("");
-      setSlug("");
-      setImage("");
-      handleRemoveImage();
+      setError("Could not create category. Please check your session and try again.");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -238,17 +245,17 @@ export function AddCategoryModal() {
           {!imageFile && (
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Or Image URL <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                Or Local Asset Path <span className="text-gray-400 font-normal lowercase">(optional)</span>
               </label>
               <input
                 type="text"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
-                placeholder="/images/tiles/... or https://..."
+                placeholder="/tiles/floor_agaria.jpg or /images/..."
                 className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 font-mono focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none transition-all"
               />
               <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">
-                Leave blank for default placeholder image
+                Leave blank for default image, or enter a /tiles/ or /images/ path
               </p>
             </div>
           )}

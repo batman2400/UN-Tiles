@@ -95,6 +95,7 @@ function StripePaymentFormInner({
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [confirmedPiId, setConfirmedPiId] = useState<string | null>(null);
   const [copiedNumber, setCopiedNumber] = useState<string | null>(null);
 
   const handleCopyCard = (num: string) => {
@@ -105,6 +106,24 @@ function StripePaymentFormInner({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (confirmedPiId) {
+      setIsProcessing(true);
+      setErrorMessage(null);
+      try {
+        await onPaymentSuccess(confirmedPiId);
+        setIsSuccess(true);
+      } catch (err: unknown) {
+        setErrorMessage(
+          err instanceof Error
+            ? err.message
+            : "Payment succeeded in Stripe, but order creation failed. Retry or contact support."
+        );
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
 
     if (!stripe || !elements) {
       return;
@@ -129,6 +148,7 @@ function StripePaymentFormInner({
       }
 
       if (result.paymentIntent?.status === "succeeded") {
+        setConfirmedPiId(result.paymentIntent.id);
         try {
           await onPaymentSuccess(result.paymentIntent.id);
           setIsSuccess(true);
@@ -262,13 +282,18 @@ function StripePaymentFormInner({
 
       <button
         type="submit"
-        disabled={!stripe || isProcessing}
+        disabled={(!stripe && !confirmedPiId) || isProcessing}
         className="w-full bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold uppercase tracking-widest py-4 rounded-xl transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {isProcessing ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-xs">Authorizing payment...</span>
+            <span className="text-xs">{confirmedPiId ? "Confirming order..." : "Authorizing payment..."}</span>
+          </>
+        ) : confirmedPiId ? (
+          <>
+            <ArrowRight className="w-4 h-4" />
+            <span>Retry Order Confirmation</span>
           </>
         ) : (
           <>

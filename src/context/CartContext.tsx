@@ -44,15 +44,25 @@ function readStorage(key: string): CartItem[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (item): item is CartItem =>
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as CartItem).id === "string" &&
-        typeof (item as CartItem).cartQuantitySqft === "number" &&
-        Number.isFinite((item as CartItem).cartQuantitySqft) &&
-        (item as CartItem).cartQuantitySqft > 0
-    );
+    return parsed
+      .filter(
+        (item): item is CartItem =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as CartItem).id === "string" &&
+          (item as CartItem).id.length > 0 &&
+          typeof (item as CartItem).cartQuantitySqft === "number" &&
+          Number.isFinite((item as CartItem).cartQuantitySqft) &&
+          Math.floor((item as CartItem).cartQuantitySqft) >= 1 &&
+          typeof (item as CartItem).price_per_sqft === "number" &&
+          Number.isFinite((item as CartItem).price_per_sqft) &&
+          (item as CartItem).price_per_sqft >= 0
+      )
+      .map((item) => ({
+        ...item,
+        image: typeof item.image === "string" && item.image.trim() ? item.image : "/tiles/floor_agaria.jpg",
+        cartQuantitySqft: Math.floor(item.cartQuantitySqft),
+      }));
   } catch {
     return [];
   }
@@ -180,11 +190,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const nextItems = itemsRef.current.map((item) => {
-      if (item.id !== productId) return item;
+    const nextItems = itemsRef.current.flatMap((item) => {
+      if (item.id !== productId) return [item];
       const maxStock = item.stockSqft ?? Infinity;
+      if (maxStock <= 0) return [];
       const clamped = Math.min(normalized, maxStock);
-      return { ...item, cartQuantitySqft: Math.max(1, clamped) };
+      return [{ ...item, cartQuantitySqft: Math.max(1, clamped) }];
     });
     itemsRef.current = nextItems;
     setCartState((prev) => ({ ...prev, items: nextItems }));

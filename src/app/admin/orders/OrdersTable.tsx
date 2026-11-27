@@ -53,12 +53,14 @@ interface StatusModalState {
   description: string;
   customerName: string;
   orderDisplayId: string;
+  error?: string | null;
 }
 
 interface BulkModalState {
   targetStatus: string;
   description: string;
   orderIds: string[];
+  error?: string | null;
 }
 
 const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
@@ -115,6 +117,10 @@ export function OrdersTable({
 
   // Bulk Status Update Modal State
   const [bulkModal, setBulkModal] = useState<BulkModalState | null>(null);
+
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
 
   // Subscribe to real-time order changes across the store
   useEffect(() => {
@@ -181,10 +187,11 @@ export function OrdersTable({
   }, [orders, searchQuery, statusFilter, deliveryMethodFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
   const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
+    const start = (safePage - 1) * PAGE_SIZE;
     return filteredOrders.slice(start, start + PAGE_SIZE);
-  }, [filteredOrders, currentPage]);
+  }, [filteredOrders, safePage]);
 
   const getRowState = (id: string): RowState => {
     return rowStates[id] ?? { isUpdating: false, feedback: null };
@@ -217,69 +224,80 @@ export function OrdersTable({
     if (!statusModal) return;
     const { orderId, targetStatus, description, currentStatus } = statusModal;
     setIsSubmittingStatus(true);
+    setStatusModal((prev) => (prev ? { ...prev, error: null } : null));
     updateRowState(orderId, { isUpdating: true, feedback: null });
 
-    const result = await updateOrderStatus({
-      orderId,
-      newStatus: targetStatus,
-      statusDescription: description.trim() || null,
-    });
+    try {
+      const result = await updateOrderStatus({
+        orderId,
+        newStatus: targetStatus,
+        statusDescription: description.trim() || null,
+      });
 
-    setIsSubmittingStatus(false);
+      if (!result.success) {
+        setStatusModal((prev) => (prev ? { ...prev, error: result.error } : null));
+        updateRowState(orderId, {
+          isUpdating: false,
+          feedback: { type: "error", message: result.error },
+        });
+        return;
+      }
 
-    if (!result.success) {
+      const updatedOrders = orders.map((o) => {
+        if (o.id === orderId) {
+          return {
+            ...o,
+            status: targetStatus,
+            payment_status: result.paymentStatus ?? o.payment_status,
+            status_description: result.statusDescription ?? null,
+            status_history: result.statusHistory ?? o.status_history,
+            status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
+          };
+        }
+        return o;
+      });
+
+      setOrders(updatedOrders);
+
+      if (viewOrder && viewOrder.id === orderId) {
+        setViewOrder((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: targetStatus,
+                payment_status: result.paymentStatus ?? prev.payment_status,
+                status_description: result.statusDescription ?? null,
+                status_history: result.statusHistory ?? prev.status_history,
+                status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
+              }
+            : null
+        );
+      }
+
+      const restored = currentStatus !== "Cancelled" && targetStatus === "Cancelled";
       updateRowState(orderId, {
         isUpdating: false,
-        feedback: { type: "error", message: result.error },
+        feedback: {
+          type: "success",
+          message: restored ? "Cancelled — stock restored." : "Status updated!",
+        },
       });
-      return;
+
+      setStatusModal(null);
+
+      setTimeout(() => {
+        updateRowState(orderId, { feedback: null });
+      }, 3000);
+    } catch {
+      const msg = "Session expired or network error. Please refresh and try again.";
+      setStatusModal((prev) => (prev ? { ...prev, error: msg } : null));
+      updateRowState(orderId, {
+        isUpdating: false,
+        feedback: { type: "error", message: msg },
+      });
+    } finally {
+      setIsSubmittingStatus(false);
     }
-
-    const updatedOrders = orders.map((o) => {
-      if (o.id === orderId) {
-        return {
-          ...o,
-          status: targetStatus,
-          payment_status: result.paymentStatus ?? o.payment_status,
-          status_description: result.statusDescription ?? null,
-          status_history: result.statusHistory ?? o.status_history,
-          status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
-        };
-      }
-      return o;
-    });
-
-    setOrders(updatedOrders);
-
-    if (viewOrder && viewOrder.id === orderId) {
-      setViewOrder((prev) =>
-        prev
-          ? {
-              ...prev,
-              status: targetStatus,
-              payment_status: result.paymentStatus ?? prev.payment_status,
-              status_description: result.statusDescription ?? null,
-              status_history: result.statusHistory ?? prev.status_history,
-              status_updated_at: result.statusUpdatedAt ?? new Date().toISOString(),
-            }
-          : null
-      );
-    }
-
-    const restored = currentStatus !== "Cancelled" && targetStatus === "Cancelled";
-    updateRowState(orderId, {
-      isUpdating: false,
-      feedback: {
-        type: "success",
-        message: restored ? "Cancelled — stock restored." : "Status updated!",
-      },
-    });
-
-    setStatusModal(null);
-
-    setTimeout(() => {
-      updateRowState(orderId, { feedback: null });
-    }, 3000);
   };
 
   const toggleSelected = (id: string) => {
@@ -317,35 +335,60 @@ export function OrdersTable({
   const handleConfirmBulkUpdate = async () => {
     if (!bulkModal) return;
     setIsBulkUpdating(true);
+    setBulkModal((prev) => (prev ? { ...prev, error: null } : null));
 
-    const { orderIds, targetStatus, description } = bulkModal;
-    const result = await bulkUpdateOrderStatus({
-      orderIds,
-      newStatus: targetStatus,
-      statusDescription: description.trim() || null,
-    });
+    try {
+      const { orderIds, targetStatus, description } = bulkModal;
+      const result = await bulkUpdateOrderStatus({
+        orderIds,
+        newStatus: targetStatus,
+        statusDescription: description.trim() || null,
+      });
 
-    setIsBulkUpdating(false);
+      if (!result.success) {
+        setBulkModal((prev) => (prev ? { ...prev, error: result.error } : null));
+        return;
+      }
 
-    if (!result.success) {
-      return;
+      const succeeded = new Set(result.succeededIds);
+      const statusMap = result.paymentStatusById ?? {};
+      setOrders((prev) =>
+        prev.map((o) =>
+          succeeded.has(o.id)
+            ? {
+                ...o,
+                status: targetStatus,
+                payment_status: statusMap[o.id] ?? o.payment_status,
+                status_description: description.trim() || null,
+                status_updated_at: new Date().toISOString(),
+              }
+            : o
+        )
+      );
+      setSelectedIds(new Set(result.failed.map((f) => f.id)));
+
+      if (result.failed.length > 0) {
+        const preview = result.failed.slice(0, 3).map((f) => `${f.id}: ${f.error}`).join("; ");
+        setBulkModal((prev) =>
+          prev
+            ? {
+                ...prev,
+                orderIds: result.failed.map((f) => f.id),
+                error: `${result.succeededIds.length} updated, ${result.failed.length} skipped (${preview})`,
+              }
+            : null
+        );
+        return;
+      }
+
+      setBulkModal(null);
+    } catch {
+      setBulkModal((prev) =>
+        prev ? { ...prev, error: "Session expired or network error. Please refresh and try again." } : null
+      );
+    } finally {
+      setIsBulkUpdating(false);
     }
-
-    const succeeded = new Set(result.succeededIds);
-    setOrders((prev) =>
-      prev.map((o) =>
-        succeeded.has(o.id)
-          ? {
-              ...o,
-              status: targetStatus,
-              status_description: description.trim() || null,
-              status_updated_at: new Date().toISOString(),
-            }
-          : o
-      )
-    );
-    setSelectedIds(new Set(result.failed.map((f) => f.id)));
-    setBulkModal(null);
   };
 
   const handleExportCsv = () => {
@@ -678,25 +721,25 @@ export function OrdersTable({
       
       <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
-          Showing {paginatedOrders.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
+          Showing {paginatedOrders.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}
           {"–"}
-          {Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}{" "}
+          {Math.min(safePage * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}{" "}
           {filteredOrders.length === 1 ? "order" : "orders"}
         </p>
         <div className="flex gap-1">
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage <= 1}
+            disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
-            {currentPage}
+            {safePage}
           </span>
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage >= totalPages}
+            disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
             <ChevronRight className="w-4 h-4" />
@@ -807,6 +850,13 @@ export function OrdersTable({
               <p className="text-[11px] text-gray-400">This description will be immediately visible to the customer on their order history page.</p>
             </div>
 
+            {statusModal.error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{statusModal.error}</span>
+              </div>
+            )}
+
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
               <button
@@ -888,6 +938,13 @@ export function OrdersTable({
                 className="w-full text-sm text-gray-900 p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/20 transition-all resize-none"
               />
             </div>
+
+            {bulkModal.error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs font-semibold text-red-700 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{bulkModal.error}</span>
+              </div>
+            )}
 
             <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-gray-100">
               <button
@@ -1033,12 +1090,26 @@ export function OrdersTable({
                     <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
                       viewOrder.payment_status === "Paid"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : viewOrder.payment_status === "Refunded"
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : viewOrder.payment_status === "Refund Pending"
+                        ? "bg-orange-50 text-orange-700 border border-orange-200"
                         : "bg-amber-50 text-amber-700 border border-amber-200"
                     }`}>
                       {viewOrder.payment_status === "Paid" ? (
                         <>
                           <ShieldCheck className="w-3.5 h-3.5" />
                           <span>{viewOrder.payment_method?.includes("Stripe") ? "Paid (Stripe)" : "Paid"}</span>
+                        </>
+                      ) : viewOrder.payment_status === "Refunded" ? (
+                        <>
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>Refunded</span>
+                        </>
+                      ) : viewOrder.payment_status === "Refund Pending" ? (
+                        <>
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>Refund Pending</span>
                         </>
                       ) : (
                         <>

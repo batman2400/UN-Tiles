@@ -8,8 +8,8 @@ import { getStripeServerClient } from "@/lib/stripe";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isDeliveryMethod } from "@/lib/address";
 
-interface CheckoutRequestBody {
-  items: unknown;
+interface ParsedCheckoutBody {
+  items: NonNullable<ReturnType<typeof parseCheckoutItems>>;
   deliveryMethod: string;
   addressId?: string | null;
   paymentMethod?: string;
@@ -58,22 +58,23 @@ function isValidDeliveryPaymentPair(deliveryMethod: string, paymentMethod: strin
   return false;
 }
 
-function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
-  if (typeof body !== "object" || body === null) return false;
+function parseCheckoutBody(body: unknown): ParsedCheckoutBody | null {
+  if (typeof body !== "object" || body === null) return null;
   const candidate = body as Record<string, unknown>;
 
-  if (parseCheckoutItems(candidate.items) === null) return false;
+  const items = parseCheckoutItems(candidate.items);
+  if (!items) return null;
 
   if (
     typeof candidate.deliveryMethod !== "string" ||
     !VALID_DELIVERY_METHODS.includes(candidate.deliveryMethod)
   ) {
-    return false;
+    return null;
   }
 
   if (isDeliveryMethod(candidate.deliveryMethod)) {
     if (typeof candidate.addressId !== "string" || !UUID_RE.test(candidate.addressId)) {
-      return false;
+      return null;
     }
   }
 
@@ -82,13 +83,13 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
       typeof candidate.paymentMethod !== "string" ||
       !VALID_PAYMENT_METHODS.includes(candidate.paymentMethod)
     ) {
-      return false;
+      return null;
     }
   }
 
   if (candidate.paymentIntentId !== undefined) {
     if (typeof candidate.paymentIntentId !== "string" || !PAYMENT_INTENT_ID_RE.test(candidate.paymentIntentId)) {
-      return false;
+      return null;
     }
   }
 
@@ -98,10 +99,16 @@ function isValidCheckoutBody(body: unknown): body is CheckoutRequestBody {
       : defaultPaymentMethod(candidate.deliveryMethod);
 
   if (!isValidDeliveryPaymentPair(candidate.deliveryMethod, effectivePaymentMethod)) {
-    return false;
+    return null;
   }
 
-  return true;
+  return {
+    items,
+    deliveryMethod: candidate.deliveryMethod,
+    addressId: typeof candidate.addressId === "string" ? candidate.addressId : null,
+    paymentMethod: typeof candidate.paymentMethod === "string" ? candidate.paymentMethod : undefined,
+    paymentIntentId: typeof candidate.paymentIntentId === "string" ? candidate.paymentIntentId : undefined,
+  };
 }
 
 function isProcessCheckoutResult(value: unknown): value is ProcessCheckoutResult {
@@ -186,9 +193,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let body: unknown;
+    let rawBody: unknown;
     try {
-      body = await request.json();
+      rawBody = await request.json();
     } catch {
       return NextResponse.json(
         { error: "Invalid request body." },
@@ -196,23 +203,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!isValidCheckoutBody(body)) {
+    const parsedBody = parseCheckoutBody(rawBody);
+    if (!parsedBody) {
       return NextResponse.json(
         { error: "Invalid cart, payment, or delivery selection. Delivery requires a saved delivery address." },
         { status: 400 }
       );
     }
 
-    const mappedItems = parseCheckoutItems(body.items);
-    if (!mappedItems) {
-      return NextResponse.json(
-        { error: "Invalid cart data." },
-        { status: 400 }
-      );
-    }
-
-    const isDelivery = isDeliveryMethod(body.deliveryMethod);
-    const requestedMethod = body.paymentMethod || defaultPaymentMethod(body.deliveryMethod);
+    const mappedItems = parsedBody.items;
+    const isDelivery = isDeliveryMethod(parsedBody.deliveryMethod);
+    const requestedMethod = parsedBody.paymentMethod || defaultPaymentMethod(parsedBody.deliveryMethod);
     const isStripeCheckout = STRIPE_PAYMENT_METHODS.has(requestedMethod);
 
     let paymentMethod = requestedMethod;
@@ -235,7 +236,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      if (!body.paymentIntentId || !PAYMENT_INTENT_ID_RE.test(body.paymentIntentId)) {
+      if (!parsedBody.paymentIntentId || !PAYMENT_INTENT_ID_RE.test(parsedBody.paymentIntentId)) {
         return NextResponse.json(
           { error: "A completed Stripe payment is required to place this order." },
           { status: 400 }
@@ -244,7 +245,7 @@ export async function POST(request: NextRequest) {
 
       let paymentIntent;
       try {
-        paymentIntent = await stripe.paymentIntents.retrieve(body.paymentIntentId);
+        paymentIntent = await stripe.paymentIntents.retrieve(parsedBody.paymentIntentId);
       } catch (retrieveError) {
         console.error("Stripe PaymentIntent retrieve failed:", retrieveError);
         return NextResponse.json(
@@ -307,47 +308,15 @@ export async function POST(request: NextRequest) {
       paymentDetails = {};
     }
 
-    const rpcParams = {
+    const { data, error } = await adminClient.rpc("process_checkout_v2", {
       p_user_id: user.id,
       p_items: mappedItems,
-      p_delivery_method: body.deliveryMethod,
-      p_address_id: isDelivery ? body.addressId : null,
+      p_delivery_method: parsedBody.deliveryMethod,
+      p_address_id: isDelivery ? parsedBody.addressId : null,
       p_payment_method: paymentMethod,
       p_payment_status: paymentStatus,
       p_payment_details: paymentDetails,
-    };
-
-    // Call hardened service_role RPC (migration 023a); fall back to legacy RPC only
-    // while 023a has not yet been applied in the database.
-    let { data, error } = await adminClient.rpc("process_checkout_v2", rpcParams);
-
-    if (
-      error &&
-      (error.code === "PGRST202" ||
-        error.message?.toLowerCase().includes("could not find the function"))
-    ) {
-      if (isStripeCheckout && typeof paymentDetails.transaction_id === "string") {
-        const { data: existingOrders } = await adminClient
-          .from("orders")
-          .select("id")
-          .filter("payment_details->>transaction_id", "eq", paymentDetails.transaction_id)
-          .limit(1);
-
-        if (existingOrders && existingOrders.length > 0) {
-          return NextResponse.json(
-            { error: "This Stripe payment has already been used for an order." },
-            { status: 409 }
-          );
-        }
-      }
-
-      console.warn(
-        "[checkout] process_checkout_v2 not found; falling back to legacy process_checkout until migration 023a is applied."
-      );
-      const fallback = await supabase.rpc("process_checkout", rpcParams);
-      data = fallback.data;
-      error = fallback.error;
-    }
+    });
 
     if (error) {
       console.error("Checkout RPC error:", error);
@@ -367,6 +336,10 @@ export async function POST(request: NextRequest) {
     revalidatePath("/collections");
     revalidatePath("/collections/[id]", "page");
     revalidatePath("/planner");
+    revalidatePath("/admin");
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin/inventory");
+    revalidatePath("/profile");
 
     return NextResponse.json({
       success: true,
