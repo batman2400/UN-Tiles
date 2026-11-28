@@ -79,6 +79,7 @@ export function PlannerClient({
   const [offsetYMm, setOffsetYMm] = useState(0);
   const [breakageBuffer, setBreakageBuffer] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const selected = plannable.find((p) => p.id === selectedId) ?? null;
   const tileSize = selected ? parseDimensions(selected.dimensions) : null;
@@ -210,11 +211,12 @@ export function PlannerClient({
       recommended
     );
     if (!added) {
-      alert(
-        `Cannot add more to cart. You may have reached the maximum available stock of ${selected.stockSqft} sqft.`
+      setCartNotice(
+        `Cannot add more to cart. You may have reached the maximum available stock of ${selected.stockSqft} sq\u00A0ft.`
       );
       return;
     }
+    setCartNotice(null);
     setJustAdded(true);
     window.setTimeout(() => setJustAdded(false), 1800);
   }, [addToCart, recommended, result, selected]);
@@ -229,6 +231,7 @@ export function PlannerClient({
       pattern,
       breakageBuffer,
       currentProductId: selected.id,
+      currentCategorySlug: selected.categorySlug,
       currentTileWidthMm: plannerInput.tileWidthMm,
       currentTileHeightMm: plannerInput.tileHeightMm,
       catalog: plannable.map((p) => ({
@@ -237,6 +240,7 @@ export function PlannerClient({
         dimensions: p.dimensions,
         image: p.image,
         category: p.category,
+        categorySlug: p.categorySlug,
         pricePerSqft: p.pricePerSqft,
       })),
       currentWastePct: result.wastePct,
@@ -246,19 +250,19 @@ export function PlannerClient({
 
   return (
     <div className="flex flex-col min-h-screen">
-      <section className="relative h-[38vh] min-h-[260px] sm:h-[46vh] sm:min-h-[320px] flex items-end bg-background overflow-hidden">
+      <section className="relative h-[38vh] min-h-[260px] sm:h-[46vh] sm:min-h-[320px] flex items-end bg-zinc-900 overflow-hidden">
         <Image
           src="/images/contact_hero_v6.jpg"
           alt="Premium tile showroom background"
           fill
           sizes="100vw"
-          className="object-cover opacity-40"
+          className="object-cover opacity-70"
           priority
           unoptimized
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 via-60% to-background/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/80" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-10 w-full">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-amber-300 font-semibold mb-2">
             Smart Tile Planner
           </p>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-white mb-3">
@@ -331,7 +335,16 @@ export function PlannerClient({
                   {error}
                 </p>
               )}
-              <LayoutCanvas result={result} />
+              <LayoutCanvas
+                result={result}
+                widthLabel={Number.isFinite(roomWidth) && roomWidth > 0 ? `${roomWidth} ${unit}` : undefined}
+                heightLabel={Number.isFinite(roomHeight) && roomHeight > 0 ? `${roomHeight} ${unit}` : undefined}
+              />
+              {cartNotice && (
+                <p role="status" className="rounded-xl border border-[#9f403d]/30 bg-[#9f403d]/8 px-4 py-3 text-xs font-semibold text-[#9f403d]">
+                  {cartNotice}
+                </p>
+              )}
               {result && selected && (
                 <ResultsPanel
                   result={result}

@@ -25,7 +25,8 @@ import {
   MessageSquareQuote,
   Sparkles,
   History,
-  ShieldCheck
+  ShieldCheck,
+  Printer
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { createClient } from "@/utils/supabase/client";
@@ -33,6 +34,7 @@ import { formatAddressSnapshot, isDeliveryMethod, type AddressSnapshot } from "@
 import { deleteAddress, listAddresses } from "@/app/actions/addresses";
 import { AddAddressModal } from "@/components/AddAddressModal";
 import { CancelOrderModal } from "@/components/CancelOrderModal";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 type SidebarSection = "account" | "orders" | "addresses";
 type ProfileFormState = {
@@ -151,7 +153,17 @@ function ProfileContent() {
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
   const supabase = createClient();
+
+  useModalBehavior(Boolean(viewOrder && !orderToCancel), () => setViewOrder(null), false);
+
+  const handleTabChange = (key: SidebarSection) => {
+    setActiveSection(key);
+    const nextUrl = key === "account" ? "/profile" : `/profile?tab=${key}`;
+    window.history.replaceState(null, "", nextUrl);
+  };
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -274,12 +286,21 @@ function ProfileContent() {
   };
 
   const handleDeleteAddress = async (id: string) => {
-    const result = await deleteAddress(id);
-    if (!result.success) {
-      setAddressError(result.error || "Could not delete the address.");
-      return;
+    setDeletingAddressId(id);
+    setAddressError(null);
+    try {
+      const result = await deleteAddress(id);
+      if (!result.success) {
+        setAddressError(result.error || "Could not delete the address.");
+        return;
+      }
+      setAddresses((current) => current.filter((addr) => addr.id !== id));
+      setConfirmDeleteId(null);
+    } catch {
+      setAddressError("Could not delete the address. Please try again.");
+    } finally {
+      setDeletingAddressId(null);
     }
-    setAddresses((current) => current.filter((addr) => addr.id !== id));
   };
 
   if (isLoading) {
@@ -347,7 +368,7 @@ function ProfileContent() {
                 return (
                   <button 
                     key={key} 
-                    onClick={() => setActiveSection(key)}
+                    onClick={() => handleTabChange(key)}
                     className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider rounded-xl whitespace-nowrap transition-all ${
                       isActive 
                         ? "bg-yellow-500/15 text-yellow-700 border border-yellow-500/30 shadow-sm" 
@@ -400,7 +421,7 @@ function ProfileContent() {
                   return (
                     <button 
                       key={key} 
-                      onClick={() => setActiveSection(key)}
+                      onClick={() => handleTabChange(key)}
                       className={`w-full flex items-center justify-between px-4 py-3.5 text-sm font-medium rounded-xl transition-all ${
                         isActive
                           ? "bg-yellow-500/10 text-yellow-600 border-r-4 border-yellow-500 font-semibold shadow-sm"
@@ -758,10 +779,20 @@ function ProfileContent() {
 
                           {/* Action Items Footer */}
                           <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-500">
-                              <FileText className="w-3.5 h-3.5 text-gray-400" />
-                              <span>Invoice Generated</span>
-                            </div>
+                            {!isCancelled ? (
+                              <button
+                                type="button"
+                                onClick={() => setViewOrder(order)}
+                                className="flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-zinc-900 transition-colors self-start sm:self-auto"
+                              >
+                                <FileText className="w-3.5 h-3.5 text-gray-400" />
+                                <span>View Order Receipt</span>
+                              </button>
+                            ) : (
+                              <span className="text-xs font-medium text-red-600/80">
+                                Order Cancelled
+                              </span>
+                            )}
                             
                             <div className="flex items-center gap-3 self-end sm:self-auto">
                               {isCancellable(order.status) && (
@@ -859,14 +890,38 @@ function ProfileContent() {
 
                         {/* Action Buttons */}
                         <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void handleDeleteAddress(addr.id)}
-                            aria-label={`Delete ${addr.label || "address"}`}
-                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {confirmDeleteId === addr.id ? (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                disabled={deletingAddressId === addr.id}
+                                onClick={() => void handleDeleteAddress(addr.id)}
+                                className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-60 inline-flex items-center gap-1.5"
+                              >
+                                {deletingAddressId === addr.id && (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                )}
+                                Confirm
+                              </button>
+                              <button
+                                type="button"
+                                disabled={deletingAddressId === addr.id}
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-60"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(addr.id)}
+                              aria-label={`Delete ${addr.label || "address"}`}
+                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -899,10 +954,15 @@ function ProfileContent() {
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in duration-200"
             onClick={() => setViewOrder(null)}
           />
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-order-drawer-title"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+          >
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0">
               <div>
-                <h3 className="font-bold text-zinc-900">Order Details</h3>
+                <h3 id="profile-order-drawer-title" className="font-bold text-zinc-900">Order Details</h3>
                 <p className="font-mono text-xs text-gray-500 mt-0.5">
                   #{viewOrder.id.startsWith("UN-")
                     ? viewOrder.id.toUpperCase()
@@ -1109,23 +1169,30 @@ function ProfileContent() {
               </div>
             </div>
             
-            <div className="mt-auto p-6 border-t border-gray-100 bg-gray-50/50 flex items-center gap-3">
+            <div className="mt-auto p-6 border-t border-gray-100 bg-gray-50/50 flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center justify-center gap-1.5 border border-gray-200 bg-white hover:bg-gray-100 text-zinc-800 font-semibold rounded-xl py-3 px-4 text-xs uppercase tracking-widest transition-colors shrink-0"
+                title="Print receipt"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print</span>
+              </button>
               {isCancellable(viewOrder.status) && (
                 <button
                   type="button"
                   onClick={() => setOrderToCancel(viewOrder)}
-                  className="w-1/2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors text-center"
+                  className="flex-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors text-center"
                 >
-                  Cancel Order
+                  Cancel
                 </button>
               )}
               <button
                 onClick={() => setViewOrder(null)}
-                className={`bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors ${
-                  isCancellable(viewOrder.status) ? "w-1/2" : "w-full"
-                }`}
+                className="flex-1 bg-zinc-900 text-white hover:bg-yellow-500 hover:text-black font-semibold rounded-xl py-3 text-xs uppercase tracking-widest transition-colors"
               >
-                Close Details
+                Close
               </button>
             </div>
           </div>

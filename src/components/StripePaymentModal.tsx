@@ -22,6 +22,7 @@ import {
 } from "@stripe/react-stripe-js";
 import type { Appearance, StripeElementsOptions } from "@stripe/stripe-js";
 import { getStripeClient } from "@/lib/stripe-client";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 interface StripePaymentModalProps {
   isOpen: boolean;
@@ -399,6 +400,8 @@ export function StripePaymentModal({
     };
   }, [isOpen, cartKey, stripePromise, items]);
 
+  useModalBehavior(isOpen, onClose, isLoadingIntent);
+
   if (!isOpen) return null;
 
   const appearance: Appearance = {
@@ -442,7 +445,17 @@ export function StripePaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="stripe-payment-modal-title"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isLoadingIntent) {
+          onClose();
+        }
+      }}
+    >
       <div className="relative w-full max-w-xl bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden text-zinc-900 flex flex-col max-h-[92vh]">
         <div className="bg-[#faf8f5] border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -468,7 +481,7 @@ export function StripePaymentModal({
         <div className="p-5 sm:p-7 overflow-y-auto space-y-6 [scrollbar-width:thin]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
             <div>
-              <h2 className="text-xl sm:text-2xl font-display font-bold text-zinc-900 tracking-tight">
+              <h2 id="stripe-payment-modal-title" className="text-xl sm:text-2xl font-display font-bold text-zinc-900 tracking-tight">
                 Complete payment
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">

@@ -133,20 +133,20 @@ export function CollectionsClient({
   return (
     <div className="flex flex-col min-h-screen">
       {/* ══════ HERO HEADER ══════ */}
-      <section className="relative h-[38vh] min-h-[260px] sm:h-[50vh] sm:min-h-[350px] flex items-end bg-background overflow-hidden">
+      <section className="relative h-[38vh] min-h-[260px] sm:h-[50vh] sm:min-h-[350px] flex items-end bg-zinc-900 overflow-hidden">
         <Image
           src="/images/contact_hero_v6.jpg"
           alt="Tile showroom"
           fill
           sizes="100vw"
-          className="object-cover opacity-40"
+          className="object-cover opacity-70"
           priority
           unoptimized
           quality={95}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 via-60% to-background/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/40 to-black/80" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-8 sm:pb-10 w-full motion-fade-up">
-          <p className="text-xs uppercase tracking-[0.2em] text-accent font-semibold mb-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-amber-300 font-semibold mb-2">
             {searchQuery
               ? `Search Results for "${searchQuery}"`
               : activeCategoryObj
@@ -180,7 +180,7 @@ export function CollectionsClient({
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search tiles, finish, size..."
+                placeholder="Search tiles or size..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"

@@ -20,6 +20,8 @@ const NAV_LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
+// Routes whose hero background at scrollY = 0 has a dark top scrim behind white nav items
+const DARK_HERO_PATHS = new Set(["/collections", "/planner", "/about", "/contact"]);
 
 export function TopNavBar() {
   const pathname = usePathname();
@@ -31,6 +33,7 @@ export function TopNavBar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 80);
@@ -40,9 +43,23 @@ export function TopNavBar() {
   }, []);
 
   useEffect(() => {
-    if (searchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
+    if (!searchOpen) return;
+    searchInputRef.current?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearchOpen(false);
+    };
+    const onPointer = (e: MouseEvent) => {
+      if (!searchWrapperRef.current?.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onPointer);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onPointer);
+    };
   }, [searchOpen]);
 
   useEffect(() => {
@@ -69,21 +86,27 @@ export function TopNavBar() {
     }
   };
 
-  // Close mobile menu on route change
+  // Close mobile menu & search popover on route change
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
     setPrevPathname(pathname);
     if (mobileOpen) setMobileOpen(false);
+    if (searchOpen) setSearchOpen(false);
   }
 
-  // Glassmorphism style for center & right pills
-  const pillClass = scrolled
-    ? "bg-white/80 backdrop-blur-md border border-zinc-200/80 shadow-sm"
-    : "bg-black/35 backdrop-blur-md border border-white/10";
+  const useLightPill = scrolled || !DARK_HERO_PATHS.has(pathname);
 
-  const iconColor = scrolled
-    ? "text-zinc-700 hover:text-black"
-    : "text-white/85 hover:text-white";
+  const pillClass = useLightPill
+    ? "bg-white/90 backdrop-blur-md border border-zinc-200/80 shadow-sm"
+    : "bg-black/45 backdrop-blur-md border border-white/15 shadow-md";
+
+  const iconColor = useLightPill
+    ? "text-zinc-700 hover:text-black hover:bg-zinc-900/5"
+    : "text-white/90 hover:text-white hover:bg-white/10";
+
+  const badgeClass = useLightPill
+    ? "bg-amber-500/15 text-amber-800 border border-amber-500/35"
+    : "bg-amber-500/20 text-amber-200 border border-amber-400/40";
 
   return (
     <>
@@ -92,33 +115,37 @@ export function TopNavBar() {
         <div className="max-w-[92rem] mx-auto px-3 sm:px-5 lg:px-6 pt-3 sm:pt-4">
           <div className="flex items-center justify-between gap-2 relative">
 
-            {/* ═══ LEFT ISLAND — Brand Anchor (no container) ═══ */}
+            {/* ═══ LEFT ISLAND — Brand Anchor ═══ */}
             <div className="pointer-events-auto flex-shrink-0 min-w-0">
-              <Link href="/" className="block transition-transform duration-500 hover:scale-[1.03]">
+              <Link
+                href="/"
+                className="inline-flex items-center rounded-full px-1.5 py-0.5 transition-transform duration-500 hover:scale-[1.03]"
+              >
                 <Image
                   src="/images/final Logo without background.png"
                   alt="UN Tiles"
                   width={320}
                   height={110}
-                  className="h-10 sm:h-12 lg:h-14 w-auto object-contain transition-all duration-500 drop-shadow-[0_2px_8px_rgba(255,255,255,0.4)] hover:scale-[1.03]"
+                  className="h-10 sm:h-11 lg:h-12 w-auto object-contain transition-all duration-500 drop-shadow-[0_2px_10px_rgba(255,255,255,0.65)]"
                   priority
                 />
               </Link>
             </div>
 
-            {/* ═══ CENTER ISLAND — Directory Pill (Dead Center with Generous Spacing) ═══ */}
+            {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
             <nav
-              className={`pointer-events-auto hidden lg:flex items-center gap-4 sm:gap-5 lg:gap-6 xl:gap-7 2xl:gap-8 rounded-full px-6 lg:px-7 xl:px-8 py-3 sm:py-3.5 transition-all duration-500 absolute left-1/2 -translate-x-1/2 shadow-sm ${pillClass}`}
+              aria-label="Primary navigation"
+              className={`pointer-events-auto hidden lg:flex items-center gap-4 xl:gap-6 2xl:gap-7 rounded-full h-11 sm:h-12 px-6 xl:px-7 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-                let currentLinkColor;
+                let currentLinkColor: string;
                 if (isActive) {
-                  currentLinkColor = scrolled ? "text-black font-bold" : "text-white font-bold";
+                  currentLinkColor = useLightPill ? "text-black font-bold" : "text-white font-bold";
                 } else {
-                  currentLinkColor = scrolled
+                  currentLinkColor = useLightPill
                     ? "text-zinc-700 hover:text-black font-semibold"
-                    : "text-white/85 hover:text-white font-medium";
+                    : "text-white/90 hover:text-white font-medium";
                 }
 
                 return (
@@ -129,7 +156,7 @@ export function TopNavBar() {
                   >
                     <span>{label.toUpperCase()}</span>
                     {badge && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none ${badgeClass}`}>
                         {badge}
                       </span>
                     )}
@@ -138,76 +165,87 @@ export function TopNavBar() {
               })}
             </nav>
 
-            {/* ═══ RIGHT ISLAND — Utilities Pill (Moved to Right & Mobile Optimized) ═══ */}
-            <div
-              className={`pointer-events-auto flex items-center gap-1 sm:gap-2.5 xl:gap-3 rounded-full px-2.5 sm:px-4 xl:px-5 py-2 sm:py-2.5 transition-all duration-500 flex-shrink-0 shadow-sm ${pillClass}`}
-            >
-              {/* Search Toggle / Form */}
-              <form 
-                onSubmit={handleSearchSubmit}
-                className={`hidden md:flex items-center transition-all duration-300 overflow-hidden ${searchOpen ? 'w-32 lg:w-36 border-b border-current/20 mr-1' : 'w-0'}`}
+            {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
+            <div ref={searchWrapperRef} className="pointer-events-auto relative flex-shrink-0">
+              <div
+                className={`flex items-center gap-1 sm:gap-2 xl:gap-2.5 rounded-full h-11 sm:h-12 px-2.5 sm:px-3.5 transition-all duration-500 ${pillClass}`}
               >
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className={`bg-transparent outline-none text-xs w-full transition-colors ${scrolled ? 'text-gray-700 placeholder:text-gray-400' : 'text-white placeholder:text-white/50'}`}
-                  onBlur={() => {
-                    if (!searchQuery) setSearchOpen(false);
-                  }}
-                />
-              </form>
-              <button 
-                type="button"
-                onClick={() => setSearchOpen(!searchOpen)}
-                aria-label="Search"
-                className={`hidden md:inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-              >
-                <Search className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-              </button>
-
-              {/* Admin Link */}
-              {user?.role === "admin" && (
-                <Link
-                  href="/admin"
-                  title="Admin Dashboard"
-                  className={`hidden sm:flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2 py-1 rounded-full hover:bg-white/10 ${iconColor}`}
+                {/* Search Popover Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen((v) => !v)}
+                  aria-label="Search tiles"
+                  aria-expanded={searchOpen}
+                  className={`hidden md:inline-flex h-9 w-9 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
                 >
-                  <Shield className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden 2xl:inline">Admin</span>
-                </Link>
-              )}
+                  <Search className="w-[18px] h-[18px]" />
+                </button>
 
-              {/* User Avatar */}
-              <div className="hidden sm:flex items-center">
-                <AuthNavIcon className={iconColor} />
+                {/* Admin Link */}
+                {user?.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    title="Admin Dashboard"
+                    className={`hidden sm:inline-flex items-center gap-1.5 h-9 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2.5 rounded-full ${iconColor}`}
+                  >
+                    <Shield className="w-3.5 h-3.5 text-amber-500" />
+                    <span className="hidden 2xl:inline">Admin</span>
+                  </Link>
+                )}
+
+                {/* User Avatar */}
+                <div className="hidden sm:flex items-center">
+                  <AuthNavIcon className={iconColor} />
+                </div>
+
+                {/* Cart Icon (Visible on all screens including Mobile) */}
+                <Link
+                  href="/cart"
+                  aria-label="Cart"
+                  className={`relative inline-flex h-9 w-9 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
+                >
+                  <ShoppingCart className="w-[18px] h-[18px]" />
+                  {cartCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-sm">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Mobile menu trigger */}
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(true)}
+                  aria-label="Open menu"
+                  className={`lg:hidden h-9 w-9 inline-flex items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
+                >
+                  <Menu className="w-[18px] h-[18px]" />
+                </button>
               </div>
 
-              {/* Cart Icon (Visible on all screens including Mobile) */}
-              <Link
-                href="/cart"
-                aria-label="Cart"
-                className={`relative inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-              >
-                <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-                {cartCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 w-4 rounded-full flex items-center justify-center shadow-sm">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-
-              {/* Mobile menu trigger */}
-              <button
-                type="button"
-                onClick={() => setMobileOpen(true)}
-                aria-label="Open menu"
-                className={`lg:hidden h-9 w-9 sm:h-10 sm:w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full hover:bg-white/10 ${iconColor}`}
-              >
-                <Menu className="w-[18px] h-[18px]" />
-              </button>
+              {/* Anchored Desktop Search Popover (avoids center-nav overlap) */}
+              {searchOpen && (
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="hidden md:flex items-center gap-2 absolute right-0 top-full mt-2.5 w-72 sm:w-80 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <Search className="w-4 h-4 text-zinc-400 ml-2 shrink-0" />
+                  <input
+                    ref={searchInputRef}
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search tiles, finish, size..."
+                    className="flex-1 bg-transparent outline-none text-xs font-medium text-zinc-900 placeholder:text-zinc-400 py-1.5"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 rounded-xl bg-zinc-900 text-white hover:bg-accent text-[11px] font-semibold uppercase tracking-wider transition-colors shrink-0"
+                  >
+                    Go
+                  </button>
+                </form>
+              )}
             </div>
 
           </div>
@@ -228,7 +266,7 @@ export function TopNavBar() {
               onClick={() => setMobileOpen(false)}
             />
             {/* Drawer */}
-            <motion.div 
+            <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
@@ -252,100 +290,100 @@ export function TopNavBar() {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-            
-            {/* Mobile Search Input */}
-            <form onSubmit={handleSearchSubmit} className="p-4 border-b ghost-border">
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant opacity-60" />
-                <input
-                  type="text"
-                  placeholder="Search collections..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-3 bg-surface-container-low text-sm text-on-surface rounded-xl border ghost-border outline-none focus:border-accent"
-                />
-              </div>
-            </form>
-            <nav className="flex-1 p-4 sm:p-6 space-y-1 overflow-y-auto">
-              {NAV_LINKS.map(({ href, label, badge }) => {
-                const isActive =
-                  href === "/" ? pathname === "/" : pathname.startsWith(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
-                      isActive
-                        ? "text-accent bg-accent-soft"
-                        : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
-                    }`}
-                  >
-                    <span>{label}</span>
-                    {badge && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-400/40">
-                        {badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-              <Link
-                href="/cart"
-                onClick={() => setMobileOpen(false)}
-                className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
-                  pathname.startsWith("/cart")
-                    ? "text-accent bg-accent-soft"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
-                }`}
-              >
-                <span>Cart</span>
-                {cartCount > 0 && (
-                  <span className="bg-accent text-on-accent text-[10px] font-bold h-5 min-w-5 px-1.5 rounded-full flex items-center justify-center">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-              <Link
-                href={user ? "/profile" : "/login"}
-                onClick={() => setMobileOpen(false)}
-                className={`block py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
-                  pathname.startsWith("/profile") || pathname.startsWith("/login")
-                    ? "text-accent bg-accent-soft"
-                    : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
-                }`}
-              >
-                {user ? "Account" : "Sign In"}
-              </Link>
-              {user?.role === "admin" && (
+
+              {/* Mobile Search Input */}
+              <form onSubmit={handleSearchSubmit} className="p-4 border-b ghost-border">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant opacity-60" />
+                  <input
+                    type="text"
+                    placeholder="Search collections..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-3 bg-surface-container-low text-sm text-on-surface rounded-xl border ghost-border outline-none focus:border-accent"
+                  />
+                </div>
+              </form>
+              <nav className="flex-1 p-4 sm:p-6 space-y-1 overflow-y-auto">
+                {NAV_LINKS.map(({ href, label, badge }) => {
+                  const isActive =
+                    href === "/" ? pathname === "/" : pathname.startsWith(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                        isActive
+                          ? "text-amber-800 bg-accent-soft"
+                          : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                      }`}
+                    >
+                      <span>{label}</span>
+                      {badge && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 font-bold border border-amber-500/35">
+                          {badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
                 <Link
-                  href="/admin"
+                  href="/cart"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                  className={`flex items-center justify-between py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                    pathname.startsWith("/cart")
+                      ? "text-amber-800 bg-accent-soft"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                  }`}
                 >
-                  <Shield className="w-4 h-4" />
-                  Admin
+                  <span>Cart</span>
+                  {cartCount > 0 && (
+                    <span className="bg-accent text-on-accent text-[10px] font-bold h-5 min-w-5 px-1.5 rounded-full flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
                 </Link>
-              )}
-            </nav>
-            <div className="p-5 sm:p-6 border-t ghost-border flex flex-col gap-4">
-              {user && (
-                <button
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signOut();
-                    window.location.href = "/login";
-                  }}
-                  className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors w-full text-left"
+                <Link
+                  href={user ? "/profile" : "/login"}
+                  onClick={() => setMobileOpen(false)}
+                  className={`block py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl transition-colors ${
+                    pathname.startsWith("/profile") || pathname.startsWith("/login")
+                      ? "text-amber-800 bg-accent-soft"
+                      : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                  }`}
                 >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              )}
-              <p className="text-xs text-on-surface-variant">
-                © {new Date().getFullYear()} UN Tiles
-              </p>
-            </div>
+                  {user ? "Account" : "Sign In"}
+                </Link>
+                {user?.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 py-3.5 px-4 text-sm tracking-widest uppercase font-semibold rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
+              </nav>
+              <div className="p-5 sm:p-6 border-t ghost-border flex flex-col gap-4">
+                {user && (
+                  <button
+                    onClick={async () => {
+                      const supabase = createClient();
+                      await supabase.auth.signOut();
+                      window.location.href = "/login";
+                    }}
+                    className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 transition-colors w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                )}
+                <p className="text-xs text-on-surface-variant">
+                  © {new Date().getFullYear()} UN Tiles
+                </p>
+              </div>
             </motion.div>
           </div>
         )}

@@ -71,15 +71,13 @@ function RegisterForm() {
     }
   };
 
-  if (isLoading) return null;
-
   return (
-    <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
+    <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-24 sm:pt-28 pb-12">
       <div className="w-full max-w-lg motion-fade-up">
-        <div className="bg-surface-container-lowest p-6 sm:p-10 md:p-14 ambient-glow">
+        <div className="bg-surface-container-lowest rounded-3xl border border-outline/20 p-6 sm:p-9 ambient-glow">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-display font-semibold tracking-tight text-on-surface mb-3">
+          <div className="text-center mb-7">
+            <h1 className="text-3xl font-display font-semibold tracking-tight text-on-surface mb-2">
               Create Account
             </h1>
             <p className="text-sm text-on-surface-variant">
@@ -89,7 +87,7 @@ function RegisterForm() {
 
           {/* Success Message */}
           {success && (
-            <div className="mb-8 bg-primary/5 border-l-2 border-primary px-5 py-4 motion-fade-up">
+            <div className="mb-6 bg-primary/5 border-l-2 border-primary px-5 py-4 motion-fade-up">
               <div className="flex items-center gap-3">
                 <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
                 <div className="space-y-1">
@@ -103,23 +101,24 @@ function RegisterForm() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-8 bg-[#9f403d]/8 border-l-2 border-[#9f403d] px-5 py-4 motion-fade-up">
+            <div className="mb-6 bg-[#9f403d]/8 border-l-2 border-[#9f403d] px-5 py-4 motion-fade-up">
               <p className="text-sm text-[#9f403d]">{error}</p>
             </div>
           )}
 
           {/* Form */}
           {!success && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <button
                 type="button"
+                disabled={isLoading || isSubmitting}
                 onClick={async () => {
                   const result = await loginWithGoogle(next);
                   if (!result.success) {
                     setError(result.error || "Google login failed.");
                   }
                 }}
-                className="w-full flex items-center justify-center gap-3 bg-surface border border-outline hover:bg-surface-container-highest py-4 text-sm font-semibold text-on-surface uppercase tracking-widest transition-colors"
+                className="w-full flex items-center justify-center gap-3 bg-surface border border-outline hover:bg-surface-container-highest py-3.5 rounded-xl text-sm font-semibold text-on-surface uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <FcGoogle className="w-5 h-5" />
                 Sign Up with Google
@@ -134,50 +133,50 @@ function RegisterForm() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-                <div className="space-y-2">
+              <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                <div className="space-y-1.5">
                   <label htmlFor="register-first-name" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">First Name</label>
                   <input id="register-first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} required placeholder="John"
-                    className="w-full bg-transparent border-b border-outline py-3 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
+                    className="w-full bg-transparent border-b border-outline py-2.5 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label htmlFor="register-last-name" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Last Name</label>
                   <input id="register-last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} required placeholder="Doe"
-                    className="w-full bg-transparent border-b border-outline py-3 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
+                    className="w-full bg-transparent border-b border-outline py-2.5 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label htmlFor="register-email" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Email Address</label>
                 <input id="register-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@example.com"
-                  className="w-full bg-transparent border-b border-outline py-3 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
+                  className="w-full bg-transparent border-b border-outline py-2.5 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label htmlFor="register-password" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Password</label>
                 <div className="relative">
                   <input id="register-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Minimum 8 characters"
-                    className="w-full bg-transparent border-b border-outline py-3 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
+                    className="w-full bg-transparent border-b border-outline py-2.5 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label htmlFor="register-confirm-password" className="block text-xs font-semibold uppercase tracking-widest text-on-surface-variant">Confirm Password</label>
                 <div className="relative">
                   <input id="register-confirm-password" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Re-enter your password"
-                    className="w-full bg-transparent border-b border-outline py-3 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
+                    className="w-full bg-transparent border-b border-outline py-2.5 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
                   <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              <button type="submit" disabled={isSubmitting}
-                className="w-full kinetic-button bg-primary hover:bg-primary-dim text-on-primary py-4 text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              <button type="submit" disabled={isLoading || isSubmitting}
+                className="w-full kinetic-button bg-primary hover:bg-primary-dim text-on-primary py-3.5 rounded-xl text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
                 <span className="flex items-center justify-center gap-3">
                   {isSubmitting ? "Creating Account..." : "Create Account"}
                   {!isSubmitting && <ArrowRight className="w-4 h-4" />}
@@ -187,7 +186,7 @@ function RegisterForm() {
             </div>
           )}
 
-          <p className="text-center text-sm text-on-surface-variant mt-10">
+          <p className="text-center text-sm text-on-surface-variant mt-7">
             Already have an account?{" "}
             <Link href={loginUrlWithNext(next)} className="kinetic-link text-primary font-semibold hover:text-primary-dim transition-colors">Log in</Link>
           </p>

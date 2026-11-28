@@ -112,9 +112,9 @@ export default function Contact() {
             unoptimized
           />
         </ParallaxLayer>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-background/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/35 to-black/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-accent font-semibold mb-4 motion-fade-up">Let&apos;s Connect</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-amber-300 font-semibold mb-4 motion-fade-up">Let&apos;s Connect</p>
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold tracking-tight text-white motion-fade-up motion-delay-1">
             Get in Touch
           </h1>
@@ -134,7 +134,7 @@ export default function Contact() {
       {/* ══════ MAP ══════ */}
       <section className="w-full">
         <ScrollReveal>
-          <div className="relative w-full h-[320px] sm:h-[480px] overflow-hidden">
+          <div className="relative w-full h-[320px] sm:h-[480px] overflow-hidden bg-surface-container">
             {/* Accent top border */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent z-10" />
             {/* Dark overlay label */}

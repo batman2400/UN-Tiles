@@ -45,6 +45,24 @@ function CartPageContent() {
   
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
+  const [qtyDrafts, setQtyDrafts] = useState<Record<string, string>>({});
+  const [confirmClear, setConfirmClear] = useState(false);
+  const cartNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearConfirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cartNoticeTimerRef.current) clearTimeout(cartNoticeTimerRef.current);
+      if (clearConfirmTimerRef.current) clearTimeout(clearConfirmTimerRef.current);
+    };
+  }, []);
+
+  const showCartNotice = (message: string) => {
+    setCartNotice(message);
+    if (cartNoticeTimerRef.current) clearTimeout(cartNoticeTimerRef.current);
+    cartNoticeTimerRef.current = setTimeout(() => setCartNotice(null), 3500);
+  };
   
   // Fulfillment & Payment Methods
   const [fulfillmentMethod, setFulfillmentMethod] = useState<"pickup" | "delivery">("pickup");
@@ -313,16 +331,24 @@ function CartPageContent() {
             {/* Desktop Column Headers */}
             <div className="hidden md:grid grid-cols-[2.5fr_1fr_1fr_1fr_auto] gap-6 pb-4 px-4 border-b border-gray-200/80 mb-4">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Product Specification</span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center">Unit Price</span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center">Quantity (sq ft)</span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-right">Subtotal</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center whitespace-nowrap">Unit Price</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center whitespace-nowrap">Qty (sq ft)</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-right whitespace-nowrap">Subtotal</span>
               <span className="w-10" />
             </div>
+
+            {cartNotice && (
+              <div role="status" className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
+                {cartNotice}
+              </div>
+            )}
 
             {/* Product Item Cards */}
             <div className="space-y-4">
               {items.map((item) => {
                 const lineTotal = item.price_per_sqft * item.cartQuantitySqft;
+                const draftVal = qtyDrafts[item.id];
+                const displayQty = draftVal !== undefined ? draftVal : String(item.cartQuantitySqft);
 
                 return (
                   <div
@@ -331,19 +357,26 @@ function CartPageContent() {
                   >
                     {/* Product Info */}
                     <div className="flex items-center gap-3 sm:gap-5 mb-4 md:mb-0 min-w-0">
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner">
+                      <Link
+                        href={`/collections/${item.id}`}
+                        className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner block"
+                      >
                         <Image
                           src={item.image || "/tiles/floor_agaria.jpg"}
                           alt={item.name}
                           fill
                           className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                      </div>
+                      </Link>
                       <div className="min-w-0">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 mb-1 inline-block">
                           {item.category}
                         </span>
-                        <h3 className="font-display font-bold text-zinc-900 text-base truncate">{item.name}</h3>
+                        <h3 className="font-display font-bold text-zinc-900 text-base truncate">
+                          <Link href={`/collections/${item.id}`} className="hover:text-accent transition-colors">
+                            {item.name}
+                          </Link>
+                        </h3>
                         <p className="text-xs text-gray-400 mt-0.5">Architectural Tile Specification</p>
                       </div>
                     </div>
@@ -362,8 +395,15 @@ function CartPageContent() {
                       
                       <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
                         <button
+                          type="button"
                           onClick={() => {
-                            updateQuantity(item.id, Math.max(1, item.cartQuantitySqft - 1));
+                            const next = Math.max(1, item.cartQuantitySqft - 1);
+                            updateQuantity(item.id, next);
+                            setQtyDrafts((prev) => {
+                              const copy = { ...prev };
+                              delete copy[item.id];
+                              return copy;
+                            });
                           }}
                           className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
                           aria-label="Decrease quantity"
@@ -372,31 +412,63 @@ function CartPageContent() {
                         </button>
                         
                         <input
-                          type="number"
-                          min={1}
-                          value={item.cartQuantitySqft}
+                          type="text"
+                          inputMode="numeric"
+                          aria-label={`Quantity in square feet for ${item.name}`}
+                          value={displayQty}
                           onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val > 0) {
+                            const raw = e.target.value;
+                            if (!/^\d*$/.test(raw)) return;
+                            setQtyDrafts((prev) => ({ ...prev, [item.id]: raw }));
+                            if (raw) {
+                              const parsed = parseInt(raw, 10);
                               const max = item.stockSqft ?? Infinity;
-                              if (val > max) {
-                                alert(`Only ${max} sqft available in stock.`);
-                                updateQuantity(item.id, max);
-                              } else {
-                                updateQuantity(item.id, val);
+                              if (!isNaN(parsed) && parsed > 0) {
+                                if (parsed > max) {
+                                  showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
+                                  updateQuantity(item.id, max);
+                                } else {
+                                  updateQuantity(item.id, parsed);
+                                }
                               }
                             }
                           }}
-                          className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          onBlur={() => {
+                            const raw = qtyDrafts[item.id];
+                            if (raw !== undefined) {
+                              const parsed = parseInt(raw, 10);
+                              const max = item.stockSqft ?? Infinity;
+                              const clamped =
+                                isNaN(parsed) || parsed < 1
+                                  ? 1
+                                  : Math.min(parsed, max);
+                              if (!isNaN(parsed) && parsed > max) {
+                                showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
+                              }
+                              updateQuantity(item.id, clamped);
+                              setQtyDrafts((prev) => {
+                                const copy = { ...prev };
+                                delete copy[item.id];
+                                return copy;
+                              });
+                            }
+                          }}
+                          className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900"
                         />
                         
                         <button
+                          type="button"
                           onClick={() => {
                             const max = item.stockSqft ?? Infinity;
                             if (item.cartQuantitySqft + 1 > max) {
-                              alert(`Only ${max} sqft available in stock.`);
+                              showCartNotice(`Only ${max} sq\u00A0ft available in stock for ${item.name}.`);
                             } else {
                               updateQuantity(item.id, item.cartQuantitySqft + 1);
+                              setQtyDrafts((prev) => {
+                                const copy = { ...prev };
+                                delete copy[item.id];
+                                return copy;
+                              });
                             }
                           }}
                           className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
@@ -418,6 +490,7 @@ function CartPageContent() {
                     {/* Delete Icon */}
                     <div className="flex justify-end items-center">
                       <button
+                        type="button"
                         onClick={() => removeFromCart(item.id)}
                         className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all"
                         aria-label={`Remove ${item.name}`}
@@ -432,28 +505,55 @@ function CartPageContent() {
             </div>
 
             {/* Cart Footer Actions */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/60 p-4 rounded-xl border border-gray-100">
+            <div className="mt-6 flex flex-row justify-between items-center gap-3 bg-white/70 px-4 py-3.5 rounded-xl border border-gray-100">
               <Link
                 href="/collections"
                 className="text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-zinc-900 transition-colors flex items-center gap-2"
               >
                 <span>← Continue Shopping</span>
               </Link>
-              <button
-                onClick={clearCart}
-                className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors"
-              >
-                Clear Cart
-              </button>
+              {confirmClear ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearCart();
+                      setConfirmClear(false);
+                    }}
+                    className="text-[11px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  >
+                    Confirm Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClear(false)}
+                    className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmClear(true);
+                    if (clearConfirmTimerRef.current) clearTimeout(clearConfirmTimerRef.current);
+                    clearConfirmTimerRef.current = setTimeout(() => setConfirmClear(false), 4000);
+                  }}
+                  className="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-red-600 transition-colors shrink-0"
+                >
+                  Clear Cart
+                </button>
+              )}
             </div>
           </div>
 
           {/* ── Order Summary & Checkout Sidebar ────────────────── */}
           <div className="lg:w-[420px] motion-fade-up motion-delay-2">
-            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 sm:p-7 shadow-xl border border-gray-100 sticky top-28 space-y-6">
+            <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-6 shadow-xl border border-gray-100 sticky top-24 space-y-4">
               
-              <div className="pb-4 border-b border-gray-100">
-                <h2 className="text-xl font-display font-bold text-zinc-900 tracking-tight">
+              <div className="pb-3 border-b border-gray-100">
+                <h2 className="text-lg font-display font-bold text-zinc-900 tracking-tight">
                   Checkout Summary
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">Select fulfillment and payment preferences.</p>

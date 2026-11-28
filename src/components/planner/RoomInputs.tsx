@@ -315,7 +315,7 @@ export function RoomInputs({
             step={1}
             value={Math.round(breakageBuffer * 100)}
             onChange={(e) => onBuffer(Number(e.target.value) / 100)}
-            className="w-full"
+            className="w-full accent-accent cursor-pointer"
           />
         </label>
         <p className="text-[11px] text-gray-400 leading-relaxed">
@@ -387,7 +387,7 @@ export function RoomInputs({
                   max={maxX}
                   value={Math.min(offsetXMm, maxX)}
                   onChange={(e) => onOffsetX(Number(e.target.value))}
-                  className="w-full"
+                  className="w-full accent-accent cursor-pointer"
                 />
               </label>
               <label className="block">
@@ -401,7 +401,7 @@ export function RoomInputs({
                   max={maxY}
                   value={Math.min(offsetYMm, maxY)}
                   onChange={(e) => onOffsetY(Number(e.target.value))}
-                  className="w-full"
+                  className="w-full accent-accent cursor-pointer"
                 />
               </label>
             </div>

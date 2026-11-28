@@ -49,10 +49,9 @@ export default function About() {
             className="object-cover object-center"
           />
         </ParallaxLayer>
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-background/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-black/35 to-black/70" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-accent font-semibold mb-4 motion-fade-up">Built to Last</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-amber-300 font-semibold mb-4 motion-fade-up">Built to Last</p>
           <h1 className="text-4xl sm:text-5xl md:text-8xl font-display font-bold tracking-tight text-white mb-6 motion-fade-up motion-delay-1">
             Our Story
           </h1>
@@ -134,11 +133,11 @@ export default function About() {
                     <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 172 reviews · 10 photos · 2 months ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   </div>
                 </div>
                 <p className="text-on-surface-variant leading-relaxed">The service was excellent, and I’m very satisfied with the overall experience. Highly recommended!</p>
@@ -153,11 +152,11 @@ export default function About() {
                     <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 172 reviews · 729 photos · 6 years ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   </div>
                 </div>
                 <p className="text-on-surface-variant leading-relaxed">You can buy high quality tiles and bathroom wear</p>
@@ -172,11 +171,11 @@ export default function About() {
                     <p className="text-sm text-on-surface-variant mt-1 break-words">Local Guide · 21 reviews · 30 photos · 6 years ago</p>
                   </div>
                   <div className="inline-flex items-center gap-0.5 text-amber-400 text-sm">
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
-                    <Star className="w-4 h-4" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   </div>
                 </div>
                 <p className="text-on-surface-variant leading-relaxed">Highly recommended</p>

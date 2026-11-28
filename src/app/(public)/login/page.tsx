@@ -48,15 +48,13 @@ function LoginForm() {
     }
   };
 
-  if (isLoading) return null;
-
   const registerHref =
     next === "/profile" ? "/register" : `/register?next=${encodeURIComponent(next)}`;
 
   return (
     <section className="min-h-[calc(100svh-6rem)] flex items-center justify-center bg-surface px-4 sm:px-6 pt-28 sm:pt-32 pb-16">
       <div className="w-full max-w-md motion-fade-up">
-        <div className="bg-surface-container-lowest p-6 sm:p-10 md:p-14 ambient-glow">
+        <div className="bg-surface-container-lowest rounded-3xl border border-outline/20 p-6 sm:p-10 md:p-12 ambient-glow">
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-3xl font-display font-semibold tracking-tight text-on-surface mb-3">
@@ -78,13 +76,14 @@ function LoginForm() {
           <div className="space-y-8">
             <button
               type="button"
+              disabled={isLoading || isSubmitting}
               onClick={async () => {
                 const result = await loginWithGoogle(next);
                 if (!result.success) {
                   setError(result.error || "Google login failed.");
                 }
               }}
-              className="w-full flex items-center justify-center gap-3 bg-surface border border-outline hover:bg-surface-container-highest py-4 text-sm font-semibold text-on-surface uppercase tracking-widest transition-colors"
+              className="w-full flex items-center justify-center gap-3 bg-surface border border-outline hover:bg-surface-container-highest py-4 rounded-xl text-sm font-semibold text-on-surface uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <FcGoogle className="w-5 h-5" />
               Sign In with Google
@@ -137,8 +136,8 @@ function LoginForm() {
 
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full kinetic-button bg-primary hover:bg-primary-dim text-on-primary py-4 text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={isLoading || isSubmitting}
+              className="w-full kinetic-button bg-primary hover:bg-primary-dim text-on-primary py-4 rounded-xl text-sm font-semibold uppercase tracking-widest transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span className="flex items-center justify-center gap-3">
                 {isSubmitting ? "Signing in..." : "Sign In"}

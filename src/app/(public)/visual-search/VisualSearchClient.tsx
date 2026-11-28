@@ -33,6 +33,12 @@ const CATEGORY_TABS = [
   { id: "pool-tiles", label: "Pool Tiles" },
 ];
 
+const SAMPLE_PHOTOS = [
+  { label: "Calacatta Marble", src: "/tiles/floor_calacatta_gold.jpg", mode: "matcher" as const },
+  { label: "Ivory Travertine", src: "/tiles/floor_ivory_travertine.jpg", mode: "matcher" as const },
+  { label: "Luxury Living Room", src: "/images/light_luxury_tiles.jpg", mode: "advisor" as const },
+];
+
 export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }) {
   const [mode, setMode] = useState<SearchMode>("matcher");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -51,6 +57,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const activePreviewUrlRef = useRef<string | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
+  const resultsSectionRef = useRef<HTMLDivElement>(null);
 
   const advisorLocked = mode === "advisor" && !visionEnabled;
 
@@ -118,6 +125,26 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
     if (advisorLocked) return;
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFileSelect(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleSampleSelect = async (sample: (typeof SAMPLE_PHOTOS)[number]) => {
+    if (isLoading || isCompressing) return;
+    setError(null);
+    if (sample.mode === "advisor" && visionEnabled) {
+      setMode("advisor");
+    } else {
+      setMode("matcher");
+    }
+    try {
+      const res = await fetch(sample.src);
+      if (!res.ok) throw new Error("Failed to load sample");
+      const blob = await res.blob();
+      const fileName = sample.src.split("/").pop() || "sample-tile.jpg";
+      const file = new File([blob], fileName, { type: blob.type || "image/jpeg" });
+      await handleFileSelect(file);
+    } catch {
+      setError("Could not load sample image. Please upload a photo manually.");
     }
   };
 
@@ -218,6 +245,11 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       if (typeof data.queryTimeMs === "number") {
         setQueryTimeMs(data.queryTimeMs);
       }
+      if (Array.isArray(data.matches) || data.scene) {
+        setTimeout(() => {
+          resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 80);
+      }
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === "AbortError") {
         return;
@@ -252,8 +284,8 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
       <div className="max-w-7xl mx-auto space-y-10 sm:space-y-12">
         {/* Header Title */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs font-semibold uppercase tracking-widest">
+            <Sparkles className="w-3.5 h-3.5 text-accent" />
             <span>Sri Lanka&apos;s #1 AI Tiles Finder</span>
           </div>
 
@@ -283,7 +315,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
               className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 disabled:opacity-60 ${
                 mode === "matcher"
                   ? "bg-primary text-on-primary shadow-md"
-                  : "text-on-surface-variant hover:text-on-surface"
+                  : "text-zinc-700 hover:text-zinc-900 hover:bg-white/60"
               }`}
             >
               <Layers className="w-4 h-4 shrink-0" />
@@ -306,7 +338,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
               className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-7 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 disabled:opacity-60 ${
                 mode === "advisor"
                   ? "bg-primary text-on-primary shadow-md"
-                  : "text-on-surface-variant hover:text-on-surface"
+                  : "text-zinc-700 hover:text-zinc-900 hover:bg-white/60"
               }`}
             >
               <Home className="w-4 h-4 shrink-0" />
@@ -402,6 +434,36 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                       <ImageIcon className="w-4 h-4" />
                       <span>Choose Photo</span>
                     </button>
+                  </div>
+                </div>
+
+                {/* Quick Sample Photos */}
+                <div className="pt-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-2.5 text-center">
+                    Or try a sample photo
+                  </p>
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {SAMPLE_PHOTOS.map((sample) => (
+                      <button
+                        key={sample.src}
+                        type="button"
+                        onClick={() => void handleSampleSelect(sample)}
+                        className="group/sample flex items-center gap-2 p-2 rounded-xl border border-outline/25 bg-surface-container/40 hover:bg-surface-container hover:border-accent/50 transition-all text-left"
+                      >
+                        <span className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-surface-container">
+                          <Image
+                            src={sample.src}
+                            alt={sample.label}
+                            fill
+                            sizes="36px"
+                            className="object-cover group-hover/sample:scale-105 transition-transform"
+                          />
+                        </span>
+                        <span className="text-[11px] font-semibold text-on-surface leading-tight line-clamp-2">
+                          {sample.label}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -529,16 +591,17 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
           </div>
         </div>
 
-        {/* Scene Advisor Output */}
-        {sceneBrief && (
-          <div className="space-y-6 pt-4">
-            <SceneBriefPanel brief={sceneBrief} />
-          </div>
-        )}
+        <div ref={resultsSectionRef} className="scroll-mt-24 space-y-6">
+          {/* Scene Advisor Output */}
+          {sceneBrief && (
+            <div className="space-y-6 pt-4">
+              <SceneBriefPanel brief={sceneBrief} />
+            </div>
+          )}
 
-        {/* Catalog Match Results */}
-        {matches && (
-          <div className="space-y-6 pt-6">
+          {/* Catalog Match Results */}
+          {matches && (
+            <div className="space-y-6 pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline/30 pb-4">
               <div>
                 <p className="text-xs uppercase tracking-widest text-accent font-semibold">
@@ -631,8 +694,9 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                 </Link>
               </div>
             )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
 
         {/* ══════ SEO & HOW IT WORKS GUIDE ══════ */}
         <div className="border-t border-outline/30 pt-14 sm:pt-20 mt-12 max-w-4xl mx-auto space-y-10">

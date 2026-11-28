@@ -68,10 +68,10 @@ export function Hero10({
       />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1440px] flex-col px-4 py-4 sm:px-10 lg:px-[74px]">
-        <div className="mx-auto flex w-full max-w-[780px] flex-1 flex-col items-center justify-start pt-[90px] text-center sm:pt-[98px] lg:pt-[76px]">
+        <div className="mx-auto flex w-full max-w-[780px] flex-1 flex-col items-center justify-start pt-[84px] text-center sm:pt-[96px] lg:pt-[76px]">
           {/* Eyebrow badge */}
-          <div className="inline-flex min-h-7 max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-slate-700/12 bg-white/40 px-3.5 py-1.5 text-[11px] leading-none font-semibold text-slate-700 shadow-sm backdrop-blur-md">
-            <span className="grid size-4 place-items-center rounded-full border border-accent/40 bg-accent/20">
+          <div className="inline-flex min-h-7 max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-slate-700/12 bg-white/55 px-3.5 py-1.5 text-[11px] leading-snug font-semibold text-slate-800 shadow-sm backdrop-blur-md">
+            <span className="grid size-4 shrink-0 place-items-center rounded-full border border-accent/40 bg-accent/20">
               <span className="size-2 rounded-full bg-accent" />
             </span>
             <span>{eyebrowText}</span>
@@ -120,8 +120,8 @@ export function Hero10({
 
         {/* Bottom trust pill */}
         <div className="mb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-center">
-          <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full bg-white/50 px-4 py-1.5 text-xs sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/40">
-            <span className="grid size-6 place-items-center rounded-full bg-slate-900 text-white">
+          <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full bg-white/60 px-4 py-1.5 text-center text-xs sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/50">
+            <span className="grid size-6 shrink-0 place-items-center rounded-full bg-slate-900 text-white">
               <FaArrowRight className="size-2.5 -rotate-45" />
             </span>
             <span>{usersText}</span>

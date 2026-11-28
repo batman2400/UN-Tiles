@@ -13,7 +13,7 @@ export function ScrollReveal({
   children,
   className = "",
   delay = 0,
-  threshold = 0.15,
+  threshold = 0.05,
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -27,16 +27,18 @@ export function ScrollReveal({
       return;
     }
 
+    const effectiveDelay = Math.min(Math.max(delay, 0), 180);
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setTimeout(() => {
             el.classList.add("revealed");
-          }, delay);
+          }, effectiveDelay);
           observer.unobserve(el);
         }
       },
-      { threshold, rootMargin: "0px 0px -40px 0px" }
+      { threshold, rootMargin: "0px 0px 40px 0px" }
     );
 
     observer.observe(el);

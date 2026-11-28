@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { Loader2, MapPin, X } from "lucide-react";
 import { createAddress } from "@/app/actions/addresses";
 import type { SavedAddress } from "@/lib/address";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 export function AddAddressModal({
   open,
@@ -19,6 +20,8 @@ export function AddAddressModal({
   const [line2, setLine2] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useModalBehavior(open, onClose, saving);
 
   if (!open) return null;
 
@@ -64,11 +67,16 @@ export function AddAddressModal({
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220]"
         onClick={saving ? undefined : onClose}
       />
-      <div className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-address-modal-title"
+        className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6"
+      >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-yellow-500" />
-            <h3 className="font-display font-bold text-zinc-900">Add Delivery Address</h3>
+            <h3 id="add-address-modal-title" className="font-display font-bold text-zinc-900">Add Delivery Address</h3>
           </div>
           <button
             type="button"

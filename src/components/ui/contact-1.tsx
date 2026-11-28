@@ -70,14 +70,18 @@ export default function ContactBlock({
     <section className="text-foreground w-full py-12 sm:py-16 md:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 sm:mb-12 max-w-2xl space-y-4">
-          {badgeText && <Badge>{badgeText}</Badge>}
+          {badgeText && (
+            <Badge className="bg-accent/10 text-amber-800 border border-accent/25 px-3 py-1 rounded-full font-semibold uppercase tracking-widest text-[11px]">
+              {badgeText}
+            </Badge>
+          )}
           {title && (
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <h2 className="text-3xl font-display font-bold tracking-tight sm:text-4xl md:text-5xl text-on-surface">
               {title}
             </h2>
           )}
           {description && (
-            <p className="text-muted-foreground text-lg">{description}</p>
+            <p className="text-on-surface-variant text-base sm:text-lg leading-relaxed">{description}</p>
           )}
         </div>
 
@@ -85,19 +89,19 @@ export default function ContactBlock({
           {contactMethods.map((method) => (
             <Card
               key={method.id}
-              className="bg-muted flex h-full flex-col overflow-hidden rounded-4xl border-none p-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0px_0px_0px_1px_rgba(0,0,0,0.08),0px_1px_2px_-1px_rgba(0,0,0,0.08),0px_2px_4px_0px_rgba(0,0,0,0.08)] ring-0 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0px_0px_0px_1px_rgba(0,0,0,0.08),0px_1px_2px_-1px_rgba(0,0,0,0.08),0px_2px_4px_0px_rgba(0,0,0,0.08)]"
+              className="bg-surface-container-lowest flex h-full flex-col overflow-hidden rounded-3xl border border-outline/25 p-0 premium-shadow hover:premium-shadow-lg transition-shadow duration-300 ring-0"
             >
               <CardContent className="flex flex-1 flex-col border-none p-6">
-                <div className="bg-card text-foreground mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl shadow-[inset_0_1px_0_0_rgba(255,255,255,1),0px_0px_0px_1px_rgba(0,0,0,0.04),0px_1px_2px_-1px_rgba(0,0,0,0.04),0px_2px_4px_0px_rgba(0,0,0,0.04)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2),0px_0px_0px_1px_rgba(0,0,0,0.04),0px_1px_2px_-1px_rgba(0,0,0,0.04),0px_2px_4px_0px_rgba(0,0,0,0.04)]">
+                <div className="bg-accent/10 text-accent border border-accent/20 mb-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl">
                   {method.icon}
                 </div>
-                <h3 className="mb-2 text-xl font-semibold">{method.title}</h3>
-                <p className="text-muted-foreground mb-8 flex-1">
+                <h3 className="mb-2 text-xl font-display font-semibold text-on-surface">{method.title}</h3>
+                <p className="text-on-surface-variant text-sm mb-8 flex-1 leading-relaxed">
                   {method.description}
                 </p>
                 <div className="mt-auto">
                   <Button
-                    className="w-full py-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.5),inset_0_-1px_0_0_rgba(0,0,0,0.2)] truncate"
+                    className="w-full h-auto py-3 px-4 rounded-xl bg-zinc-900 hover:bg-accent text-white text-xs font-semibold tracking-wider transition-colors truncate"
                     render={<a href={method.actionUrl} target="_blank" rel="noopener noreferrer" />}
                   >
                     {method.actionLabel}

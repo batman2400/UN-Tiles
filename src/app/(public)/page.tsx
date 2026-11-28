@@ -91,35 +91,35 @@ export default function Home() {
 
       {/* ══════ TRUST BAR (INTERACTIVE & TOOL LINKED) ══════ */}
       <section className="py-4 sm:py-5 border-b ghost-border bg-surface-container-low/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:gap-10 text-on-surface-variant">
-          <div className="flex items-center gap-2.5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 lg:gap-x-7 text-on-surface-variant">
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <Shield className="w-4 h-4 text-accent flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Direct Importer Pricing</span>
+            <span className="text-xs font-medium tracking-wide">Direct Importer Pricing</span>
           </div>
-          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
-          <div className="flex items-center gap-2.5">
+          <div className="hidden lg:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <Truck className="w-4 h-4 text-accent flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Islandwide Delivery Sri Lanka</span>
+            <span className="text-xs font-medium tracking-wide">Islandwide Delivery Sri Lanka</span>
           </div>
-          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
-          <div className="flex items-center gap-2.5">
+          <div className="hidden lg:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="flex items-center gap-2 whitespace-nowrap">
             <Award className="w-4 h-4 text-accent flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-medium tracking-wide">Colombo 05 Showroom</span>
+            <span className="text-xs font-medium tracking-wide">Colombo 05 Showroom</span>
           </div>
-          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="hidden lg:block w-[1px] h-3.5 bg-outline-variant/30" />
           <Link
             href="/visual-search"
-            className="flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide text-accent hover:text-accent/80 transition-colors group"
+            className="flex items-center gap-2 text-xs font-semibold tracking-wide text-amber-800 hover:text-accent transition-colors group whitespace-nowrap"
           >
-            <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+            <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform shrink-0" />
             <span className="underline-offset-4 hover:underline">Sri Lanka&apos;s #1 AI Tile Finder</span>
           </Link>
-          <div className="hidden md:block w-[1px] h-3.5 bg-outline-variant/30" />
+          <div className="hidden lg:block w-[1px] h-3.5 bg-outline-variant/30" />
           <Link
             href="/planner"
-            className="flex items-center gap-2 text-xs sm:text-sm font-semibold tracking-wide text-on-surface hover:text-accent transition-colors group"
+            className="flex items-center gap-2 text-xs font-semibold tracking-wide text-on-surface hover:text-accent transition-colors group whitespace-nowrap"
           >
-            <Calculator className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+            <Calculator className="w-4 h-4 text-accent group-hover:scale-110 transition-transform shrink-0" />
             <span className="underline-offset-4 hover:underline">Smart 2D Tile Planner</span>
           </Link>
         </div>

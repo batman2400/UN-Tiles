@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download, Trash2 } from "lucide-react";
+import { CheckCircle, AlertTriangle, Package, Search, Image as ImageIcon, Loader2, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download, Trash2, Pencil } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import Image from "next/image";
 import { AddCategoryModal } from "@/components/admin/AddCategoryModal";
 import { AddProductModal } from "@/components/admin/AddProductModal";
+import { EditProductModal } from "@/components/admin/EditProductModal";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 import { downloadCsv } from "@/lib/csv";
 import { adjustProductStock, bulkAdjustProductStock, deleteProduct } from "@/app/actions/admin";
 
@@ -20,6 +22,9 @@ export interface AdminProduct {
   price_per_sqft: number;
   category_slug: string;
   image: string;
+  dimensions?: string;
+  finish?: string;
+  application?: string;
 }
 
 interface RowState {
@@ -46,6 +51,11 @@ export function InventoryTable({
   const [bulkRestockAmount, setBulkRestockAmount] = useState("");
   const [isBulkRestocking, setIsBulkRestocking] = useState(false);
   const [bulkFeedback, setBulkFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useModalBehavior(Boolean(deleteTarget), () => setDeleteTarget(null), isDeleting);
 
   // Sync local table state whenever Server Action revalidation delivers fresh initialProducts
   useEffect(() => {
@@ -202,9 +212,11 @@ export function InventoryTable({
     }
   };
 
-  const handleDelete = async (productId: string, productName: string) => {
-    if (!confirm(`Are you sure you want to delete "${productName}"? This action cannot be undone.`)) return;
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const { id: productId } = deleteTarget;
 
+    setIsDeleting(true);
     updateRowState(productId, { isUpdating: true, feedback: null });
 
     try {
@@ -215,6 +227,7 @@ export function InventoryTable({
           isUpdating: false,
           feedback: { type: "error", message: result.error },
         });
+        setDeleteTarget(null);
         return;
       }
 
@@ -225,11 +238,15 @@ export function InventoryTable({
         next.delete(productId);
         return next;
       });
+      setDeleteTarget(null);
     } catch {
       updateRowState(productId, {
         isUpdating: false,
         feedback: { type: "error", message: "Session expired or network error." },
       });
+      setDeleteTarget(null);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -541,14 +558,28 @@ export function InventoryTable({
                             </button>
                           ))}
                         </div>
-                        <button
-                          onClick={() => handleDelete(product.id, product.name)}
-                          disabled={row.isUpdating}
-                          className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
-                          title="Delete Product"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingProduct(product)}
+                            disabled={row.isUpdating}
+                            className="text-gray-400 hover:text-zinc-900 p-1.5 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-30"
+                            title="Edit Product"
+                            aria-label={`Edit ${product.name}`}
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteTarget({ id: product.id, name: product.name })}
+                            disabled={row.isUpdating}
+                            className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-30 disabled:hover:bg-transparent"
+                            title="Delete Product"
+                            aria-label={`Delete ${product.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       {row.feedback && (
                         <div className={`mt-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider motion-fade-up ${
@@ -596,6 +627,82 @@ export function InventoryTable({
           </button>
         </div>
       </div>
+
+      {editingProduct && (
+        <EditProductModal
+          key={editingProduct.id}
+          product={editingProduct}
+          categories={categories}
+          onClose={() => setEditingProduct(null)}
+          onUpdated={(updated) => {
+            setProducts((prev) =>
+              prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
+            );
+            updateRowState(updated.id, {
+              feedback: { type: "success", message: "Product updated" },
+            });
+            setTimeout(() => {
+              updateRowState(updated.id, { feedback: null });
+            }, 3000);
+          }}
+        />
+      )}
+
+      {deleteTarget && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220] animate-[fade-in_0.2s_ease-out]"
+            onClick={() => {
+              if (!isDeleting) setDeleteTarget(null);
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-product-modal-title"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6 border border-gray-100 animate-[scale-in_0.2s_ease-out]"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 id="delete-product-modal-title" className="font-bold text-gray-900 text-base">
+                  Delete Product
+                </h3>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  Are you sure you want to delete <strong className="text-gray-900">&ldquo;{deleteTarget.name}&rdquo;</strong>? This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 rounded-lg border border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => void handleConfirmDelete()}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 disabled:opacity-60"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete Product"
+                )}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

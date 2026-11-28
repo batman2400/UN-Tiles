@@ -105,6 +105,10 @@ const deleteProductSchema = z.object({
   productId: z.string().min(1, "Product is required"),
 });
 
+const updateProductSchema = productSchema.omit({ stock_sqft: true }).extend({
+  id: z.string().min(1, "Product is required"),
+});
+
 // ── Auth Guard ─────────────────────────────────────────
 
 async function requireAdminSafe(
@@ -282,6 +286,111 @@ export async function createProduct(rawData: {
 
   revalidateCatalog();
   return { success: true };
+}
+
+export async function updateProduct(rawData: {
+  id: string;
+  sku: string;
+  name: string;
+  category_slug: string;
+  dimensions: string;
+  price_per_sqft: number;
+  image?: string;
+  finish: string;
+  application: string;
+}) {
+  const parsed = updateProductSchema.safeParse(rawData);
+  if (!parsed.success) {
+    return { success: false as const, error: parsed.error.issues[0]?.message || "Validation failed" };
+  }
+  const data = parsed.data;
+  const resolvedImage = data.image?.trim() || DEFAULT_TILE_IMAGE;
+
+  const supabase = await createClient();
+  const auth = await requireAdminSafe(supabase);
+  if (!auth.ok) return { success: false as const, error: auth.error };
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("products")
+    .select("id, sku, image")
+    .eq("id", data.id)
+    .single();
+
+  if (fetchError || !existing) {
+    return { success: false as const, error: fetchError?.message || "Product not found." };
+  }
+
+  const { data: duplicateSku } = await supabase
+    .from("products")
+    .select("id, name")
+    .eq("sku", data.sku)
+    .neq("id", data.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateSku) {
+    return {
+      success: false as const,
+      error: `SKU "${data.sku}" is already used by "${duplicateSku.name}".`,
+    };
+  }
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({
+      sku: data.sku,
+      name: data.name,
+      category_slug: data.category_slug,
+      dimensions: data.dimensions,
+      price_per_sqft: data.price_per_sqft,
+      image: resolvedImage,
+      finish: data.finish,
+      application: data.application,
+    })
+    .eq("id", data.id);
+
+  if (updateError) {
+    return { success: false as const, error: updateError.message };
+  }
+
+  await logAdminAction(supabase, {
+    adminId: auth.user.id,
+    adminEmail: auth.user.email,
+    action: "product.updated",
+    entityType: "product",
+    entityId: data.id,
+    details: { sku: data.sku, name: data.name, price_per_sqft: data.price_per_sqft },
+  });
+
+  if (resolvedImage && resolvedImage !== existing.image) {
+    try {
+      after(async () => {
+        try {
+          await indexProduct(data.id, resolvedImage);
+        } catch (embedErr) {
+          console.warn(`[Admin Action] Background indexProduct failed for ${data.id}:`, embedErr);
+        }
+      });
+    } catch (afterErr) {
+      console.warn("[Admin Action] after() hook unavailable:", afterErr);
+    }
+  }
+
+  revalidateCatalog();
+  return {
+    success: true as const,
+    product: {
+      id: data.id,
+      sku: data.sku,
+      name: data.name,
+      category_slug: data.category_slug,
+      dimensions: data.dimensions,
+      price_per_sqft: data.price_per_sqft,
+      image: resolvedImage,
+      finish: data.finish,
+      application: data.application,
+    },
+  };
 }
 
 export async function adjustProductStock(rawData: { productId: string; amount: number }) {

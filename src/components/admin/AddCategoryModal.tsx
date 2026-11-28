@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Plus, X, Loader2 } from "lucide-react";
 import { createCategory } from "@/app/actions/admin";
 import { createClient } from "@/utils/supabase/client";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 const ALLOWED_UPLOAD_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -68,6 +69,8 @@ export function AddCategoryModal() {
     setIsOpen(false);
     setError(null);
   };
+
+  useModalBehavior(isOpen, handleClose, isSubmitting);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -156,9 +159,14 @@ export function AddCategoryModal() {
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-category-modal-title"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[201] animate-[scale-in_0.2s_ease-out] overflow-hidden flex flex-col max-h-[min(90vh,100dvh-1.5rem)]"
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-          <h3 className="font-bold text-gray-900">Add New Category</h3>
+          <h3 id="add-category-modal-title" className="font-bold text-gray-900">Add New Category</h3>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-900 p-1 rounded-md transition-colors"

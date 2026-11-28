@@ -4,7 +4,15 @@ import { useId } from "react";
 import { polygonToPath } from "@/lib/tile-planner";
 import type { PlannerResult } from "@/lib/tile-planner";
 
-export function LayoutCanvas({ result }: { result: PlannerResult | null }) {
+export function LayoutCanvas({
+  result,
+  widthLabel,
+  heightLabel,
+}: {
+  result: PlannerResult | null;
+  widthLabel?: string;
+  heightLabel?: string;
+}) {
   const uid = useId().replace(/:/g, "");
 
   if (!result) {
@@ -16,7 +24,11 @@ export function LayoutCanvas({ result }: { result: PlannerResult | null }) {
   }
 
   const { room, roomPolygon: poly, tiles, pairedCutIds } = result;
-  const pad = Math.max(room.width, room.height) * 0.04;
+  const maxDim = Math.max(room.width, room.height);
+  const pad = maxDim * 0.04;
+  const labelSize = Math.max(maxDim * 0.032, 14);
+  const topExtra = widthLabel ? labelSize * 1.9 : 0;
+  const leftExtra = heightLabel ? labelSize * 1.9 : 0;
   const clipId = `room-clip-${uid}`;
   const hatchId = `cut-hatch-${uid}`;
   const pairSet = new Set(pairedCutIds.flat());
@@ -25,8 +37,8 @@ export function LayoutCanvas({ result }: { result: PlannerResult | null }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
       <svg
-        viewBox={`${-pad} ${-pad} ${room.width + pad * 2} ${room.height + pad * 2}`}
-        className="w-full h-auto max-h-[min(70vh,640px)] bg-[#f7f5f2]"
+        viewBox={`${-(pad + leftExtra)} ${-(pad + topExtra)} ${room.width + pad * 2 + leftExtra} ${room.height + pad * 2 + topExtra}`}
+        className="w-full h-auto max-h-[min(58vh,500px)] bg-[#f7f5f2]"
         role="img"
         aria-label="Tile layout preview"
       >
@@ -81,6 +93,37 @@ export function LayoutCanvas({ result }: { result: PlannerResult | null }) {
         </g>
 
         <path d={path} fill="none" stroke="#1c1917" strokeWidth={Math.max(2, pad * 0.12)} />
+
+        {widthLabel && (
+          <text
+            x={room.width / 2}
+            y={-(topExtra * 0.42)}
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="#57534e"
+            fontSize={labelSize}
+            fontWeight="600"
+            fontFamily="var(--font-sans), sans-serif"
+          >
+            {widthLabel}
+          </text>
+        )}
+
+        {heightLabel && (
+          <text
+            x={-(leftExtra * 0.48)}
+            y={room.height / 2}
+            textAnchor="middle"
+            dominantBaseline="central"
+            transform={`rotate(-90 ${-(leftExtra * 0.48)} ${room.height / 2})`}
+            fill="#57534e"
+            fontSize={labelSize}
+            fontWeight="600"
+            fontFamily="var(--font-sans), sans-serif"
+          >
+            {heightLabel}
+          </text>
+        )}
       </svg>
 
       <div className="flex flex-wrap gap-4 px-4 py-3 border-t border-gray-100 text-[11px] uppercase tracking-wider text-gray-500">

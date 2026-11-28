@@ -9,7 +9,9 @@ export function AuthNavIcon({ className }: { className?: string }) {
 
   if (isLoading) {
     return (
-      <div className="w-5 h-5 bg-surface-container-high animate-pulse" />
+      <div className="h-9 w-9 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-full bg-surface-container-high animate-pulse" />
+      </div>
     );
   }
 
@@ -34,7 +36,7 @@ export function AuthNavIcon({ className }: { className?: string }) {
     <Link
       href="/login"
       aria-label="Sign in"
-      className={`icon-button-lift flex h-10 w-10 sm:min-h-11 sm:min-w-11 items-center justify-center transition-colors duration-300 ${className ?? "text-on-surface-variant hover:text-on-surface"}`}
+      className={`icon-button-lift inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-300 ${className ?? "text-on-surface-variant hover:text-on-surface"}`}
     >
       <UserCircle className="w-5 h-5" />
     </Link>

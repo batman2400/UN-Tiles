@@ -15,11 +15,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle } from "lucide-react";
-import {
-  FaArrowRight,
-  FaSeedling,
-} from "react-icons/fa";
+import { CheckCircle, Sparkles } from "lucide-react";
+import { FaArrowRight } from "react-icons/fa";
 
 interface ContactInfo {
   email: string;
@@ -175,39 +172,39 @@ export default function ContactSolutionForm(
       <div className="grid w-full max-w-5xl grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-12">
         <div className="flex flex-col gap-6">
           {badge && (
-            <Badge>
-              <FaSeedling className="text-primary-foreground" />
+            <Badge className="w-fit bg-accent/10 text-amber-800 border border-accent/25 px-3 py-1 rounded-full font-semibold uppercase tracking-widest text-[11px] gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-accent" />
               {badge}
             </Badge>
           )}
 
-          <h1 className="text-foreground text-3xl leading-tight font-extrabold tracking-tight sm:text-4xl md:text-5xl">
+          <h2 className="text-on-surface text-3xl leading-tight font-display font-bold tracking-tight sm:text-4xl md:text-5xl">
             {headline}{" "}
-            <span className="text-primary block">{headlineAccent}</span>
-          </h1>
+            <span className="text-accent block">{headlineAccent}</span>
+          </h2>
 
-          <p className="text-muted-foreground max-w-sm text-base leading-relaxed">
+          <p className="text-on-surface-variant max-w-sm text-base leading-relaxed">
             {subheadline}
           </p>
 
-          <Separator className="border-primary/40 my-2 w-16" />
+          <Separator className="border-accent/40 my-2 w-16" />
         </div>
 
-        <Card className="bg-muted rounded-4xl shadow-sm ring-0">
-          <CardContent className="flex flex-col gap-5 p-5 sm:p-8">
+        <Card className="bg-surface-container-lowest border border-outline/25 rounded-3xl premium-shadow-lg ring-0">
+          <CardContent className="flex flex-col gap-5 p-6 sm:p-8">
             {success ? (
               <div className="flex flex-col items-center justify-center text-center py-12 space-y-6">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                  <CheckCircle className="w-8 h-8 text-primary" />
+                <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-accent" />
                 </div>
                 <div className="space-y-3">
-                  <p className="text-sm uppercase tracking-[0.2em] text-primary font-semibold">
+                  <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold">
                     Inquiry Received
                   </p>
-                  <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+                  <h2 className="text-2xl md:text-3xl font-display font-bold tracking-tight text-on-surface">
                     Thank You
                   </h2>
-                  <p className="text-muted-foreground leading-relaxed max-w-sm">
+                  <p className="text-on-surface-variant leading-relaxed max-w-sm">
                     An architectural consultant will be in touch shortly to discuss your project in detail.
                   </p>
                 </div>
@@ -222,15 +219,15 @@ export default function ContactSolutionForm(
             ) : (
               <>
                 {errorMsg && (
-                  <div className="mb-4 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-sm rounded-xl">
+                  <div className="mb-2 p-4 bg-red-500/10 border border-red-500/20 text-red-600 text-sm rounded-xl">
                     {errorMsg}
                   </div>
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1.5">
                     <Label
                       htmlFor="name"
-                      className="text-foreground text-sm font-medium"
+                      className="text-on-surface text-xs font-bold uppercase tracking-wider"
                     >
                       Full Name *
                     </Label>
@@ -239,13 +236,13 @@ export default function ContactSolutionForm(
                       placeholder="Kasun Perera"
                       value={form.name}
                       onChange={(e) => handleChange("name", e.target.value)}
-                      className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                      className="bg-surface-container-low/60 border border-outline/30 rounded-xl min-h-11 px-3.5 text-sm text-on-surface placeholder:text-outline-variant focus-visible:border-accent focus-visible:ring-accent/20"
                     />
                   </div>
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1.5">
                     <Label
                       htmlFor="company"
-                      className="text-foreground text-sm font-medium"
+                      className="text-on-surface text-xs font-bold uppercase tracking-wider"
                     >
                       Company
                     </Label>
@@ -254,18 +251,18 @@ export default function ContactSolutionForm(
                       placeholder="Your Company"
                       value={form.company}
                       onChange={(e) => handleChange("company", e.target.value)}
-                      className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                      className="bg-surface-container-low/60 border border-outline/30 rounded-xl min-h-11 px-3.5 text-sm text-on-surface placeholder:text-outline-variant focus-visible:border-accent focus-visible:ring-accent/20"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1.5">
                     <Label
                       htmlFor="email"
-                      className="text-foreground text-sm font-medium"
+                      className="text-on-surface text-xs font-bold uppercase tracking-wider"
                     >
-                      Work Email *
+                      Email Address *
                     </Label>
                     <Input
                       id="email"
@@ -273,13 +270,13 @@ export default function ContactSolutionForm(
                       placeholder="kasun@example.com"
                       value={form.email}
                       onChange={(e) => handleChange("email", e.target.value)}
-                      className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                      className="bg-surface-container-low/60 border border-outline/30 rounded-xl min-h-11 px-3.5 text-sm text-on-surface placeholder:text-outline-variant focus-visible:border-accent focus-visible:ring-accent/20"
                     />
                   </div>
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-1.5">
                     <Label
                       htmlFor="phone"
-                      className="text-foreground text-sm font-medium"
+                      className="text-on-surface text-xs font-bold uppercase tracking-wider"
                     >
                       Phone Number
                     </Label>
@@ -289,15 +286,15 @@ export default function ContactSolutionForm(
                       placeholder="+94 77 ..."
                       value={form.phone}
                       onChange={(e) => handleChange("phone", e.target.value)}
-                      className="bg-input focus-visible:ring-primary rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                      className="bg-surface-container-low/60 border border-outline/30 rounded-xl min-h-11 px-3.5 text-sm text-on-surface placeholder:text-outline-variant focus-visible:border-accent focus-visible:ring-accent/20"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-1.5">
                   <Label
                     htmlFor="projectType"
-                    className="text-foreground text-sm font-medium"
+                    className="text-on-surface text-xs font-bold uppercase tracking-wider"
                   >
                     Project Type
                   </Label>
@@ -307,7 +304,7 @@ export default function ContactSolutionForm(
                   >
                     <SelectTrigger
                       id="projectType"
-                      className="bg-input focus:ring-primary text-muted-foreground rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                      className="w-full min-h-11 px-3.5 bg-surface-container-low/60 border border-outline/30 rounded-xl text-sm text-on-surface focus:border-accent focus:ring-accent/20"
                     >
                       <SelectValue placeholder="Choose a project type..." />
                     </SelectTrigger>
@@ -324,27 +321,27 @@ export default function ContactSolutionForm(
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-1.5">
                   <Label
                     htmlFor="message"
-                    className="text-foreground text-sm font-medium"
+                    className="text-on-surface text-xs font-bold uppercase tracking-wider"
                   >
                     Message *
                   </Label>
                   <Textarea
                     id="message"
-                    placeholder="Tell us about your goals or challenges..."
+                    placeholder="Tell us about your project, tile preferences, or timeline..."
                     rows={4}
                     value={form.message}
                     onChange={(e) => handleChange("message", e.target.value)}
-                    className="bg-input focus-visible:ring-primary resize-none rounded-xl border-0 text-sm shadow-[inset_0_1px_0_0_rgba(255,255,255,1)] focus-visible:ring-1 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.2)]"
+                    className="bg-surface-container-low/60 border border-outline/30 rounded-xl px-3.5 py-2.5 text-sm text-on-surface placeholder:text-outline-variant resize-none focus-visible:border-accent focus-visible:ring-accent/20"
                   />
                 </div>
 
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || !form.name || !form.email || !form.message}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 group mt-1 w-full rounded-xl py-5 text-sm font-semibold shadow-[inset_0_2px_0_0_rgba(255,255,255,0.5),inset_0_-2px_0_0_rgba(0,0,0,0.2)] transition-all dark:shadow-[inset_0_2px_0_0_rgba(255,255,255,0.2)] disabled:opacity-70"
+                  className="bg-zinc-900 text-white hover:bg-accent group mt-1 w-full h-auto rounded-xl py-4 text-xs font-semibold uppercase tracking-widest shadow-md transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? "Sending..." : ctaLabel}
                   {!isSubmitting && <FaArrowRight className="ml-2 text-xs transition-transform group-hover:translate-x-1" />}

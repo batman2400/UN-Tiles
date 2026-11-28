@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Check, AlertTriangle } from "lucide-react";
@@ -19,21 +19,51 @@ export function ProductCard({
 }) {
   const { addToCart } = useCart();
   const [justAdded, setJustAdded] = useState(false);
-  const [qty, setQty] = useState(() =>
-    product.stockSqft > 0 ? Math.min(10, product.stockSqft) : 1
-  );
+  const initialQty = product.stockSqft > 0 ? Math.min(10, product.stockSqft) : 1;
+  const [qty, setQty] = useState(initialQty);
+  const [qtyInput, setQtyInput] = useState(String(initialQty));
+  const [stockNotice, setStockNotice] = useState<string | null>(null);
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+      if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    };
+  }, []);
+
+  const showNotice = useCallback((message: string) => {
+    setStockNotice(message);
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setStockNotice(null), 3500);
+  }, []);
 
   const isOutOfStock = product.stockSqft === 0;
   const isLowStock = product.stockSqft > 0 && product.stockSqft <= 100;
 
+  const commitQtyDraft = useCallback((): number => {
+    const parsed = parseInt(qtyInput, 10);
+    if (isNaN(parsed) || parsed < 1) {
+      setQty(1);
+      setQtyInput("1");
+      return 1;
+    }
+    if (product.stockSqft > 0 && parsed > product.stockSqft) {
+      setQty(product.stockSqft);
+      setQtyInput(String(product.stockSqft));
+      showNotice(`Only ${product.stockSqft} sq\u00A0ft available in stock.`);
+      return product.stockSqft;
+    }
+    setQty(parsed);
+    setQtyInput(String(parsed));
+    return parsed;
+  }, [qtyInput, product.stockSqft, showNotice]);
+
   const handleQuickAdd = useCallback(() => {
     if (isOutOfStock || justAdded) return;
 
-    if (qty > product.stockSqft) {
-      alert(`Only ${product.stockSqft} sqft available in stock.`);
-      setQty(product.stockSqft);
-      return;
-    }
+    const targetQty = commitQtyDraft();
 
     const added = addToCart(
       {
@@ -42,19 +72,23 @@ export function ProductCard({
         image: product.image,
         category: product.category,
         price_per_sqft: product.pricePerSqft,
-        stockSqft: product.stockSqft, // Ensure stock is passed to cart
+        stockSqft: product.stockSqft,
       },
-      qty
+      targetQty
     );
 
     if (!added) {
-      alert(`Cannot add more to cart. You may have reached the maximum available stock of ${product.stockSqft} sqft.`);
+      showNotice(
+        `Max stock reached (${product.stockSqft} sq\u00A0ft total in warehouse).`
+      );
       return;
     }
 
+    setStockNotice(null);
     setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1800);
-  }, [addToCart, product, isOutOfStock, justAdded, qty]);
+    if (addedTimerRef.current) clearTimeout(addedTimerRef.current);
+    addedTimerRef.current = setTimeout(() => setJustAdded(false), 1800);
+  }, [addToCart, commitQtyDraft, product, isOutOfStock, justAdded, showNotice]);
 
   return (
     <div className="group flex h-full min-w-0 flex-col bg-surface-container-lowest premium-shadow hover:premium-shadow-lg transition-shadow duration-500 rounded-2xl overflow-hidden">
@@ -148,6 +182,13 @@ export function ProductCard({
           </Link>
         )}
 
+        {/* Inline stock notice */}
+        {stockNotice && (
+          <p role="status" className="text-[11px] font-medium text-[#9f403d] leading-snug">
+            {stockNotice}
+          </p>
+        )}
+
         {/* Price + Quick Add row */}
         <div className="mt-auto flex min-w-0 flex-col gap-2 pt-2 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col min-w-0">
@@ -165,38 +206,50 @@ export function ProductCard({
                 currency: "LKR",
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0,
-              }).format(product.pricePerSqft)} / sq ft
+              }).format(product.pricePerSqft)} / sq&nbsp;ft
             </span>
           </div>
           <div className="flex w-full min-w-0 items-center gap-1.5 sm:gap-2 xl:w-auto xl:justify-end">
             {!isOutOfStock && (
-              <input
-                type="number"
-                min={1}
-                max={product.stockSqft}
-                value={qty}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value) || 1;
-                  if (val > product.stockSqft) {
-                    alert(`Only ${product.stockSqft} sqft available in stock.`);
-                    setQty(product.stockSqft);
-                  } else {
-                    setQty(Math.max(1, val));
-                  }
-                }}
-                className="w-11 sm:w-14 min-h-10 shrink-0 px-1 sm:px-2 py-1.5 text-xs border border-outline bg-transparent rounded outline-none focus:border-primary text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                disabled={justAdded}
-              />
+              <div className="relative flex items-center shrink-0">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  aria-label="Quantity in square feet"
+                  title="Quantity in sq ft"
+                  value={qtyInput}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (!/^\d*$/.test(raw)) return;
+                    setQtyInput(raw);
+                    if (raw) {
+                      const parsed = parseInt(raw, 10);
+                      if (parsed >= 1) {
+                        setQty(Math.min(parsed, product.stockSqft));
+                      }
+                    }
+                  }}
+                  onBlur={() => {
+                    commitQtyDraft();
+                  }}
+                  className="w-12 sm:w-14 xl:w-16 min-h-10 shrink-0 px-1.5 sm:pr-7 sm:pl-2 py-1.5 text-xs font-medium border border-outline/60 bg-transparent rounded-lg outline-none focus:border-accent text-center sm:text-left"
+                  disabled={justAdded}
+                />
+                <span className="hidden sm:inline pointer-events-none absolute right-2 text-[9px] font-semibold text-on-surface-variant uppercase">
+                  ft²
+                </span>
+              </div>
             )}
             <button
+              type="button"
               onClick={handleQuickAdd}
               disabled={isOutOfStock || justAdded}
-              className={`flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider sm:tracking-widest whitespace-nowrap overflow-hidden rounded xl:flex-initial transition-all duration-300 ${
+              className={`flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-2 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider sm:tracking-widest whitespace-nowrap overflow-hidden rounded-lg xl:flex-initial transition-all duration-300 ${
                 isOutOfStock
                   ? "bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed w-full"
                   : justAdded
-                  ? "bg-primary/10 text-primary"
-                  : "bg-surface-container-high text-on-surface-variant hover:bg-accent hover:text-white sm:hover:scale-105"
+                  ? "bg-emerald-600 text-white"
+                  : "bg-zinc-900 text-white hover:bg-accent shadow-sm"
               }`}
             >
               {isOutOfStock ? (

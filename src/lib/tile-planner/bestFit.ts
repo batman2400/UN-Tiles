@@ -34,6 +34,7 @@ export type CatalogEntry = {
   dimensions: string;
   image: string;
   category: string;
+  categorySlug?: string;
   pricePerSqft: number;
 };
 
@@ -43,6 +44,7 @@ export type BestFitParams = {
   pattern: Pattern;
   breakageBuffer: number;
   currentProductId: string;
+  currentCategorySlug?: string;
   currentTileWidthMm: number;
   currentTileHeightMm: number;
   catalog: CatalogEntry[];
@@ -63,6 +65,7 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
     pattern,
     breakageBuffer,
     currentProductId,
+    currentCategorySlug,
     currentTileWidthMm,
     currentTileHeightMm,
     catalog,
@@ -79,6 +82,15 @@ export function findBestFitTiles(params: BestFitParams): BestFitCandidate[] {
   for (const entry of catalog) {
     // Skip the tile the user already has selected
     if (entry.id === currentProductId) continue;
+
+    // Keep recommendations in the same tile category (e.g. Floor stays Floor)
+    if (
+      currentCategorySlug &&
+      entry.categorySlug &&
+      entry.categorySlug !== currentCategorySlug
+    ) {
+      continue;
+    }
 
     const size = parseDimensions(entry.dimensions);
     if (!size) continue;

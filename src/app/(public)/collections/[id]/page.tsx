@@ -272,9 +272,10 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
               </div>
               <Link
                 href={`/collections?category=${product.categorySlug}`}
-                className="text-xs font-bold uppercase tracking-wider text-accent hover:underline hidden sm:block"
+                className="text-xs font-bold uppercase tracking-wider text-accent hover:underline hidden sm:inline-flex items-center gap-1.5"
               >
-                View All {product.category} &rarr;
+                <span>View All {product.category}</span>
+                <span aria-hidden="true">&rarr;</span>
               </Link>
             </div>
 

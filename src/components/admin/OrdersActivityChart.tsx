@@ -5,15 +5,11 @@ interface DayBucket {
 }
 
 /**
- * Lightweight inline-SVG bar chart — no charting library dependency needed
- * for a simple 14-day trend. Pure presentational (server-renderable);
- * per-bar tooltips are handled natively via SVG <title>.
+ * Lightweight HTML/CSS flex bar chart — unstretched crisp corners across all
+ * screen widths with native hover titles and server-renderable markup.
  */
 export function OrdersActivityChart({ data }: { data: DayBucket[] }) {
   const max = Math.max(1, ...data.map((d) => d.count));
-  const width = 100;
-  const height = 40;
-  const barWidth = width / data.length;
 
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-6 md:p-8 motion-fade-up motion-delay-4">
@@ -27,32 +23,40 @@ export function OrdersActivityChart({ data }: { data: DayBucket[] }) {
         </span>
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-32" preserveAspectRatio="none">
+      <div
+        className="h-32 flex items-end gap-1.5 sm:gap-2"
+        role="img"
+        aria-label="14-day order activity bar chart"
+      >
         {data.map((d, i) => {
-          const barHeight = (d.count / max) * (height - 4);
-          const x = i * barWidth;
-          const y = height - barHeight;
+          const pct = (d.count / max) * 100;
+          const heightPct = d.count > 0 ? Math.max(pct, 8) : 4;
           return (
-            <rect
+            <div
               key={i}
-              x={x + barWidth * 0.15}
-              y={y}
-              width={barWidth * 0.7}
-              height={Math.max(barHeight, d.count > 0 ? 1 : 0.5)}
-              rx={0.8}
-              className={d.count > 0 ? "fill-accent" : "fill-gray-100"}
+              title={`${d.fullLabel}: ${d.count} order${d.count === 1 ? "" : "s"}`}
+              className="flex-1 h-full flex items-end group"
             >
-              <title>{`${d.fullLabel}: ${d.count} order${d.count === 1 ? "" : "s"}`}</title>
-            </rect>
+              <div
+                style={{ height: `${heightPct}%` }}
+                className={`w-full rounded-t-md transition-all duration-300 ${
+                  d.count > 0
+                    ? "bg-accent group-hover:bg-zinc-900"
+                    : "bg-gray-100 group-hover:bg-gray-200"
+                }`}
+              />
+            </div>
           );
         })}
-      </svg>
+      </div>
 
-      <div className="flex justify-between mt-2">
+      <div className="flex gap-1.5 sm:gap-2 mt-2">
         {data.map((d, i) => (
           <span
             key={i}
-            className={`text-[9px] font-bold uppercase tracking-wider text-gray-400 ${i % 2 !== 0 ? "hidden sm:inline" : ""}`}
+            className={`flex-1 text-center text-[9px] font-bold uppercase tracking-wider text-gray-400 ${
+              i % 2 !== 0 ? "hidden sm:block" : ""
+            }`}
           >
             {d.label}
           </span>

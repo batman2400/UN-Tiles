@@ -88,10 +88,11 @@ export function AuditLogTable({ initialEntries }: { initialEntries: AuditLogEntr
   }, [initialEntries, searchQuery, actionFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredEntries.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
   const paginatedEntries = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
+    const start = (safePage - 1) * PAGE_SIZE;
     return filteredEntries.slice(start, start + PAGE_SIZE);
-  }, [filteredEntries, currentPage]);
+  }, [filteredEntries, safePage]);
 
   const handleExportCsv = () => {
     downloadCsv(
@@ -212,25 +213,25 @@ export function AuditLogTable({ initialEntries }: { initialEntries: AuditLogEntr
 
       <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gray-50/50">
         <p className="text-xs text-gray-500 font-medium">
-          Showing {paginatedEntries.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}
+          Showing {paginatedEntries.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1}
           {"–"}
-          {Math.min(currentPage * PAGE_SIZE, filteredEntries.length)} of {filteredEntries.length}{" "}
+          {Math.min(safePage * PAGE_SIZE, filteredEntries.length)} of {filteredEntries.length}{" "}
           {filteredEntries.length === 1 ? "entry" : "entries"}
         </p>
         <div className="flex gap-1">
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage <= 1}
+            disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
-            {currentPage}
+            {safePage}
           </span>
           <button
             className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentPage >= totalPages}
+            disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
             <ChevronRight className="w-4 h-4" />

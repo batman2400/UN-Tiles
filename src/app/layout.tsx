@@ -1,14 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Manrope, Geist } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 import { cn } from "@/lib/utils";
-
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -293,7 +287,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full", "antialiased", inter.variable, manrope.variable, "font-sans", geist.variable)}
+      className={cn("h-full", "antialiased", inter.variable, manrope.variable, "font-sans")}
       style={{ backgroundColor: "#faf8f5", colorScheme: "light" }}
     >
       <body

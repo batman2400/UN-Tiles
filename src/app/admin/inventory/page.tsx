@@ -19,7 +19,7 @@ export default async function AdminInventoryPage() {
       .single(),
     supabase
       .from("products")
-      .select("id, sku, name, stock_sqft, price_per_sqft, category_slug, image")
+      .select("id, sku, name, stock_sqft, price_per_sqft, category_slug, image, dimensions, finish, application")
       .order("sku", { ascending: true }),
     supabase
       .from("categories")
@@ -46,6 +46,9 @@ export default async function AdminInventoryPage() {
     price_per_sqft: Number(row.price_per_sqft),
     category_slug: row.category_slug,
     image: row.image,
+    dimensions: row.dimensions ?? "",
+    finish: row.finish ?? "",
+    application: row.application ?? "",
   }));
 
   const categories = categoriesRes.data ?? [];

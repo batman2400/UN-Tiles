@@ -11,6 +11,7 @@ import { createClient } from "@/utils/supabase/client";
 import { downloadCsv } from "@/lib/csv";
 import { formatAddressSnapshot, isDeliveryMethod, type AddressSnapshot } from "@/lib/address";
 import { updateOrderStatus, bulkUpdateOrderStatus } from "@/app/actions/admin";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 export interface StatusHistoryItem {
   status: string;
@@ -117,6 +118,10 @@ export function OrdersTable({
 
   // Bulk Status Update Modal State
   const [bulkModal, setBulkModal] = useState<BulkModalState | null>(null);
+
+  useModalBehavior(Boolean(statusModal), () => setStatusModal(null), isSubmittingStatus);
+  useModalBehavior(Boolean(bulkModal), () => setBulkModal(null), isBulkUpdating);
+  useModalBehavior(Boolean(viewOrder && !statusModal), () => setViewOrder(null), false);
 
   useEffect(() => {
     setOrders(initialOrders);
@@ -754,10 +759,15 @@ export function OrdersTable({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220] animate-in fade-in duration-200"
             onClick={() => { if (!isSubmittingStatus) setStatusModal(null); }}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="order-status-modal-title"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-start justify-between pb-4 border-b border-gray-100">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <h3 id="order-status-modal-title" className="font-bold text-gray-900 text-lg flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-yellow-600" />
                   Update Order Status
                 </h3>
@@ -897,10 +907,15 @@ export function OrdersTable({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[220] animate-in fade-in duration-200"
             onClick={() => { if (!isBulkUpdating) setBulkModal(null); }}
           />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-status-modal-title"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-start justify-between pb-4 border-b border-gray-100">
               <div>
-                <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <h3 id="bulk-status-modal-title" className="font-bold text-gray-900 text-lg flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-yellow-600" />
                   Bulk Update ({bulkModal.orderIds.length} Orders)
                 </h3>
@@ -985,10 +1000,15 @@ export function OrdersTable({
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in duration-200"
             onClick={() => setViewOrder(null)}
           />
-          <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-order-drawer-title"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[201] flex flex-col animate-in slide-in-from-right duration-300 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
+          >
             <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10">
               <div>
-                <h3 className="font-bold text-gray-900">Order Details</h3>
+                <h3 id="admin-order-drawer-title" className="font-bold text-gray-900">Order Details</h3>
                 <p className="font-mono text-xs text-gray-500 mt-0.5">
                   {viewOrder.id.startsWith("UN-")
                     ? `#${viewOrder.id.substring(0, 18).toUpperCase()}`

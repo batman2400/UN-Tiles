@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, Loader2, X } from "lucide-react";
 import { cancelCustomerOrder } from "@/app/actions/orders";
+import { useModalBehavior } from "@/hooks/useModalBehavior";
 
 export interface OrderCancellationTarget {
   id: string;
@@ -54,6 +55,8 @@ export function CancelOrderModal({
       setCancelling(false);
     }
   }, [open, order?.id]);
+
+  useModalBehavior(open && Boolean(order), onClose, cancelling);
 
   if (!open || !order) return null;
 
@@ -107,14 +110,19 @@ export function CancelOrderModal({
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[230] animate-in fade-in duration-200"
         onClick={cancelling ? undefined : onClose}
       />
-      <div className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[231] p-6 animate-in zoom-in-95 duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cancel-order-modal-title"
+        className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[231] p-6 animate-in zoom-in-95 duration-200"
+      >
         <div className="flex items-center justify-between pb-4 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-red-100 text-red-600 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-display font-bold text-zinc-900 text-base">Cancel Order</h3>
+              <h3 id="cancel-order-modal-title" className="font-display font-bold text-zinc-900 text-base">Cancel Order</h3>
               <p className="font-mono text-xs text-gray-500">#{displayOrderId}</p>
             </div>
           </div>
