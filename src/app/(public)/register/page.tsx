@@ -158,7 +158,7 @@ function RegisterForm() {
                 <div className="relative">
                   <input id="register-password" type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Minimum 8 characters"
                     className="w-full bg-transparent border-b border-outline py-2.5 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-0 top-1/2 -translate-y-1/2 min-h-11 min-w-11 -mr-2 inline-flex items-center justify-center text-outline hover:text-on-surface transition-colors">
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
@@ -169,7 +169,7 @@ function RegisterForm() {
                 <div className="relative">
                   <input id="register-confirm-password" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Re-enter your password"
                     className="w-full bg-transparent border-b border-outline py-2.5 pr-10 text-on-surface placeholder:text-outline-variant outline-none form-field-animate focus:border-b-2 focus:border-primary focus:bg-surface-container-highest/40 transition-colors" />
-                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-0 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? "Hide password" : "Show password"} className="absolute right-0 top-1/2 -translate-y-1/2 min-h-11 min-w-11 -mr-2 inline-flex items-center justify-center text-outline hover:text-on-surface transition-colors">
                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>

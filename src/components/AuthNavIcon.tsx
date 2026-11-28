@@ -9,7 +9,7 @@ export function AuthNavIcon({ className }: { className?: string }) {
 
   if (isLoading) {
     return (
-      <div className="h-9 w-9 flex items-center justify-center">
+      <div className="h-10 w-10 flex items-center justify-center">
         <div className="w-7 h-7 rounded-full bg-surface-container-high animate-pulse" />
       </div>
     );
@@ -24,7 +24,7 @@ export function AuthNavIcon({ className }: { className?: string }) {
     return (
       <Link
         href="/profile"
-        className="icon-button-lift flex items-center justify-center w-8 h-8 rounded-full bg-primary text-on-primary text-xs font-display font-bold transition-colors duration-300 hover:bg-primary-dim"
+        className="icon-button-lift flex items-center justify-center w-9 h-9 rounded-full bg-primary text-on-primary text-xs font-display font-bold transition-colors duration-300 hover:bg-primary-dim"
         title={user.firstName ? `${user.firstName} ${user.lastName}` : user.email}
       >
         {initialF}{initialL}
@@ -36,7 +36,7 @@ export function AuthNavIcon({ className }: { className?: string }) {
     <Link
       href="/login"
       aria-label="Sign in"
-      className={`icon-button-lift inline-flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-300 ${className ?? "text-on-surface-variant hover:text-on-surface"}`}
+      className={`icon-button-lift inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-300 ${className ?? "text-on-surface-variant hover:text-on-surface"}`}
     >
       <UserCircle className="w-5 h-5" />
     </Link>

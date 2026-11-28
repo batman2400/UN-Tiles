@@ -113,12 +113,12 @@ export default function About() {
             <div className="text-center mb-12">
               <p className="text-sm uppercase tracking-[0.2em] text-accent font-semibold mb-3">Customer Reviews</p>
               <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight text-on-surface">What Our Customers Say</h2>
-              <div className="mt-4 flex flex-col md:flex-row items-center justify-center gap-3 text-sm text-on-surface-variant">
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-sm text-on-surface-variant">
                 <div className="inline-flex items-center gap-2">
                   <span className="text-amber-400 text-lg">★★★★★</span>
                   <span className="font-semibold text-on-surface">5.0</span>
                 </div>
-                <span>·</span>
+                <span aria-hidden="true">·</span>
                 <span>5 Google reviews</span>
               </div>
             </div>

@@ -97,10 +97,10 @@ export function Hero10({
               href={primaryHref}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex h-12 items-center gap-2.5 rounded-full bg-zinc-900 px-7 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-md hover:bg-black transition-all"
+              className="inline-flex min-h-12 items-center justify-center gap-2.5 rounded-full bg-zinc-900 px-6 sm:px-7 py-2.5 text-xs sm:text-sm font-semibold uppercase tracking-wider text-white shadow-md hover:bg-black transition-all"
             >
               <span>{primaryText}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </motion.a>
 
             {/* Studio Tools Hub Action */}
@@ -108,11 +108,11 @@ export function Hero10({
               href={studioHref}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
-              className="inline-flex h-12 items-center gap-2 rounded-full border border-slate-700/15 bg-white/50 px-6 text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur-md hover:bg-white/80 hover:border-accent transition-all group"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-slate-700/15 bg-white/50 px-4 sm:px-6 py-2.5 text-[11px] sm:text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur-md hover:bg-white/80 hover:border-accent transition-all group"
             >
-              <AiFeatureIcon className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
+              <AiFeatureIcon className="w-4 h-4 text-accent shrink-0 transition-transform group-hover:scale-110" />
               <span>{studioText}</span>
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent shrink-0 whitespace-nowrap">
                 AI & 2D
               </span>
             </motion.a>
@@ -120,8 +120,8 @@ export function Hero10({
         </div>
 
         {/* Bottom trust pill */}
-        <div className="mb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-center">
-          <div className="inline-flex w-fit max-w-full items-center gap-3 rounded-full bg-white/60 px-4 py-1.5 text-center text-xs sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/50">
+        <div className="mt-6 sm:mt-8 mb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-col items-center gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-center">
+          <div className="inline-flex w-fit max-w-full items-center gap-2.5 sm:gap-3 rounded-full bg-white/60 px-3.5 sm:px-4 py-1.5 text-center text-[11px] sm:text-sm font-semibold text-slate-800 shadow-sm backdrop-blur-md border border-white/50">
             <span className="grid size-6 shrink-0 place-items-center rounded-full bg-slate-900 text-white">
               <FaArrowRight className="size-2.5 -rotate-45" />
             </span>

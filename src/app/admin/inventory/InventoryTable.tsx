@@ -607,19 +607,19 @@ export function InventoryTable({
           {Math.min(safePage * PAGE_SIZE, filteredProducts.length)} of {filteredProducts.length}{" "}
           {filteredProducts.length === 1 ? "product" : "products"}
         </p>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+          <span className="min-w-10 min-h-10 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
             {safePage}
           </span>
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
@@ -660,7 +660,7 @@ export function InventoryTable({
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-product-modal-title"
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6 border border-gray-100 animate-[scale-in_0.2s_ease-out]"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[min(90vh,calc(100dvh-1.5rem))] overflow-y-auto bg-white rounded-2xl shadow-2xl z-[221] p-6 border border-gray-100 animate-[scale-in_0.2s_ease-out]"
           >
             <div className="flex items-start gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">

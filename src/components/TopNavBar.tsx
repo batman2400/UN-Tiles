@@ -136,7 +136,7 @@ export function TopNavBar() {
             {/* ═══ CENTER ISLAND — Directory Pill ═══ */}
             <nav
               aria-label="Primary navigation"
-              className={`pointer-events-auto hidden lg:flex items-center gap-4 xl:gap-6 2xl:gap-7 rounded-full h-11 sm:h-12 px-6 xl:px-7 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
+              className={`pointer-events-auto hidden lg:flex items-center lg:gap-3 xl:gap-6 2xl:gap-7 rounded-full h-11 sm:h-12 lg:px-4 xl:px-7 transition-all duration-500 absolute left-1/2 -translate-x-1/2 ${pillClass}`}
             >
               {NAV_LINKS.map(({ href, label, badge }) => {
                 const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -153,7 +153,7 @@ export function TopNavBar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`text-xs xl:text-[12.5px] tracking-[0.14em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
+                    className={`text-[11px] xl:text-[12.5px] tracking-[0.1em] xl:tracking-[0.14em] uppercase transition-colors duration-300 flex items-center gap-1.5 whitespace-nowrap ${currentLinkColor}`}
                   >
                     <span>{label.toUpperCase()}</span>
                     {badge && (
@@ -170,7 +170,7 @@ export function TopNavBar() {
             {/* ═══ RIGHT ISLAND — Utilities Pill ═══ */}
             <div ref={searchWrapperRef} className="pointer-events-auto relative flex-shrink-0">
               <div
-                className={`flex items-center gap-1 sm:gap-2 xl:gap-2.5 rounded-full h-11 sm:h-12 px-2.5 sm:px-3.5 transition-all duration-500 ${pillClass}`}
+                className={`flex items-center gap-0.5 sm:gap-1.5 xl:gap-2 rounded-full h-11 sm:h-12 px-2 sm:px-3 transition-all duration-500 ${pillClass}`}
               >
                 {/* Search Popover Toggle */}
                 <button
@@ -178,7 +178,7 @@ export function TopNavBar() {
                   onClick={() => setSearchOpen((v) => !v)}
                   aria-label="Search tiles"
                   aria-expanded={searchOpen}
-                  className={`hidden md:inline-flex h-9 w-9 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
+                  className={`inline-flex h-10 w-10 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
                 >
                   <Search className="w-[18px] h-[18px]" />
                 </button>
@@ -188,7 +188,7 @@ export function TopNavBar() {
                   <Link
                     href="/admin"
                     title="Admin Dashboard"
-                    className={`hidden sm:inline-flex items-center gap-1.5 h-9 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2.5 rounded-full ${iconColor}`}
+                    className={`hidden sm:inline-flex items-center gap-1.5 h-10 text-[10px] font-black uppercase tracking-widest transition-colors duration-300 px-2.5 rounded-full ${iconColor}`}
                   >
                     <Shield className="w-3.5 h-3.5 text-amber-500" />
                     <span className="hidden 2xl:inline">Admin</span>
@@ -204,11 +204,11 @@ export function TopNavBar() {
                 <Link
                   href="/cart"
                   aria-label="Cart"
-                  className={`relative inline-flex h-9 w-9 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
+                  className={`relative inline-flex h-10 w-10 items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
                 >
                   <ShoppingCart className="w-[18px] h-[18px]" />
                   {cartCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 bg-accent text-on-accent text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-sm">
+                    <span className="absolute top-1 right-1 bg-accent text-on-accent text-[9px] font-bold h-4 min-w-4 px-1 rounded-full flex items-center justify-center shadow-sm">
                       {cartCount}
                     </span>
                   )}
@@ -219,17 +219,17 @@ export function TopNavBar() {
                   type="button"
                   onClick={() => setMobileOpen(true)}
                   aria-label="Open menu"
-                  className={`lg:hidden h-9 w-9 inline-flex items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
+                  className={`lg:hidden h-10 w-10 inline-flex items-center justify-center transition-colors duration-300 rounded-full ${iconColor}`}
                 >
                   <Menu className="w-[18px] h-[18px]" />
                 </button>
               </div>
 
-              {/* Anchored Desktop Search Popover (avoids center-nav overlap) */}
+              {/* Anchored Search Popover (works across mobile, tablet, and desktop) */}
               {searchOpen && (
                 <form
                   onSubmit={handleSearchSubmit}
-                  className="hidden md:flex items-center gap-2 absolute right-0 top-full mt-2.5 w-72 sm:w-80 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  className="flex items-center gap-2 absolute right-0 top-full mt-2.5 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 rounded-2xl bg-white/95 backdrop-blur-xl border border-zinc-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150"
                 >
                   <Search className="w-4 h-4 text-zinc-400 ml-2 shrink-0" />
                   <input

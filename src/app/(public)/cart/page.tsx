@@ -323,18 +323,18 @@ function CartPageContent() {
           </h1>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-8 xl:gap-10">
           
           {/* ── Cart Items List ───────────────────────────── */}
-          <div className="flex-1 motion-fade-up motion-delay-1">
+          <div className="flex-1 min-w-0 motion-fade-up motion-delay-1">
             
             {/* Desktop Column Headers */}
-            <div className="hidden md:grid grid-cols-[2.5fr_1fr_1fr_1fr_auto] gap-6 pb-4 px-4 border-b border-gray-200/80 mb-4">
+            <div className="hidden xl:grid xl:grid-cols-[minmax(220px,2.4fr)_minmax(90px,1fr)_auto_minmax(100px,1fr)_auto] xl:gap-6 pb-4 px-4 border-b border-gray-200/80 mb-4">
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Product Specification</span>
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center whitespace-nowrap">Unit Price</span>
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-center whitespace-nowrap">Qty (sq ft)</span>
               <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400 text-right whitespace-nowrap">Subtotal</span>
-              <span className="w-10" />
+              <span className="w-11" />
             </div>
 
             {cartNotice && (
@@ -353,146 +353,159 @@ function CartPageContent() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-md hover:bg-gray-50/50 transition-all md:grid md:grid-cols-[2.5fr_1fr_1fr_1fr_auto] md:gap-6 md:items-center group"
+                    className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100 hover:shadow-md hover:bg-gray-50/50 transition-all xl:grid xl:grid-cols-[minmax(220px,2.4fr)_minmax(90px,1fr)_auto_minmax(100px,1fr)_auto] xl:gap-6 xl:items-center group"
                   >
                     {/* Product Info */}
-                    <div className="flex items-center gap-3 sm:gap-5 mb-4 md:mb-0 min-w-0">
-                      <Link
-                        href={`/collections/${item.id}`}
-                        className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner block"
-                      >
-                        <Image
-                          src={item.image || "/tiles/floor_agaria.jpg"}
-                          alt={item.name}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        />
-                      </Link>
-                      <div className="min-w-0">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 mb-1 inline-block">
-                          {item.category}
-                        </span>
-                        <h3 className="font-display font-bold text-zinc-900 text-base truncate">
-                          <Link href={`/collections/${item.id}`} className="hover:text-accent transition-colors">
-                            {item.name}
-                          </Link>
-                        </h3>
-                        <p className="text-xs text-gray-400 mt-0.5">Architectural Tile Specification</p>
-                      </div>
-                    </div>
-
-                    {/* Price per sq ft */}
-                    <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Unit Price:</span>
-                      <span className="font-mono text-sm font-semibold text-zinc-900">
-                        {formatCurrency(item.price_per_sqft)}
-                      </span>
-                    </div>
-
-                    {/* Quantity Control Pill */}
-                    <div className="flex justify-between md:justify-center items-center mb-3 md:mb-0">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Qty (sq ft):</span>
-                      
-                      <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const next = Math.max(1, item.cartQuantitySqft - 1);
-                            updateQuantity(item.id, next);
-                            setQtyDrafts((prev) => {
-                              const copy = { ...prev };
-                              delete copy[item.id];
-                              return copy;
-                            });
-                          }}
-                          className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
-                          aria-label="Decrease quantity"
+                    <div className="flex items-start sm:items-center justify-between gap-3 sm:gap-4 mb-4 xl:mb-0 min-w-0">
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                        <Link
+                          href={`/collections/${item.id}`}
+                          className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden border border-gray-200/60 shadow-inner block"
                         >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          aria-label={`Quantity in square feet for ${item.name}`}
-                          value={displayQty}
-                          onChange={(e) => {
-                            const raw = e.target.value;
-                            if (!/^\d*$/.test(raw)) return;
-                            setQtyDrafts((prev) => ({ ...prev, [item.id]: raw }));
-                            if (raw) {
-                              const parsed = parseInt(raw, 10);
-                              const max = item.stockSqft ?? Infinity;
-                              if (!isNaN(parsed) && parsed > 0) {
-                                if (parsed > max) {
-                                  showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
-                                  updateQuantity(item.id, max);
-                                } else {
-                                  updateQuantity(item.id, parsed);
-                                }
-                              }
-                            }
-                          }}
-                          onBlur={() => {
-                            const raw = qtyDrafts[item.id];
-                            if (raw !== undefined) {
-                              const parsed = parseInt(raw, 10);
-                              const max = item.stockSqft ?? Infinity;
-                              const clamped =
-                                isNaN(parsed) || parsed < 1
-                                  ? 1
-                                  : Math.min(parsed, max);
-                              if (!isNaN(parsed) && parsed > max) {
-                                showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
-                              }
-                              updateQuantity(item.id, clamped);
-                              setQtyDrafts((prev) => {
-                                const copy = { ...prev };
-                                delete copy[item.id];
-                                return copy;
-                              });
-                            }
-                          }}
-                          className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900"
-                        />
-                        
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const max = item.stockSqft ?? Infinity;
-                            if (item.cartQuantitySqft + 1 > max) {
-                              showCartNotice(`Only ${max} sq\u00A0ft available in stock for ${item.name}.`);
-                            } else {
-                              updateQuantity(item.id, item.cartQuantitySqft + 1);
-                              setQtyDrafts((prev) => {
-                                const copy = { ...prev };
-                                delete copy[item.id];
-                                return copy;
-                              });
-                            }
-                          }}
-                          className="px-3 py-1.5 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
+                          <Image
+                            src={item.image || "/tiles/floor_agaria.jpg"}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        </Link>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-yellow-600 bg-yellow-500/10 px-2 py-0.5 rounded border border-yellow-500/20 mb-1 inline-block">
+                            {item.category}
+                          </span>
+                          <h3 className="font-display font-bold text-zinc-900 text-base line-clamp-2 xl:truncate">
+                            <Link href={`/collections/${item.id}`} className="hover:text-accent transition-colors">
+                              {item.name}
+                            </Link>
+                          </h3>
+                          <p className="text-xs text-gray-400 mt-0.5">Architectural Tile Specification</p>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Line Subtotal */}
-                    <div className="flex justify-between md:justify-end items-center mb-3 md:mb-0">
-                      <span className="text-xs font-bold uppercase tracking-widest text-gray-400 md:hidden">Subtotal:</span>
-                      <span className="font-mono text-base font-bold text-zinc-900">
-                        {formatCurrency(lineTotal)}
-                      </span>
-                    </div>
-
-                    {/* Delete Icon */}
-                    <div className="flex justify-end items-center">
                       <button
                         type="button"
                         onClick={() => removeFromCart(item.id)}
-                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2.5 rounded-full transition-all"
+                        className="xl:hidden min-h-11 min-w-11 -mr-2 -mt-1 inline-flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0"
+                        aria-label={`Remove ${item.name}`}
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-3.5 sm:pt-4 border-t border-gray-100 xl:contents">
+                      {/* Price per sq ft */}
+                      <div className="flex justify-between sm:flex-col sm:items-start xl:items-center xl:justify-center items-center">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400 xl:hidden sm:mb-1">Unit Price</span>
+                        <span className="font-mono text-sm font-semibold text-zinc-900 whitespace-nowrap">
+                          {formatCurrency(item.price_per_sqft)}
+                        </span>
+                      </div>
+
+                      {/* Quantity Control Pill */}
+                      <div className="flex justify-between sm:flex-col sm:items-center xl:justify-center items-center">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400 xl:hidden sm:mb-1">Qty (sq ft)</span>
+                        
+                        <div className="border border-gray-200 rounded-full flex items-center overflow-hidden bg-gray-50/80 shadow-sm focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500/30 transition-all">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = Math.max(1, item.cartQuantitySqft - 1);
+                              updateQuantity(item.id, next);
+                              setQtyDrafts((prev) => {
+                                const copy = { ...prev };
+                                delete copy[item.id];
+                                return copy;
+                              });
+                            }}
+                            className="min-h-10 min-w-10 px-3 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            aria-label={`Quantity in square feet for ${item.name}`}
+                            value={displayQty}
+                            onChange={(e) => {
+                              const raw = e.target.value;
+                              if (!/^\d*$/.test(raw)) return;
+                              setQtyDrafts((prev) => ({ ...prev, [item.id]: raw }));
+                              if (raw) {
+                                const parsed = parseInt(raw, 10);
+                                const max = item.stockSqft ?? Infinity;
+                                if (!isNaN(parsed) && parsed > 0) {
+                                  if (parsed > max) {
+                                    showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
+                                    updateQuantity(item.id, max);
+                                  } else {
+                                    updateQuantity(item.id, parsed);
+                                  }
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              const raw = qtyDrafts[item.id];
+                              if (raw !== undefined) {
+                                const parsed = parseInt(raw, 10);
+                                const max = item.stockSqft ?? Infinity;
+                                const clamped =
+                                  isNaN(parsed) || parsed < 1
+                                    ? 1
+                                    : Math.min(parsed, max);
+                                if (!isNaN(parsed) && parsed > max) {
+                                  showCartNotice(`Only ${max} sq\u00A0ft available for ${item.name}.`);
+                                }
+                                updateQuantity(item.id, clamped);
+                                setQtyDrafts((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[item.id];
+                                  return copy;
+                                });
+                              }
+                            }}
+                            className="font-mono text-center w-12 bg-transparent border-none outline-none text-sm font-bold text-zinc-900"
+                          />
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const max = item.stockSqft ?? Infinity;
+                              if (item.cartQuantitySqft + 1 > max) {
+                                showCartNotice(`Only ${max} sq\u00A0ft available in stock for ${item.name}.`);
+                              } else {
+                                updateQuantity(item.id, item.cartQuantitySqft + 1);
+                                setQtyDrafts((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[item.id];
+                                  return copy;
+                                });
+                              }
+                            }}
+                            className="min-h-10 min-w-10 px-3 hover:bg-gray-200/80 text-gray-600 transition-colors flex items-center justify-center active:scale-95"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Line Subtotal */}
+                      <div className="flex justify-between sm:flex-col sm:items-end xl:justify-end items-center">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-gray-400 xl:hidden sm:mb-1">Subtotal</span>
+                        <span className="font-mono text-base font-bold text-zinc-900 whitespace-nowrap">
+                          {formatCurrency(lineTotal)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Desktop Delete Icon */}
+                    <div className="hidden xl:flex justify-end items-center">
+                      <button
+                        type="button"
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-gray-400 hover:text-red-500 hover:bg-red-50 min-h-11 min-w-11 inline-flex items-center justify-center rounded-full transition-all"
                         aria-label={`Remove ${item.name}`}
                         title="Remove item"
                       >
@@ -549,7 +562,7 @@ function CartPageContent() {
           </div>
 
           {/* ── Order Summary & Checkout Sidebar ────────────────── */}
-          <div className="lg:w-[420px] motion-fade-up motion-delay-2">
+          <div className="lg:w-[380px] xl:w-[420px] shrink-0 motion-fade-up motion-delay-2">
             <div className="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-6 shadow-xl border border-gray-100 sticky top-24 space-y-4">
               
               <div className="pb-3 border-b border-gray-100">

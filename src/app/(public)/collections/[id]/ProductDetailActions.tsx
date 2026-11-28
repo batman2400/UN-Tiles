@@ -127,8 +127,8 @@ export function ProductDetailActions({ product }: { product: Product }) {
       {/* Quantity & Add to Cart Controls */}
       {!isOutOfStock && (
         <div className="space-y-2.5">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center justify-between sm:justify-start border border-outline rounded-xl bg-surface-container/40 px-3.5 py-2 shrink-0">
+          <div className="flex flex-col sm:flex-row md:flex-col xl:flex-row gap-3">
+            <div className="flex items-center justify-between sm:justify-start md:justify-between xl:justify-start min-h-12 border border-outline rounded-xl bg-surface-container/40 px-3.5 py-2 shrink-0">
               <label htmlFor="quantity" className="text-xs font-semibold text-on-surface-variant mr-3 whitespace-nowrap">
                 Quantity (sq&nbsp;ft):
               </label>
@@ -188,7 +188,7 @@ export function ProductDetailActions({ product }: { product: Product }) {
       )}
 
       {/* Auxiliary Actions: Smart Planner & AI Finder */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 gap-3 pt-2">
         {productHasParsableSize(product.dimensions) && (
           <Link
             href={`/planner?product=${encodeURIComponent(product.id)}`}

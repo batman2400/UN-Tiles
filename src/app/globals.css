@@ -412,6 +412,7 @@ body {
 .product-card-overlay {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(
     to top,
     rgba(28, 25, 23, 0.75) 0%,
@@ -431,6 +432,7 @@ body {
 }
 
 .product-card-overlay .overlay-btn {
+  pointer-events: auto;
   transform: translateY(12px);
   opacity: 0;
   transition:
@@ -445,12 +447,7 @@ body {
 
 @media (hover: none) {
   .product-card-overlay {
-    opacity: 1;
-  }
-
-  .product-card-overlay .overlay-btn {
-    transform: none;
-    opacity: 1;
+    display: none;
   }
 }
 
@@ -650,13 +647,11 @@ body {
   }
 
   .product-card-overlay {
-    opacity: 1;
     transition: none !important;
   }
 
   .product-card-overlay .overlay-btn {
     transform: none;
-    opacity: 1;
     transition: none !important;
   }
 }

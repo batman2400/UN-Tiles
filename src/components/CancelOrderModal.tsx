@@ -114,7 +114,7 @@ export function CancelOrderModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="cancel-order-modal-title"
-        className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[231] p-6 animate-in zoom-in-95 duration-200"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[min(90vh,calc(100dvh-1.5rem))] overflow-y-auto bg-white rounded-2xl shadow-2xl z-[231] p-5 sm:p-6 animate-in zoom-in-95 duration-200"
       >
         <div className="flex items-center justify-between pb-4 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
@@ -130,7 +130,7 @@ export function CancelOrderModal({
             type="button"
             disabled={cancelling}
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-zinc-900 rounded-md transition-colors disabled:opacity-50"
+            className="min-h-10 min-w-10 inline-flex items-center justify-center p-1 text-gray-400 hover:text-zinc-900 rounded-md transition-colors disabled:opacity-50"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

@@ -176,15 +176,15 @@ export function CollectionsClient({
         
         {/* Instant Search Bar & Active Filter Badges */}
         <div className="mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200/80">
-          <div className="flex items-center gap-2.5 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-1">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search tiles or size..."
+                placeholder="Search tiles..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
+                className="w-full pl-9 sm:pl-10 pr-9 py-2.5 bg-white shadow-sm text-sm text-zinc-900 rounded-xl outline-none border border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all placeholder:text-gray-400 font-medium"
               />
               {searchQuery && (
                 <button
@@ -197,7 +197,7 @@ export function CollectionsClient({
             </div>
             <Link
               href="/visual-search"
-              className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-xl uppercase tracking-wider transition-all shadow-sm shrink-0 group"
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-xl uppercase tracking-wider transition-all shadow-sm shrink-0 group min-h-11"
               title="Upload photo or inspiration image for AI tile suggestions"
             >
               <AiFeatureIcon className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />

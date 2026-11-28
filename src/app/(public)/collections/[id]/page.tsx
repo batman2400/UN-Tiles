@@ -169,15 +169,15 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
         </nav>
 
         {/* Product Main Display */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-14 items-start">
           {/* Left: Tile Image Preview */}
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-surface-container border border-outline/30 premium-shadow-lg">
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-surface-container border border-outline/30 premium-shadow-lg md:sticky md:top-28">
             <Image
               src={safeImage}
               alt={`Buy ${product.name} ${product.category} tile in Sri Lanka`}
               fill
               priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
             <div className="absolute top-4 left-4 z-10">

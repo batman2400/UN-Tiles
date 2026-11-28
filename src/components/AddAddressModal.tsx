@@ -71,7 +71,7 @@ export function AddAddressModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-address-modal-title"
-        className="fixed inset-x-4 top-[12%] sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md bg-white rounded-2xl shadow-2xl z-[221] p-6"
+        className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-md max-h-[min(90vh,calc(100dvh-1.5rem))] overflow-y-auto bg-white rounded-2xl shadow-2xl z-[221] p-5 sm:p-6"
       >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -82,7 +82,7 @@ export function AddAddressModal({
             type="button"
             disabled={saving}
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-zinc-900 rounded-md disabled:opacity-50"
+            className="min-h-10 min-w-10 inline-flex items-center justify-center p-1 text-gray-400 hover:text-zinc-900 rounded-md disabled:opacity-50"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

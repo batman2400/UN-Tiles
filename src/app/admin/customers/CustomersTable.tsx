@@ -169,19 +169,19 @@ export function CustomersTable({ initialCustomers }: { initialCustomers: AdminCu
           {Math.min(safePage * PAGE_SIZE, filteredCustomers.length)} of {filteredCustomers.length}{" "}
           {filteredCustomers.length === 1 ? "customer" : "customers"}
         </p>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+          <span className="min-w-10 min-h-10 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
             {safePage}
           </span>
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >

@@ -441,13 +441,13 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant mb-2.5 text-center">
                     Or try a sample photo
                   </p>
-                  <div className="grid grid-cols-3 gap-2.5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
                     {SAMPLE_PHOTOS.map((sample) => (
                       <button
                         key={sample.src}
                         type="button"
                         onClick={() => void handleSampleSelect(sample)}
-                        className="group/sample flex items-center gap-2 p-2 rounded-xl border border-outline/25 bg-surface-container/40 hover:bg-surface-container hover:border-accent/50 transition-all text-left"
+                        className="group/sample min-h-12 flex items-center gap-2.5 sm:gap-2 p-2.5 sm:p-2 rounded-xl border border-outline/25 bg-surface-container/40 hover:bg-surface-container hover:border-accent/50 transition-all text-left"
                       >
                         <span className="relative w-9 h-9 rounded-lg overflow-hidden shrink-0 bg-surface-container">
                           <Image
@@ -458,7 +458,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                             className="object-cover group-hover/sample:scale-105 transition-transform"
                           />
                         </span>
-                        <span className="text-[11px] font-semibold text-on-surface leading-tight line-clamp-2">
+                        <span className="text-xs sm:text-[11px] font-semibold text-on-surface leading-tight sm:line-clamp-2">
                           {sample.label}
                         </span>
                       </button>
@@ -483,7 +483,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="absolute top-3 right-3 p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-sm border border-white/20 transition-all z-20"
+                      className="absolute top-3 right-3 min-h-10 min-w-10 flex items-center justify-center rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-sm border border-white/20 transition-all z-20"
                       title="Remove image"
                     >
                       <X className="w-4 h-4" />

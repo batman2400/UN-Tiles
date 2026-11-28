@@ -731,19 +731,19 @@ export function OrdersTable({
           {Math.min(safePage * PAGE_SIZE, filteredOrders.length)} of {filteredOrders.length}{" "}
           {filteredOrders.length === 1 ? "order" : "orders"}
         </p>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage <= 1}
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <span className="w-8 h-8 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+          <span className="min-w-10 min-h-10 rounded border border-gray-900 bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
             {safePage}
           </span>
           <button
-            className="w-8 h-8 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="min-w-10 min-h-10 rounded border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={safePage >= totalPages}
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
           >
@@ -763,7 +763,7 @@ export function OrdersTable({
             role="dialog"
             aria-modal="true"
             aria-labelledby="order-status-modal-title"
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[min(90vh,calc(100dvh-1.5rem))] overflow-y-auto"
           >
             <div className="flex items-start justify-between pb-4 border-b border-gray-100">
               <div>
@@ -911,7 +911,7 @@ export function OrdersTable({
             role="dialog"
             aria-modal="true"
             aria-labelledby="bulk-status-modal-title"
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] max-w-lg bg-white rounded-2xl shadow-2xl z-[221] p-6 animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col gap-5 max-h-[min(90vh,calc(100dvh-1.5rem))] overflow-y-auto"
           >
             <div className="flex items-start justify-between pb-4 border-b border-gray-100">
               <div>
