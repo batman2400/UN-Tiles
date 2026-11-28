@@ -2,7 +2,7 @@
 
 import { ProductCard } from "@/components/ProductCard";
 import type { MatchedProduct } from "@/lib/visual-search/types";
-import { Sparkles } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 
 interface VisualMatchCardProps {
   product: MatchedProduct;
@@ -32,7 +32,7 @@ export function VisualMatchCard({ product, rank, priority = false }: VisualMatch
         <div
           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold tracking-wide backdrop-blur-md border ${getBadgeStyle()} transition-transform duration-300 group-hover/match:scale-105`}
         >
-          <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+          <AiFeatureIcon className="w-3 h-3 text-amber-300 shrink-0" />
           <span>{showRank ? `#${rank} · ${percentage}% Match` : `${percentage}% Match`}</span>
         </div>
       </div>

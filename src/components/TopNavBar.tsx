@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Search, ShoppingCart, Menu, X, Shield, LogOut } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 import Image from "next/image";
 import { AuthNavIcon } from "@/components/AuthNavIcon";
 import { createClient } from "@/utils/supabase/client";
@@ -156,8 +157,9 @@ export function TopNavBar() {
                   >
                     <span>{label.toUpperCase()}</span>
                     {badge && (
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none ${badgeClass}`}>
-                        {badge}
+                      <span className={`inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full font-bold leading-none ${badgeClass}`}>
+                        <AiFeatureIcon className="w-2.5 h-2.5 shrink-0" />
+                        <span>{badge}</span>
                       </span>
                     )}
                   </Link>
@@ -321,8 +323,9 @@ export function TopNavBar() {
                     >
                       <span>{label}</span>
                       {badge && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 font-bold border border-amber-500/35">
-                          {badge}
+                        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-800 font-bold border border-amber-500/35">
+                          <AiFeatureIcon className="w-3 h-3 shrink-0" />
+                          <span>{badge}</span>
                         </span>
                       )}
                     </Link>

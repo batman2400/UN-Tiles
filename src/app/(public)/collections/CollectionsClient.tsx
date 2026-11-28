@@ -6,7 +6,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import type { Product, CategoryCard } from "@/data/products";
-import { Search, X, SlidersHorizontal, ChevronDown, Sparkles } from "lucide-react";
+import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 
 interface CollectionsClientProps {
   allProducts: Product[];
@@ -199,7 +200,7 @@ export function CollectionsClient({
               className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-2.5 bg-zinc-900 hover:bg-black text-white text-xs font-semibold rounded-xl uppercase tracking-wider transition-all shadow-sm shrink-0 group"
               title="Upload photo or inspiration image for AI tile suggestions"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
+              <AiFeatureIcon className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
               <span className="hidden sm:inline">AI Suggestions</span>
               <span className="sm:hidden">AI Match</span>
             </Link>
@@ -368,7 +369,7 @@ export function CollectionsClient({
                     href="/visual-search"
                     className="inline-flex items-center justify-center gap-2 border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent font-semibold rounded-xl py-3 px-6 text-xs uppercase tracking-widest transition-all w-full sm:w-auto"
                   >
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <AiFeatureIcon className="w-3.5 h-3.5" />
                     <span>Try AI Suggestions</span>
                   </Link>
                 </div>

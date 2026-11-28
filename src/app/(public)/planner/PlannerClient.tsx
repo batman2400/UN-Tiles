@@ -281,8 +281,8 @@ export function PlannerClient({
           </p>
         ) : (
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-            <aside className="w-full lg:w-80 xl:w-96 shrink-0 space-y-5">
-              <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-4">
+            <aside className="w-full lg:w-80 xl:w-96 shrink-0">
+              <div className="lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto [scrollbar-width:thin] rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 space-y-4 shadow-sm">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-2">
                     Tile

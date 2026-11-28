@@ -48,7 +48,7 @@ export default function TermsPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">3. Tile Planner and AI Visual Search Tools</h2>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              Our Smart Room Planner and Gemini-powered Visual Tile Search are assistive digital utilities provided
+              Our Smart Room Planner and AI Visual Tile Search are assistive digital utilities provided
               to assist with surface estimation and visual discovery. Waste percentage estimates (e.g., 10%–15% recommended
               cutting allowance) and layout diagrams are guidelines only. Final measurement verification and installation
               assessments remain the responsibility of the client and licensed contractor.

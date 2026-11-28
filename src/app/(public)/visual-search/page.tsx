@@ -5,7 +5,7 @@ import { VisualSearchClient } from "./VisualSearchClient";
 export const metadata: Metadata = {
   title: "AI Tiles Finder in Sri Lanka | Visual Tile Matcher & Design Advisor",
   description:
-    "Sri Lanka's #1 AI Tiles Finder. Upload a photo of any room or tile texture and let our Gemini AI instantly find matching floor and wall tiles available to purchase in Sri Lanka with islandwide delivery.",
+    "Sri Lanka's #1 AI Tiles Finder. Upload a photo of any room or tile texture and let our visual AI instantly find matching floor and wall tiles available to purchase in Sri Lanka with islandwide delivery.",
   keywords: [
     "ai tiles finder in sri lanka",
     "ai tile finder",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "AI Tiles Finder in Sri Lanka | UN Tiles",
     description:
-      "Upload a photo and let Sri Lanka's #1 AI Tiles Finder match floor and wall tiles instantly. Powered by Gemini AI.",
+      "Upload a photo and let Sri Lanka's #1 AI Tiles Finder match floor and wall tiles instantly.",
     url: "https://www.untiles.com/visual-search",
   },
 };
@@ -38,7 +38,7 @@ export default function VisualSearchPage() {
     operatingSystem: "All",
     browserRequirements: "Requires modern web browser with camera or upload support",
     description:
-      "Sri Lanka's #1 AI Tiles Finder. Upload a photo of your room or inspiration tile swatch to find matching floor and wall tiles with Gemini AI.",
+      "Sri Lanka's #1 AI Tiles Finder. Upload a photo of your room or inspiration tile swatch to find matching floor and wall tiles instantly with visual AI.",
     offers: {
       "@type": "Offer",
       price: "0",
@@ -61,7 +61,7 @@ export default function VisualSearchPage() {
         name: "What is the best AI tiles finder in Sri Lanka?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "UN Tiles offers Sri Lanka's premier AI Tiles Finder, powered by Google Gemini Vision. Users can upload a photo of their space, swatch, or inspirational concept to instantly discover matching porcelain and ceramic tiles available in Sri Lanka with transparent LKR pricing.",
+          text: "UN Tiles offers Sri Lanka's premier AI Tiles Finder. Users can upload a photo of their space, swatch, or inspirational concept to instantly discover matching porcelain and ceramic tiles available in Sri Lanka with transparent LKR pricing.",
         },
       },
       {

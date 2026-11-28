@@ -3,7 +3,8 @@
 import { motion } from "motion/react";
 import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa6";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 
 export interface HeroAction {
   label: string;
@@ -109,7 +110,7 @@ export function Hero10({
               whileTap={{ scale: 0.97 }}
               className="inline-flex h-12 items-center gap-2 rounded-full border border-slate-700/15 bg-white/50 px-6 text-xs sm:text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur-md hover:bg-white/80 hover:border-accent transition-all group"
             >
-              <Sparkles className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
+              <AiFeatureIcon className="w-4 h-4 text-accent transition-transform group-hover:scale-110" />
               <span>{studioText}</span>
               <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-bold text-accent">
                 AI & 2D

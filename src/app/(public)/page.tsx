@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { preload } from "react-dom";
 import { getCatalogData } from "@/data/products";
-import { ArrowRight, Shield, Truck, Award, Gem, Sparkles, Camera, Layers, Calculator } from "lucide-react";
+import { ArrowRight, Shield, Truck, Award, Gem, Camera, Layers, Calculator } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 import { ParallaxLayer } from "@/components/ParallaxLayer";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { StatsCounter } from "@/components/StatsCounter";
@@ -21,7 +22,7 @@ const faqItems = [
   {
     question: "How do I use the AI Tiles Finder in Sri Lanka?",
     answer:
-      "UN Tiles features Sri Lanka's #1 Gemini AI-powered Tiles Finder at untiles.com/visual-search. Simply upload a photo of your room, an inspiration image from Pinterest/Instagram, or an existing tile swatch. Our AI instantly matches your image with available tiles in our catalog.",
+      "UN Tiles features Sri Lanka's #1 AI Tiles Finder at untiles.com/visual-search. Simply upload a photo of your room, an inspiration image from Pinterest/Instagram, or an existing tile swatch. Our visual AI instantly matches your image with available tiles in our catalog.",
   },
   {
     question: "Can I purchase floor and wall tiles online in Sri Lanka with delivery?",
@@ -111,7 +112,7 @@ export default function Home() {
             href="/visual-search"
             className="flex items-center gap-2 text-xs font-semibold tracking-wide text-amber-800 hover:text-accent transition-colors group whitespace-nowrap"
           >
-            <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform shrink-0" />
+            <AiFeatureIcon className="w-4 h-4 text-accent group-hover:scale-110 transition-transform shrink-0" />
             <span className="underline-offset-4 hover:underline">Sri Lanka&apos;s #1 AI Tile Finder</span>
           </Link>
           <div className="hidden lg:block w-[1px] h-3.5 bg-outline-variant/30" />
@@ -135,7 +136,7 @@ export default function Home() {
           <ScrollReveal>
             <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/25 text-accent text-xs font-semibold uppercase tracking-widest mb-4">
-                <Sparkles className="w-3.5 h-3.5" />
+                <AiFeatureIcon className="w-3.5 h-3.5" />
                 <span>Next-Gen Tile Shopping Studio</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface mb-4">
@@ -156,23 +157,19 @@ export default function Home() {
                 <div>
                   <div className="flex items-center justify-between gap-3 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20 text-accent group-hover:scale-110 group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                      <Sparkles className="w-6 h-6" />
+                      <AiFeatureIcon variant="badge" className="w-6 h-6" />
                     </div>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                      Gemini AI Powered
-                    </span>
                   </div>
 
                   <h3 className="text-2xl sm:text-3xl font-display font-bold text-on-surface mb-3 group-hover:text-accent transition-colors">
                     AI Tiles Finder & Room Matcher
                   </h3>
                   <p className="text-on-surface-variant text-sm sm:text-base leading-relaxed mb-6">
-                    Snap or upload any photo — a room corner, Pinterest inspiration, or an existing tile swatch. Our Gemini AI analyzes textures, colors, and aesthetics to find exact available matches in our Sri Lanka warehouse.
+                    Snap or upload any photo — a room corner, Pinterest inspiration, or an existing tile swatch. Our visual AI analyzes textures, colors, and aesthetics to find exact available matches in our Sri Lanka warehouse.
                   </p>
 
                   <div className="flex flex-wrap gap-2 mb-8">
-                    {["Photo & Texture Upload", "Gemini Scene Advisor", "Instant Catalog Match", "Islandwide Delivery"].map((tag) => (
+                    {["Photo & Texture Upload", "AI Scene Advisor", "Instant Catalog Match", "Islandwide Delivery"].map((tag) => (
                       <span key={tag} className="text-xs px-3 py-1 rounded-full bg-surface-container border border-outline/20 text-on-surface-variant font-medium">
                         ✓ {tag}
                       </span>
@@ -276,7 +273,7 @@ export default function Home() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <Link href="/visual-search" className="inline-flex items-center justify-center space-x-2 border border-outline/40 bg-surface-container-lowest/80 px-5 sm:px-6 py-3.5 uppercase tracking-widest text-xs sm:text-sm font-semibold text-on-surface hover:bg-surface-container-high hover:border-accent transition-all rounded-xl shadow-sm">
-                  <Sparkles className="w-4 h-4 text-accent" />
+                  <AiFeatureIcon className="w-4 h-4 text-accent" />
                   <span>AI Tiles Finder</span>
                 </Link>
                 <Link href="/planner" className="inline-flex items-center justify-center space-x-2 border border-outline/40 bg-surface-container-lowest/80 px-5 sm:px-6 py-3.5 uppercase tracking-widest text-xs sm:text-sm font-semibold text-on-surface hover:bg-surface-container-high hover:border-accent transition-all rounded-xl shadow-sm">
@@ -411,14 +408,14 @@ async function HomeBelowFold() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 items-center">
             <ScrollReveal className="space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5" />
+                <AiFeatureIcon className="w-3.5 h-3.5" />
                 <span>Sri Lanka&apos;s #1 AI Tiles Finder</span>
               </div>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold tracking-tight text-on-surface leading-tight">
                 Sri Lanka&apos;s First <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent/70">AI Tiles Finder</span> & Room Matcher
               </h2>
               <p className="text-base sm:text-lg leading-relaxed text-on-surface-variant">
-                Looking for an AI tiles finder in Sri Lanka? UN Tiles brings cutting-edge Gemini AI visual search to your fingertips. Snap a photo of any tile, floor, or room inspiration, and our AI instantly finds matching porcelain and ceramic tiles available in our Sri Lanka warehouse.
+                Looking for an AI tiles finder in Sri Lanka? UN Tiles brings cutting-edge AI visual search to your fingertips. Snap a photo of any tile, floor, or room inspiration, and our visual AI instantly finds matching porcelain and ceramic tiles available in our Sri Lanka warehouse.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-2xl bg-surface-container border border-outline/30">
@@ -457,18 +454,18 @@ async function HomeBelowFold() {
               <div className="aspect-[4/3] sm:aspect-square relative rounded-3xl overflow-hidden premium-shadow-lg border border-outline/30 bg-surface-container">
                 <Image
                   src="/images/light_luxury_tiles.jpg"
-                  alt="Sri Lanka AI Tiles Finder - UN Tiles Gemini Visual Matching"
+                  alt="Sri Lanka AI Tiles Finder - UN Tiles AI Visual Matching"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-6 sm:p-8 text-white">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-semibold w-fit mb-2">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <AiFeatureIcon className="w-3.5 h-3.5 text-amber-300" />
                     <span>Instant Similarity Scoring</span>
                   </div>
                   <p className="text-sm font-medium text-white/90">
-                    Dual Gemini Embedding 2 & Flash Vision vector matching.
+                    Multimodal vector &amp; room palette visual matching.
                   </p>
                 </div>
               </div>

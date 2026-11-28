@@ -7,7 +7,6 @@ import {
   Upload,
   Camera,
   ImageIcon,
-  Sparkles,
   Layers,
   Home,
   RefreshCw,
@@ -16,8 +15,8 @@ import {
   ArrowRight,
   Info,
   X,
-  Scan,
 } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 import { VisualMatchCard } from "@/components/visual-search/VisualMatchCard";
 import { SceneBriefPanel } from "@/components/visual-search/SceneBriefPanel";
 import { compressImageForUpload } from "@/lib/visual-search/client-compress";
@@ -285,7 +284,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         {/* Header Title */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-800 text-xs font-semibold uppercase tracking-widest">
-            <Sparkles className="w-3.5 h-3.5 text-accent" />
+            <AiFeatureIcon className="w-3.5 h-3.5 text-accent" />
             <span>Sri Lanka&apos;s #1 AI Tiles Finder</span>
           </div>
 
@@ -295,7 +294,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
 
           <p className="text-sm sm:text-lg text-on-surface-variant leading-relaxed">
             Looking to find and buy tiles in Sri Lanka? Upload an inspiration photo, material texture, or a picture of your room.
-            Our Gemini AI Tiles Finder instantly matches your image with our curated Sri Lanka inventory with per-sqft LKR pricing.
+            Our AI Tiles Finder instantly matches your image with our curated Sri Lanka inventory with per-sqft LKR pricing.
           </p>
         </div>
 
@@ -500,7 +499,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                       {/* Smooth Center AI Spinner */}
                       <div className="relative w-14 h-14 flex items-center justify-center">
                         <div className="w-12 h-12 rounded-full border-2 border-amber-400/20 border-t-amber-400 animate-spin" />
-                        <Scan className="w-5 h-5 text-amber-300 absolute" />
+                        <AiFeatureIcon variant="badge" className="w-5 h-5 text-amber-300 absolute" />
                       </div>
 
                       <div className="text-center px-4 space-y-1">
@@ -546,7 +545,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
+                      <AiFeatureIcon className="w-4 h-4" />
                       <span>{mode === "matcher" ? "Find Matching Tiles" : "Get Scene Advice"}</span>
                     </>
                   )}
@@ -721,7 +720,7 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
               <span className="text-xs font-bold text-accent uppercase tracking-widest">Step 2</span>
               <h3 className="text-base font-bold text-on-surface">AI Vector Matching</h3>
               <p className="text-xs text-on-surface-variant leading-relaxed">
-                Our Gemini AI analyzes texture grain, color contrast, and surface finish to match against our real-time Sri Lanka tile catalog.
+                Our visual AI analyzes texture grain, color contrast, and surface finish to match against our real-time Sri Lanka tile catalog.
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-surface-container/60 border border-outline/20 space-y-2">
@@ -737,10 +736,10 @@ export function VisualSearchClient({ visionEnabled }: { visionEnabled: boolean }
         {/* Footer Disclaimer */}
         <div className="border-t border-outline/30 pt-8 mt-12 max-w-4xl mx-auto text-center space-y-2 text-xs text-on-surface-variant leading-relaxed">
           <p>
-            <strong>Note:</strong> AI visual match rankings are generated via Google Gemini multimodal embeddings and provide design inspiration. Because lighting, screen calibration, and glaze finishes vary, we recommend confirming exact tile colors and surface textures at our UN Tiles showroom before placing large orders.
+            <strong>Note:</strong> AI visual match rankings are generated via multimodal visual embeddings and provide design inspiration. Because lighting, screen calibration, and glaze finishes vary, we recommend confirming exact tile colors and surface textures at our UN Tiles showroom before placing large orders.
           </p>
           <p className="text-[11px] opacity-75">
-            Uploaded search images are processed securely using the Google AI Studio Gemini API in accordance with our terms of service.
+            Uploaded search images are processed securely by our AI visual search service in accordance with our terms of service.
           </p>
         </div>
       </div>

@@ -56,8 +56,8 @@ export default function PrivacyPage() {
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-slate-800 mb-4">3. AI Visual Search and Image Processing</h2>
             <p className="text-slate-600 mb-4 leading-relaxed">
-              When you upload a photo to find matching tile slabs, your image is processed temporarily via Google
-              Gemini Vision and embedding models to analyze surface texture, pattern, color palettes, and finish.
+              When you upload a photo to find matching tile slabs, your image is processed temporarily via AI
+              vision and embedding models to analyze surface texture, pattern, color palettes, and finish.
               Uploaded images are used solely to generate similarity vectors for finding matching catalog items;
               they are not used to train general artificial intelligence models, are not sold to third parties,
               and are not retained as permanent public records.

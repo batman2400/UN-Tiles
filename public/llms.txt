@@ -28,4 +28,4 @@ UN Tiles stocks over 50+ curated tile designs with transparent pricing per squar
 ## Value-Add Shopping Tools (Assisting Features)
 To make tile purchasing faster and eliminate guesswork for buyers, UN Tiles provides two built-in shopping assistants:
 - **Smart Tile Planner (https://www.untiles.com/planner)**: An interactive room calculator that calculates required square footage, box counts, and tile wastage buffer before buying.
-- **AI Tiles Finder (https://www.untiles.com/visual-search)**: A visual search tool powered by Gemini AI that lets customers upload photos of rooms or Pinterest swatches to instantly match tiles available for purchase in our store.
+- **AI Tiles Finder (https://www.untiles.com/visual-search)**: A visual search tool that lets customers upload photos of rooms or Pinterest swatches to instantly match tiles available for purchase in our store.

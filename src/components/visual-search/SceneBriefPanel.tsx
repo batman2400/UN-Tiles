@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import type { SceneBrief } from "@/lib/visual-search/types";
-import { Sparkles, Sun, Palette, Compass, Layers, Check, Copy } from "lucide-react";
+import { Sun, Palette, Compass, Layers, Check, Copy } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 
 interface SceneBriefPanelProps {
   brief: SceneBrief;
@@ -27,7 +28,7 @@ export function SceneBriefPanel({ brief }: SceneBriefPanelProps) {
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
-            <Sparkles className="w-5 h-5" />
+            <AiFeatureIcon variant="badge" className="w-5 h-5" />
           </div>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-amber-400">

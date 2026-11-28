@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ShoppingCart, Check, Calculator, Sparkles, AlertTriangle, ArrowRight } from "lucide-react";
+import { ShoppingCart, Check, Calculator, AlertTriangle, ArrowRight } from "lucide-react";
+import { AiFeatureIcon } from "@/components/ui/AiFeatureIcon";
 import { useCart } from "@/context/CartContext";
 import type { Product } from "@/data/products";
 import { productHasParsableSize } from "@/lib/tile-planner";
@@ -206,7 +207,7 @@ export function ProductDetailActions({ product }: { product: Product }) {
           className="flex items-center justify-between p-3.5 rounded-xl border border-accent/30 bg-accent/5 hover:bg-accent/10 transition-all group"
         >
           <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-accent" />
+            <AiFeatureIcon className="w-4 h-4 text-accent" />
             <span className="text-xs font-semibold text-accent">Find Similar with AI</span>
           </div>
           <ArrowRight className="w-3.5 h-3.5 text-accent group-hover:translate-x-1 transition-transform" />
